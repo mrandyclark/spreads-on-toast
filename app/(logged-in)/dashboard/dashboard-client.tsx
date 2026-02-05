@@ -19,6 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MOCK_LEAGUES } from '@/static-data';
+import { GroupSummary, Sport } from '@/types';
 
 interface User {
   email?: string;
@@ -31,49 +33,24 @@ interface DashboardClientProps {
   user: User;
 }
 
-const mockLeagues = [
-  {
-    id: '1',
-    members: 8,
-    name: 'Sunday Squad',
-    season: '2025-26',
-    sport: 'NFL',
-    yourRank: 2,
-  },
-  {
-    id: '2',
-    members: 6,
-    name: 'Hoops Heads',
-    season: '2025-26',
-    sport: 'NBA',
-    yourRank: 1,
-  },
-  {
-    id: '3',
-    members: 10,
-    name: 'Diamond Dynasty',
-    season: '2025',
-    sport: 'MLB',
-    yourRank: 5,
-  },
-];
-
 export function DashboardClient({ user }: DashboardClientProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [leagueName, setLeagueName] = useState('');
   const [leagueSport, setLeagueSport] = useState('MLB');
   const [inviteCode, setInviteCode] = useState('');
-  const [leagues, setLeagues] = useState(mockLeagues);
+  const [leagues, setLeagues] = useState<GroupSummary[]>(MOCK_LEAGUES);
 
   const handleCreateLeague = () => {
     if (leagueName.trim()) {
-      const newLeague = {
+      const newLeague: GroupSummary = {
         id: String(leagues.length + 1),
-        members: 1,
+        isLocked: false,
+        lockDate: new Date('2025-03-28'),
+        memberCount: 1,
         name: leagueName.trim(),
         season: '2025',
-        sport: leagueSport,
+        sport: leagueSport as Sport,
         yourRank: 1,
       };
       setLeagues([newLeague, ...leagues]);
@@ -86,12 +63,14 @@ export function DashboardClient({ user }: DashboardClientProps) {
   const handleJoinLeague = () => {
     if (inviteCode.trim()) {
       // Mock joining a league - in real app this would validate the code
-      const joinedLeague = {
+      const joinedLeague: GroupSummary = {
         id: String(leagues.length + 1),
-        members: 5,
+        isLocked: false,
+        lockDate: new Date('2025-03-28'),
+        memberCount: 5,
         name: 'Joined League',
         season: '2025',
-        sport: 'MLB',
+        sport: Sport.MLB,
         yourRank: 5,
       };
       setLeagues([joinedLeague, ...leagues]);
@@ -217,7 +196,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
                           </span>
                           <span className="inline-flex items-center gap-1">
                             <Users className="h-3.5 w-3.5" />
-                            {league.members} members
+                            {league.memberCount} members
                           </span>
                           <span>{league.season}</span>
                         </div>

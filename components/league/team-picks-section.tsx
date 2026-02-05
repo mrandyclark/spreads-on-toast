@@ -7,41 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-
-const MLB_TEAMS = [
-  { abbr: 'NYY', division: 'East', id: 'nyy', league: 'AL', line: 91.5, name: 'New York Yankees' },
-  { abbr: 'BOS', division: 'East', id: 'bos', league: 'AL', line: 81.5, name: 'Boston Red Sox' },
-  { abbr: 'TOR', division: 'East', id: 'tor', league: 'AL', line: 85.5, name: 'Toronto Blue Jays' },
-  { abbr: 'BAL', division: 'East', id: 'bal', league: 'AL', line: 88.5, name: 'Baltimore Orioles' },
-  { abbr: 'TB', division: 'East', id: 'tb', league: 'AL', line: 86.5, name: 'Tampa Bay Rays' },
-  { abbr: 'CLE', division: 'Central', id: 'cle', league: 'AL', line: 82.5, name: 'Cleveland Guardians' },
-  { abbr: 'MIN', division: 'Central', id: 'min', league: 'AL', line: 83.5, name: 'Minnesota Twins' },
-  { abbr: 'DET', division: 'Central', id: 'det', league: 'AL', line: 74.5, name: 'Detroit Tigers' },
-  { abbr: 'CWS', division: 'Central', id: 'cws', league: 'AL', line: 68.5, name: 'Chicago White Sox' },
-  { abbr: 'KC', division: 'Central', id: 'kc', league: 'AL', line: 73.5, name: 'Kansas City Royals' },
-  { abbr: 'HOU', division: 'West', id: 'hou', league: 'AL', line: 89.5, name: 'Houston Astros' },
-  { abbr: 'TEX', division: 'West', id: 'tex', league: 'AL', line: 86.5, name: 'Texas Rangers' },
-  { abbr: 'SEA', division: 'West', id: 'sea', league: 'AL', line: 84.5, name: 'Seattle Mariners' },
-  { abbr: 'LAA', division: 'West', id: 'laa', league: 'AL', line: 76.5, name: 'Los Angeles Angels' },
-  { abbr: 'OAK', division: 'West', id: 'oak', league: 'AL', line: 58.5, name: 'Oakland Athletics' },
-  { abbr: 'LAD', division: 'West', id: 'lad', league: 'NL', line: 96.5, name: 'Los Angeles Dodgers' },
-  { abbr: 'SF', division: 'West', id: 'sf', league: 'NL', line: 79.5, name: 'San Francisco Giants' },
-  { abbr: 'SD', division: 'West', id: 'sd', league: 'NL', line: 85.5, name: 'San Diego Padres' },
-  { abbr: 'ARI', division: 'West', id: 'ari', league: 'NL', line: 84.5, name: 'Arizona Diamondbacks' },
-  { abbr: 'COL', division: 'West', id: 'col', league: 'NL', line: 62.5, name: 'Colorado Rockies' },
-  { abbr: 'ATL', division: 'East', id: 'atl', league: 'NL', line: 92.5, name: 'Atlanta Braves' },
-  { abbr: 'PHI', division: 'East', id: 'phi', league: 'NL', line: 88.5, name: 'Philadelphia Phillies' },
-  { abbr: 'NYM', division: 'East', id: 'nym', league: 'NL', line: 84.5, name: 'New York Mets' },
-  { abbr: 'MIA', division: 'East', id: 'mia', league: 'NL', line: 70.5, name: 'Miami Marlins' },
-  { abbr: 'WSH', division: 'East', id: 'wsh', league: 'NL', line: 67.5, name: 'Washington Nationals' },
-  { abbr: 'MIL', division: 'Central', id: 'mil', league: 'NL', line: 85.5, name: 'Milwaukee Brewers' },
-  { abbr: 'CHC', division: 'Central', id: 'chc', league: 'NL', line: 81.5, name: 'Chicago Cubs' },
-  { abbr: 'CIN', division: 'Central', id: 'cin', league: 'NL', line: 78.5, name: 'Cincinnati Reds' },
-  { abbr: 'STL', division: 'Central', id: 'stl', league: 'NL', line: 79.5, name: 'St. Louis Cardinals' },
-  { abbr: 'PIT', division: 'Central', id: 'pit', league: 'NL', line: 72.5, name: 'Pittsburgh Pirates' },
-];
+import { getFullTeamName, getLineForTeam, MLB_TEAMS } from '@/static-data';
+import { Conference } from '@/types';
 
 type Pick = 'over' | 'under' | null;
+
+// Combine team data with lines for display
+const TEAMS_WITH_LINES = MLB_TEAMS.map((team) => ({
+  ...team,
+  fullName: getFullTeamName(team),
+  line: getLineForTeam(team.id) ?? 0,
+}));
 
 export function TeamPicksSection() {
   const [picks, setPicks] = useState<Record<string, Pick>>({});
@@ -52,12 +28,12 @@ export function TeamPicksSection() {
     setPicks((prev) => ({ ...prev, [teamId]: pick }));
   };
 
-  const filteredTeams = MLB_TEAMS.filter((team) => {
+  const filteredTeams = TEAMS_WITH_LINES.filter((team) => {
     const matchesSearch =
-      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.abbr.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLeague = filterLeague === 'all' || team.league === filterLeague;
-    return matchesSearch && matchesLeague;
+      team.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      team.abbreviation.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesConference = filterLeague === 'all' || team.conference === filterLeague;
+    return matchesSearch && matchesConference;
   });
 
   const pickedCount = Object.values(picks).filter(Boolean).length;
@@ -71,7 +47,7 @@ export function TeamPicksSection() {
             <CardDescription>Pick over or under for each team{"'"}s season win total</CardDescription>
           </div>
           <Badge className="w-fit" variant="outline">
-            {pickedCount}/{MLB_TEAMS.length} picked
+            {pickedCount}/{TEAMS_WITH_LINES.length} picked
           </Badge>
         </div>
       </CardHeader>
@@ -112,15 +88,15 @@ export function TeamPicksSection() {
             >
               <div className="flex items-center gap-3">
                 <Badge
-                  className={`w-12 justify-center ${team.league === 'AL' ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/30'}`}
+                  className={`w-12 justify-center ${team.conference === Conference.AL ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/30'}`}
                   variant="outline"
                 >
-                  {team.abbr}
+                  {team.abbreviation}
                 </Badge>
                 <div>
-                  <p className="font-medium">{team.name}</p>
+                  <p className="font-medium">{team.fullName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {team.league} {team.division}
+                    {team.conference} {team.division.replace('_', ' ').replace('AL ', '').replace('NL ', '')}
                   </p>
                 </div>
               </div>

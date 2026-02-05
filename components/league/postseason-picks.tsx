@@ -5,42 +5,7 @@ import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-const AL_TEAMS = [
-  { abbr: 'NYY', id: 'nyy', name: 'New York Yankees' },
-  { abbr: 'BOS', id: 'bos', name: 'Boston Red Sox' },
-  { abbr: 'TOR', id: 'tor', name: 'Toronto Blue Jays' },
-  { abbr: 'BAL', id: 'bal', name: 'Baltimore Orioles' },
-  { abbr: 'TB', id: 'tb', name: 'Tampa Bay Rays' },
-  { abbr: 'CLE', id: 'cle', name: 'Cleveland Guardians' },
-  { abbr: 'MIN', id: 'min', name: 'Minnesota Twins' },
-  { abbr: 'DET', id: 'det', name: 'Detroit Tigers' },
-  { abbr: 'CWS', id: 'cws', name: 'Chicago White Sox' },
-  { abbr: 'KC', id: 'kc', name: 'Kansas City Royals' },
-  { abbr: 'HOU', id: 'hou', name: 'Houston Astros' },
-  { abbr: 'TEX', id: 'tex', name: 'Texas Rangers' },
-  { abbr: 'SEA', id: 'sea', name: 'Seattle Mariners' },
-  { abbr: 'LAA', id: 'laa', name: 'Los Angeles Angels' },
-  { abbr: 'OAK', id: 'oak', name: 'Oakland Athletics' },
-];
-
-const NL_TEAMS = [
-  { abbr: 'LAD', id: 'lad', name: 'Los Angeles Dodgers' },
-  { abbr: 'SF', id: 'sf', name: 'San Francisco Giants' },
-  { abbr: 'SD', id: 'sd', name: 'San Diego Padres' },
-  { abbr: 'ARI', id: 'ari', name: 'Arizona Diamondbacks' },
-  { abbr: 'COL', id: 'col', name: 'Colorado Rockies' },
-  { abbr: 'ATL', id: 'atl', name: 'Atlanta Braves' },
-  { abbr: 'PHI', id: 'phi', name: 'Philadelphia Phillies' },
-  { abbr: 'NYM', id: 'nym', name: 'New York Mets' },
-  { abbr: 'MIA', id: 'mia', name: 'Miami Marlins' },
-  { abbr: 'WSH', id: 'wsh', name: 'Washington Nationals' },
-  { abbr: 'MIL', id: 'mil', name: 'Milwaukee Brewers' },
-  { abbr: 'CHC', id: 'chc', name: 'Chicago Cubs' },
-  { abbr: 'CIN', id: 'cin', name: 'Cincinnati Reds' },
-  { abbr: 'STL', id: 'stl', name: 'St. Louis Cardinals' },
-  { abbr: 'PIT', id: 'pit', name: 'Pittsburgh Pirates' },
-];
+import { AL_TEAMS, getTeamById, NL_TEAMS } from '@/static-data';
 
 const MAX_PICKS = 5;
 
@@ -99,7 +64,7 @@ export function PostseasonPicks() {
                   onClick={() => togglePick(team.id, 'AL')}
                 >
                   {isSelected && <Check className="h-3.5 w-3.5" />}
-                  {team.abbr}
+                  {team.abbreviation}
                 </button>
               );
             })}
@@ -109,10 +74,10 @@ export function PostseasonPicks() {
               <p className="mb-2 text-xs font-medium text-muted-foreground">Your picks:</p>
               <div className="flex flex-wrap gap-1.5">
                 {alPicks.map((id) => {
-                  const team = AL_TEAMS.find((t) => t.id === id);
+                  const team = getTeamById(id);
                   return (
                     <Badge key={id} variant="secondary">
-                      {team?.abbr}
+                      {team?.abbreviation}
                     </Badge>
                   );
                 })}
@@ -155,7 +120,7 @@ export function PostseasonPicks() {
                   onClick={() => togglePick(team.id, 'NL')}
                 >
                   {isSelected && <Check className="h-3.5 w-3.5" />}
-                  {team.abbr}
+                  {team.abbreviation}
                 </button>
               );
             })}
@@ -165,10 +130,10 @@ export function PostseasonPicks() {
               <p className="mb-2 text-xs font-medium text-muted-foreground">Your picks:</p>
               <div className="flex flex-wrap gap-1.5">
                 {nlPicks.map((id) => {
-                  const team = NL_TEAMS.find((t) => t.id === id);
+                  const team = getTeamById(id);
                   return (
                     <Badge key={id} variant="secondary">
-                      {team?.abbr}
+                      {team?.abbreviation}
                     </Badge>
                   );
                 })}

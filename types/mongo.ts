@@ -69,5 +69,11 @@ export type With_id<T extends BaseDocument | BaseSubDocument> = { _id?: any } & 
 
 // Model names for refs and model registration - add your models here
 export enum ModelName {
+  Group = 'Group',
+  Invitation = 'Invitation',
+  Season = 'Season',
+  Sheet = 'Sheet',
+  Team = 'Team',
+  TeamLine = 'TeamLine',
   User = 'User',
 }

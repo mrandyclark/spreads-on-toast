@@ -16,46 +16,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const LEAGUE_DATA = {
-  id: 'mlb-2024',
-  isLocked: false,
-  lockDate: new Date('2024-03-28T12:00:00'),
-  memberCount: 6,
-  name: 'Toast Masters MLB',
-  season: '2024',
-  sport: 'MLB',
-};
-
-const MEMBERS = [
-  { avatar: 'MT', correctPicks: 18, id: '1', name: 'Mike T.', rank: 1, totalPicks: 30, trend: 'up' },
-  { avatar: 'SK', correctPicks: 16, id: '2', name: 'Sarah K.', rank: 2, totalPicks: 30, trend: 'same' },
-  { avatar: 'YO', correctPicks: 15, id: '3', isCurrentUser: true, name: 'You', rank: 3, totalPicks: 30, trend: 'down' },
-  { avatar: 'JL', correctPicks: 14, id: '4', name: 'Jake L.', rank: 4, totalPicks: 30, trend: 'up' },
-  { avatar: 'ER', correctPicks: 12, id: '5', name: 'Emma R.', rank: 5, totalPicks: 30, trend: 'down' },
-  { avatar: 'CP', correctPicks: 10, id: '6', name: 'Chris P.', rank: 6, totalPicks: 30, trend: 'same' },
-];
-
-const MOCK_PLAYER_PICKS = {
-  postseasonAL: ['NYY', 'HOU', 'TEX', 'BAL', 'MIN'],
-  postseasonNL: ['LAD', 'ATL', 'PHI', 'MIL', 'ARI'],
-  teamPicks: [
-    { line: 91.5, pick: 'over', team: 'NYY' },
-    { line: 96.5, pick: 'over', team: 'LAD' },
-    { line: 92.5, pick: 'under', team: 'ATL' },
-    { line: 89.5, pick: 'over', team: 'HOU' },
-    { line: 88.5, pick: 'over', team: 'PHI' },
-  ],
-  worldSeriesAL: 'NYY',
-  worldSeriesNL: 'LAD',
-};
+import { getTeamByAbbreviation, MOCK_GROUP, MOCK_MEMBERS, MOCK_PLAYER_PICKS } from '@/static-data';
+import { GroupMemberSummary } from '@/types';
 
 export default function LeagueDetailPage() {
-  const [isLocked, setIsLocked] = useState(LEAGUE_DATA.isLocked);
-  const [selectedPlayer, setSelectedPlayer] = useState<(typeof MEMBERS)[0] | null>(null);
+  const [isLocked, setIsLocked] = useState(MOCK_GROUP.isLocked);
+  const [selectedPlayer, setSelectedPlayer] = useState<GroupMemberSummary | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const daysUntilLock = Math.max(0, Math.ceil((LEAGUE_DATA.lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  const daysUntilLock = Math.max(0, Math.ceil((MOCK_GROUP.lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,16 +41,16 @@ export default function LeagueDetailPage() {
             <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-2">
               <ToastIcon className="h-6 w-6 text-primary" />
-              <span className="font-semibold">{LEAGUE_DATA.name}</span>
+              <span className="font-semibold">{MOCK_GROUP.name}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Badge className="hidden sm:flex" variant="secondary">
-              {LEAGUE_DATA.sport} {LEAGUE_DATA.season}
+              {MOCK_GROUP.sport} {MOCK_GROUP.season}
             </Badge>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              <span>{LEAGUE_DATA.memberCount}</span>
+              <span>{MOCK_GROUP.memberCount}</span>
             </div>
           </div>
         </div>
@@ -110,7 +79,7 @@ export default function LeagueDetailPage() {
                     <p className="font-medium">{daysUntilLock} days until picks lock</p>
                     <p className="text-sm text-muted-foreground">
                       Locks on{' '}
-                      {LEAGUE_DATA.lockDate.toLocaleDateString('en-US', {
+                      {MOCK_GROUP.lockDate.toLocaleDateString('en-US', {
                         day: 'numeric',
                         month: 'long',
                         weekday: 'long',
@@ -133,7 +102,7 @@ export default function LeagueDetailPage() {
               <Card>
                 <CardContent className="p-0">
                   <div className="divide-y divide-border">
-                    {MEMBERS.map((member, index) => (
+                    {MOCK_MEMBERS.map((member, index) => (
                       <button
                         className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-muted/50"
                         key={member.id}
@@ -184,7 +153,7 @@ export default function LeagueDetailPage() {
             <section>
               <h2 className="mb-4 text-xl font-semibold">Season Progress</h2>
               <div className="grid gap-6 md:grid-cols-2">
-                <StandingsChart members={MEMBERS} />
+                <StandingsChart members={MOCK_MEMBERS} />
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Pick Distribution</CardTitle>
@@ -233,18 +202,21 @@ export default function LeagueDetailPage() {
                     <CardContent className="p-4">
                       <p className="mb-4 text-sm text-muted-foreground">Your locked win total picks for the season.</p>
                       <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-                        {MOCK_PLAYER_PICKS.teamPicks.map((pick) => (
-                          <div
-                            className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
-                            key={pick.team}
-                          >
-                            <span className="font-medium">{pick.team}</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-muted-foreground">{pick.line}</span>
-                              <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
+                        {MOCK_PLAYER_PICKS.teamPicks.map((pick) => {
+                          const team = getTeamByAbbreviation(pick.teamId.toUpperCase());
+                          return (
+                            <div
+                              className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
+                              key={pick.teamId}
+                            >
+                              <span className="font-medium">{team?.abbreviation ?? pick.teamId}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">{pick.line}</span>
+                                <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>
@@ -332,7 +304,7 @@ export default function LeagueDetailPage() {
                     Other members{"'"} picks will be visible after the lock date.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    {MEMBERS.map((member) => (
+                    {MOCK_MEMBERS.map((member) => (
                       <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5" key={member.id}>
                         <Avatar className="h-6 w-6">
                           <AvatarFallback
@@ -378,15 +350,18 @@ export default function LeagueDetailPage() {
             <div>
               <h4 className="mb-3 text-sm font-medium text-muted-foreground">Team Picks</h4>
               <div className="space-y-2">
-                {MOCK_PLAYER_PICKS.teamPicks.map((pick) => (
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3" key={pick.team}>
-                    <span className="font-medium">{pick.team}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">{pick.line}</span>
-                      <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
+                {MOCK_PLAYER_PICKS.teamPicks.map((pick) => {
+                  const team = getTeamByAbbreviation(pick.teamId.toUpperCase());
+                  return (
+                    <div className="flex items-center justify-between rounded-lg border border-border p-3" key={pick.teamId}>
+                      <span className="font-medium">{team?.abbreviation ?? pick.teamId}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">{pick.line}</span>
+                        <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

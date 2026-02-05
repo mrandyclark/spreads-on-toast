@@ -6,42 +6,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-const AL_TEAMS = [
-  { abbr: 'NYY', id: 'nyy', name: 'New York Yankees' },
-  { abbr: 'BOS', id: 'bos', name: 'Boston Red Sox' },
-  { abbr: 'TOR', id: 'tor', name: 'Toronto Blue Jays' },
-  { abbr: 'BAL', id: 'bal', name: 'Baltimore Orioles' },
-  { abbr: 'TB', id: 'tb', name: 'Tampa Bay Rays' },
-  { abbr: 'CLE', id: 'cle', name: 'Cleveland Guardians' },
-  { abbr: 'MIN', id: 'min', name: 'Minnesota Twins' },
-  { abbr: 'DET', id: 'det', name: 'Detroit Tigers' },
-  { abbr: 'CWS', id: 'cws', name: 'Chicago White Sox' },
-  { abbr: 'KC', id: 'kc', name: 'Kansas City Royals' },
-  { abbr: 'HOU', id: 'hou', name: 'Houston Astros' },
-  { abbr: 'TEX', id: 'tex', name: 'Texas Rangers' },
-  { abbr: 'SEA', id: 'sea', name: 'Seattle Mariners' },
-  { abbr: 'LAA', id: 'laa', name: 'Los Angeles Angels' },
-  { abbr: 'OAK', id: 'oak', name: 'Oakland Athletics' },
-];
-
-const NL_TEAMS = [
-  { abbr: 'LAD', id: 'lad', name: 'Los Angeles Dodgers' },
-  { abbr: 'SF', id: 'sf', name: 'San Francisco Giants' },
-  { abbr: 'SD', id: 'sd', name: 'San Diego Padres' },
-  { abbr: 'ARI', id: 'ari', name: 'Arizona Diamondbacks' },
-  { abbr: 'COL', id: 'col', name: 'Colorado Rockies' },
-  { abbr: 'ATL', id: 'atl', name: 'Atlanta Braves' },
-  { abbr: 'PHI', id: 'phi', name: 'Philadelphia Phillies' },
-  { abbr: 'NYM', id: 'nym', name: 'New York Mets' },
-  { abbr: 'MIA', id: 'mia', name: 'Miami Marlins' },
-  { abbr: 'WSH', id: 'wsh', name: 'Washington Nationals' },
-  { abbr: 'MIL', id: 'mil', name: 'Milwaukee Brewers' },
-  { abbr: 'CHC', id: 'chc', name: 'Chicago Cubs' },
-  { abbr: 'CIN', id: 'cin', name: 'Cincinnati Reds' },
-  { abbr: 'STL', id: 'stl', name: 'St. Louis Cardinals' },
-  { abbr: 'PIT', id: 'pit', name: 'Pittsburgh Pirates' },
-];
+import { AL_TEAMS, getFullTeamName, getTeamById, NL_TEAMS } from '@/static-data';
 
 export function WorldSeriesPicks() {
   const [alChampion, setAlChampion] = useState<string>('');
@@ -72,9 +37,9 @@ export function WorldSeriesPicks() {
                   <SelectItem key={team.id} value={team.id}>
                     <span className="flex items-center gap-2">
                       <Badge className="text-xs" variant="outline">
-                        {team.abbr}
+                        {team.abbreviation}
                       </Badge>
-                      {team.name}
+                      {getFullTeamName(team)}
                     </span>
                   </SelectItem>
                 ))}
@@ -93,9 +58,9 @@ export function WorldSeriesPicks() {
                   <SelectItem key={team.id} value={team.id}>
                     <span className="flex items-center gap-2">
                       <Badge className="text-xs" variant="outline">
-                        {team.abbr}
+                        {team.abbreviation}
                       </Badge>
-                      {team.name}
+                      {getFullTeamName(team)}
                     </span>
                   </SelectItem>
                 ))}
@@ -113,7 +78,7 @@ export function WorldSeriesPicks() {
               >
                 {alTeam ? (
                   <>
-                    <p className="text-2xl font-bold">{alTeam.abbr}</p>
+                    <p className="text-2xl font-bold">{alTeam.abbreviation}</p>
                     <p className="text-xs opacity-80">AL Champion</p>
                   </>
                 ) : (
@@ -129,7 +94,7 @@ export function WorldSeriesPicks() {
               >
                 {nlTeam ? (
                   <>
-                    <p className="text-2xl font-bold">{nlTeam.abbr}</p>
+                    <p className="text-2xl font-bold">{nlTeam.abbreviation}</p>
                     <p className="text-xs opacity-80">NL Champion</p>
                   </>
                 ) : (
