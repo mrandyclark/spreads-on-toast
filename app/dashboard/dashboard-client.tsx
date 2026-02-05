@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface User {
   email?: string;
@@ -59,7 +60,10 @@ const mockLeagues = [
 
 export function DashboardClient({ user }: DashboardClientProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [leagueName, setLeagueName] = useState('');
+  const [leagueSport, setLeagueSport] = useState('MLB');
+  const [inviteCode, setInviteCode] = useState('');
   const [leagues, setLeagues] = useState(mockLeagues);
 
   const handleCreateLeague = () => {
@@ -68,13 +72,31 @@ export function DashboardClient({ user }: DashboardClientProps) {
         id: String(leagues.length + 1),
         members: 1,
         name: leagueName.trim(),
-        season: '2025-26',
-        sport: 'NFL',
+        season: '2025',
+        sport: leagueSport,
         yourRank: 1,
       };
       setLeagues([newLeague, ...leagues]);
       setLeagueName('');
+      setLeagueSport('MLB');
       setIsCreateOpen(false);
+    }
+  };
+
+  const handleJoinLeague = () => {
+    if (inviteCode.trim()) {
+      // Mock joining a league - in real app this would validate the code
+      const joinedLeague = {
+        id: String(leagues.length + 1),
+        members: 5,
+        name: 'Joined League',
+        season: '2025',
+        sport: 'MLB',
+        yourRank: 5,
+      };
+      setLeagues([joinedLeague, ...leagues]);
+      setInviteCode('');
+      setIsJoinOpen(false);
     }
   };
 
@@ -132,6 +154,17 @@ export function DashboardClient({ user }: DashboardClientProps) {
                     placeholder="e.g. Sunday Squad"
                     value={leagueName}
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="league-sport">Sport</Label>
+                  <Select onValueChange={setLeagueSport} value={leagueSport}>
+                    <SelectTrigger id="league-sport">
+                      <SelectValue placeholder="Select a sport" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MLB">MLB</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>
@@ -206,7 +239,43 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
         <div className="mt-8 rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
           <p className="mb-3 text-muted-foreground">Have an invite code from a friend?</p>
-          <Button variant="outline">Join an existing league</Button>
+          <Dialog onOpenChange={setIsJoinOpen} open={isJoinOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Join an existing league</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Join a league</DialogTitle>
+                <DialogDescription>
+                  Enter the invite code you received from a friend to join their league.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="invite-code">Invite code</Label>
+                  <Input
+                    id="invite-code"
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleJoinLeague();
+                      }
+                    }}
+                    placeholder="e.g. ABC123"
+                    value={inviteCode}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setIsJoinOpen(false)} variant="outline">
+                  Cancel
+                </Button>
+                <Button disabled={!inviteCode.trim()} onClick={handleJoinLeague}>
+                  Join League
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>
