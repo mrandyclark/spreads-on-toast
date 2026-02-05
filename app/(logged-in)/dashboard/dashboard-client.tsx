@@ -198,7 +198,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
         ) : (
           <div className="grid gap-4">
             {leagues.map((league) => (
-              <Link href={`/dashboard/${league.id}`} key={league.id}>
+              <Link href={`/league/${league.id}`} key={league.id}>
                 <Card className="group cursor-pointer transition-all hover:border-primary/50 hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-4 sm:p-6">
                     <div className="flex items-center gap-4">
