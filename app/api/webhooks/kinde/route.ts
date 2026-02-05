@@ -91,6 +91,7 @@ export async function POST(request: Request) {
           });
           console.log('[webhook] Created user (via update event) with kindeId:', user.id);
         }
+
         break;
       }
 

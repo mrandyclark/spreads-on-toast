@@ -2,7 +2,7 @@
 
 import { ChevronRight, Plus, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ToastIcon } from '@/components/toast-icon';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MOCK_LEAGUES } from '@/static-data';
-import { GroupSummary, SessionUser, Sport } from '@/types';
+import { Group, Season, SessionUser } from '@/types';
 
 interface DashboardClientProps {
   user: SessionUser;
@@ -29,44 +28,82 @@ interface DashboardClientProps {
 export function DashboardClient({ user }: DashboardClientProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
-  const [leagueName, setLeagueName] = useState('');
-  const [leagueSport, setLeagueSport] = useState('MLB');
+  const [groupName, setGroupName] = useState('');
+  const [groupSport, setGroupSport] = useState('MLB');
+  const [groupSeason, setGroupSeason] = useState('');
   const [inviteCode, setInviteCode] = useState('');
-  const [leagues, setLeagues] = useState<GroupSummary[]>(MOCK_LEAGUES);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [createError, setCreateError] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreateLeague = () => {
-    if (leagueName.trim()) {
-      const newLeague: GroupSummary = {
-        id: String(leagues.length + 1),
-        isLocked: false,
-        lockDate: new Date('2025-03-28'),
-        memberCount: 1,
-        name: leagueName.trim(),
-        season: '2025',
-        sport: leagueSport as Sport,
-        yourRank: 1,
-      };
-      setLeagues([newLeague, ...leagues]);
-      setLeagueName('');
-      setLeagueSport('MLB');
-      setIsCreateOpen(false);
+  useEffect(() => {
+    async function fetchGroups() {
+      try {
+        const res = await fetch('/api/groups');
+
+        if (res.ok) {
+          const data = await res.json();
+          setGroups(data);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSeasons() {
+      const res = await fetch(`/api/seasons?sport=${groupSport}`);
+
+      if (res.ok) {
+        const data = await res.json();
+        setSeasons(data);
+        setGroupSeason(data[0]?.season ?? '');
+      }
+    }
+
+    fetchSeasons();
+  }, [groupSport]);
+
+  const handleCreateGroup = async () => {
+    if (groupName.trim()) {
+      setCreateError('');
+      setIsCreating(true);
+
+      const res = await fetch('/api/groups', {
+        body: JSON.stringify({
+          lockDate: new Date(`${groupSeason}-03-28`).toISOString(),
+          name: groupName.trim(),
+          season: groupSeason,
+          sport: groupSport,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        const newGroup = await res.json();
+        setGroups([newGroup, ...groups]);
+        setGroupName('');
+        setGroupSport('MLB');
+        setGroupSeason(seasons[0]?.season ?? '');
+        setIsCreateOpen(false);
+      } else {
+        const data = await res.json();
+        setCreateError(data.error || 'Failed to create group');
+      }
+
+      setIsCreating(false);
     }
   };
 
-  const handleJoinLeague = () => {
+  const handleJoinGroup = () => {
     if (inviteCode.trim()) {
-      // Mock joining a league - in real app this would validate the code
-      const joinedLeague: GroupSummary = {
-        id: String(leagues.length + 1),
-        isLocked: false,
-        lockDate: new Date('2025-03-28'),
-        memberCount: 5,
-        name: 'Joined League',
-        season: '2025',
-        sport: Sport.MLB,
-        yourRank: 5,
-      };
-      setLeagues([joinedLeague, ...leagues]);
+      // TODO: Implement join group API
       setInviteCode('');
       setIsJoinOpen(false);
     }
@@ -94,43 +131,43 @@ export function DashboardClient({ user }: DashboardClientProps) {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Your Leagues</h1>
-            <p className="mt-1 text-muted-foreground">Manage your leagues and track your standings</p>
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Your Groups</h1>
+            <p className="mt-1 text-muted-foreground">Manage your groups and track your standings</p>
           </div>
 
           <Dialog onOpenChange={setIsCreateOpen} open={isCreateOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                Create League
+                Create Group
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Create a new league</DialogTitle>
+                <DialogTitle>Create a new group</DialogTitle>
                 <DialogDescription>
-                  Give your league a name to get started. You can invite friends after creating it.
+                  Give your group a name to get started. You can invite friends after creating it.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="league-name">League name</Label>
+                  <Label htmlFor="group-name">Group name</Label>
                   <Input
-                    id="league-name"
-                    onChange={(e) => setLeagueName(e.target.value)}
+                    id="group-name"
+                    onChange={(e) => setGroupName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleCreateLeague();
+                        handleCreateGroup();
                       }
                     }}
                     placeholder="e.g. Sunday Squad"
-                    value={leagueName}
+                    value={groupName}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="league-sport">Sport</Label>
-                  <Select onValueChange={setLeagueSport} value={leagueSport}>
-                    <SelectTrigger id="league-sport">
+                  <Label htmlFor="group-sport">Sport</Label>
+                  <Select onValueChange={setGroupSport} value={groupSport}>
+                    <SelectTrigger id="group-sport">
                       <SelectValue placeholder="Select a sport" />
                     </SelectTrigger>
                     <SelectContent>
@@ -138,39 +175,75 @@ export function DashboardClient({ user }: DashboardClientProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="group-season">Season</Label>
+                  <Select
+                    disabled={seasons.length === 0}
+                    onValueChange={setGroupSeason}
+                    value={groupSeason}
+                  >
+                    <SelectTrigger id="group-season">
+                      <SelectValue placeholder={seasons.length === 0 ? 'No seasons available' : 'Select a season'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {seasons.map((s) => (
+                        <SelectItem key={s.id} value={s.season}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+              {createError && (
+                <p className="text-sm text-destructive">{createError}</p>
+              )}
               <DialogFooter>
                 <Button onClick={() => setIsCreateOpen(false)} variant="outline">
                   Cancel
                 </Button>
-                <Button disabled={!leagueName.trim()} onClick={handleCreateLeague}>
-                  Create League
+                <Button disabled={!groupName.trim() || !groupSeason || isCreating} onClick={handleCreateGroup}>
+                  {isCreating ? 'Creating...' : 'Create Group'}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
-        {leagues.length === 0 ? (
+        {isLoading ? (
+          <div className="grid gap-4">
+            {[1, 2].map((i) => (
+              <Card key={i}>
+                <CardContent className="flex items-center gap-4 p-4 sm:p-6">
+                  <div className="h-12 w-12 animate-pulse rounded-xl bg-muted" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-48 animate-pulse rounded bg-muted" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : groups.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Trophy className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-foreground">No leagues yet</h3>
+              <h3 className="mb-2 text-lg font-semibold text-foreground">No groups yet</h3>
               <p className="mb-6 max-w-sm text-muted-foreground">
-                Create your first league to start making picks and competing with friends.
+                Create your first group to start making picks and competing with friends.
               </p>
               <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
                 <Plus className="h-4 w-4" />
-                Create your first league
+                Create your first group
               </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4">
-            {leagues.map((league) => (
-              <Link href={`/league/${league.id}`} key={league.id}>
+            {groups.map((group) => (
+              <Link href={`/league/${group.id}`} key={group.id}>
                 <Card className="group cursor-pointer transition-all hover:border-primary/50 hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-4 sm:p-6">
                     <div className="flex items-center gap-4">
@@ -179,27 +252,23 @@ export function DashboardClient({ user }: DashboardClientProps) {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground transition-colors group-hover:text-primary">
-                          {league.name}
+                          {group.name}
                         </h3>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
                             <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                              {league.sport}
+                              {group.sport}
                             </span>
                           </span>
                           <span className="inline-flex items-center gap-1">
                             <Users className="h-3.5 w-3.5" />
-                            {league.memberCount} members
+                            {group.members.length} members
                           </span>
-                          <span>{league.season}</span>
+                          <span>{group.season}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="hidden text-right sm:block">
-                        <p className="text-sm text-muted-foreground">Your rank</p>
-                        <p className="text-lg font-bold text-foreground">#{league.yourRank}</p>
-                      </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
                     </div>
                   </CardContent>
@@ -213,13 +282,13 @@ export function DashboardClient({ user }: DashboardClientProps) {
           <p className="mb-3 text-muted-foreground">Have an invite code from a friend?</p>
           <Dialog onOpenChange={setIsJoinOpen} open={isJoinOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Join an existing league</Button>
+              <Button variant="outline">Join an existing group</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Join a league</DialogTitle>
+                <DialogTitle>Join a group</DialogTitle>
                 <DialogDescription>
-                  Enter the invite code you received from a friend to join their league.
+                  Enter the invite code you received from a friend to join their group.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -230,7 +299,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
                     onChange={(e) => setInviteCode(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleJoinLeague();
+                        handleJoinGroup();
                       }
                     }}
                     placeholder="e.g. ABC123"
@@ -242,8 +311,8 @@ export function DashboardClient({ user }: DashboardClientProps) {
                 <Button onClick={() => setIsJoinOpen(false)} variant="outline">
                   Cancel
                 </Button>
-                <Button disabled={!inviteCode.trim()} onClick={handleJoinLeague}>
-                  Join League
+                <Button disabled={!inviteCode.trim()} onClick={handleJoinGroup}>
+                  Join Group
                 </Button>
               </DialogFooter>
             </DialogContent>

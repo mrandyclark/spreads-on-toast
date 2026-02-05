@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 // Import all models here to ensure they're registered
 import '@/models/user.model';
+import '@/models/team.model';
+import '@/models/sheet.model';
+import '@/models/group.model';
+import '@/models/season.model';
+import '@/models/team-line.model';
 
 const MONGO_URI = process.env.MONGO_URI!;
 const MONGO_USER = process.env.MONGO_USER;

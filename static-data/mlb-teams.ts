@@ -1,4 +1,4 @@
-import { Conference, Division, Sport } from '@/types';
+import { Conference, Division } from '@/types';
 
 /**
  * MLB team data for UI display

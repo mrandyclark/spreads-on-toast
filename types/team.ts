@@ -1,4 +1,4 @@
-import { BaseDocument } from './mongo';
+import { BaseDocument, Ref } from './mongo';
 import { Conference, Division, Sport } from './sport';
 
 /**
@@ -23,7 +23,7 @@ export interface TeamLine extends BaseDocument {
   line: number; // e.g., 91.5 (over/under wins)
   season: string; // e.g., '2025'
   sport: Sport;
-  team: string; // Team ID
+  team: Ref<Team>; // Team ID or populated Team
 }
 
 /**

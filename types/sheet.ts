@@ -1,5 +1,7 @@
+import { Group } from './group';
 import { BaseDocument, Ref } from './mongo';
-import { Conference } from './sport';
+import { Conference, Sport } from './sport';
+import { Team } from './team';
 import { User } from './user';
 
 /**
@@ -24,9 +26,9 @@ export enum PickResult {
  */
 export interface TeamPick {
   line: number; // The line at time of pick (e.g., 91.5)
-  pick: PickDirection; // 'over' or 'under'
+  pick?: PickDirection; // 'over' or 'under' (undefined until user picks)
   result?: PickResult; // Set after season ends
-  team: string; // Team ID
+  team: Ref<Team>; // Team ID or populated Team
 }
 
 /**
@@ -51,8 +53,9 @@ export interface WorldSeriesPicks {
  * Contains all their picks for the season
  */
 export interface Sheet extends BaseDocument {
-  group: string; // Group ID
+  group: Ref<Group>; // Group ID or populated Group
   postseasonPicks?: PostseasonPicks;
+  sport: Sport; // Sport this sheet is for
   submittedAt?: Date; // When picks were finalized
   teamPicks: TeamPick[];
   user: Ref<User>;

@@ -7,28 +7,62 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { getFullTeamName, getLineForTeam, MLB_TEAMS } from '@/static-data';
-import { Conference } from '@/types';
+import { Conference, Team, TeamPick } from '@/types';
 
 type Pick = 'over' | 'under' | null;
 
-// Combine team data with lines for display
-const TEAMS_WITH_LINES = MLB_TEAMS.map((team) => ({
-  ...team,
-  fullName: getFullTeamName(team),
-  line: getLineForTeam(team.id) ?? 0,
-}));
+interface MlbTeamPicksProps {
+  onPicksChange?: (picks: Record<string, Pick>) => void;
+  teamPicks: TeamPick[];
+}
 
-export function MlbTeamPicks() {
-  const [picks, setPicks] = useState<Record<string, Pick>>({});
+export function MlbTeamPicks({ onPicksChange, teamPicks }: MlbTeamPicksProps) {
+  const [picks, setPicks] = useState<Record<string, Pick>>(() => {
+    const initial: Record<string, Pick> = {};
+    teamPicks.forEach((tp) => {
+      const teamId = typeof tp.team === 'object' ? tp.team.id : tp.team;
+
+      if (tp.pick) {
+        initial[teamId] = tp.pick as Pick;
+      }
+    });
+    return initial;
+  });
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterLeague, setFilterLeague] = useState<'AL' | 'NL' | 'all'>('all');
+  const [filterLeague, setFilterLeague] = useState<'AL' | 'all' | 'NL'>('all');
+
+  // Build teams with lines from the sheet's teamPicks (populated)
+  const teamsWithLines = teamPicks
+    .map((tp) => {
+      const team = typeof tp.team === 'object' ? (tp.team as Team) : null;
+
+      if (!team) {return null;}
+      return {
+        abbreviation: team.abbreviation,
+        conference: team.conference,
+        division: team.division,
+        fullName: `${team.city} ${team.name}`,
+        id: team.id,
+        line: tp.line,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a!.fullName.localeCompare(b!.fullName)) as Array<{
+    abbreviation: string;
+    conference: Conference;
+    division: string;
+    fullName: string;
+    id: string;
+    line: number;
+  }>;
 
   const handlePickChange = (teamId: string, pick: Pick) => {
-    setPicks((prev) => ({ ...prev, [teamId]: pick }));
+    const newPicks = { ...picks, [teamId]: pick };
+    setPicks(newPicks);
+    onPicksChange?.(newPicks);
   };
 
-  const filteredTeams = TEAMS_WITH_LINES.filter((team) => {
+  const filteredTeams = teamsWithLines.filter((team) => {
     const matchesSearch =
       team.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.abbreviation.toLowerCase().includes(searchQuery.toLowerCase());
@@ -47,7 +81,7 @@ export function MlbTeamPicks() {
             <CardDescription>Pick over or under for each team{"'"}s season win total</CardDescription>
           </div>
           <Badge className="w-fit" variant="outline">
-            {pickedCount}/{TEAMS_WITH_LINES.length} picked
+            {pickedCount}/{teamsWithLines.length} picked
           </Badge>
         </div>
       </CardHeader>
@@ -64,7 +98,7 @@ export function MlbTeamPicks() {
           </div>
           <ToggleGroup
             className="justify-start"
-            onValueChange={(v) => v && setFilterLeague(v as 'AL' | 'NL' | 'all')}
+            onValueChange={(v) => v && setFilterLeague(v as 'AL' | 'all' | 'NL')}
             type="single"
             value={filterLeague}
           >
@@ -88,7 +122,7 @@ export function MlbTeamPicks() {
             >
               <div className="flex items-center gap-3">
                 <Badge
-                  className={`w-12 justify-center ${team.conference === Conference.AL ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/30'}`}
+                  className={`w-12 justify-center ${team.conference === Conference.AL ? 'border-primary/30 bg-primary/5' : 'border-blue-500/30 bg-blue-500/10'}`}
                   variant="outline"
                 >
                   {team.abbreviation}

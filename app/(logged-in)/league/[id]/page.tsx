@@ -2,7 +2,8 @@
 
 import { ArrowLeft, Calendar, ChevronRight, Crown, Lock, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { MlbPicksForm } from '@/components/league/mlb';
 import { StandingsChart } from '@/components/league/standings-chart';
@@ -12,17 +13,106 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { SheetContent, SheetDescription, SheetHeader, SheetTitle, Sheet as SheetUI } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getTeamByAbbreviation, MOCK_GROUP, MOCK_MEMBERS, MOCK_PLAYER_PICKS } from '@/static-data';
-import { GroupMemberSummary } from '@/types';
+import { getTeamByAbbreviation, MOCK_MEMBERS, MOCK_PLAYER_PICKS } from '@/static-data';
+import { Group, GroupMemberSummary, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 export default function LeagueDetailPage() {
-  const [isLocked, setIsLocked] = useState(MOCK_GROUP.isLocked);
+  const params = useParams();
+  const groupId = params.id as string;
+
+  const [group, setGroup] = useState<Group | null>(null);
+  const [sheet, setSheet] = useState<null | Sheet>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [teamPicks, setTeamPicks] = useState<Record<string, 'over' | 'under' | null>>({});
+  const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(null);
+  const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<GroupMemberSummary | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const daysUntilLock = Math.max(0, Math.ceil((MOCK_GROUP.lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [groupRes, sheetRes] = await Promise.all([
+          fetch(`/api/groups/${groupId}`),
+          fetch(`/api/groups/${groupId}/sheet`),
+        ]);
+
+        if (groupRes.ok) {
+          const groupData = await groupRes.json();
+          setGroup(groupData);
+        }
+
+        if (sheetRes.ok) {
+          const sheetData = await sheetRes.json();
+          setSheet(sheetData);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [groupId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!group) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Group not found</div>
+      </div>
+    );
+  }
+
+  const lockDate = new Date(group.lockDate);
+  const isLocked = lockDate < new Date();
+  const daysUntilLock = Math.max(0, Math.ceil((lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
+  const handleSavePicks = async () => {
+    setIsSaving(true);
+
+    try {
+      const teamPicksToSave = Object.entries(teamPicks)
+        .filter(([, pick]) => pick !== null)
+        .map(([team, pick]) => ({ pick: pick as 'over' | 'under', team }));
+
+      const body: Record<string, unknown> = {};
+
+      if (teamPicksToSave.length > 0) {
+        body.teamPicks = teamPicksToSave;
+      }
+
+      if (postseasonPicks) {
+        body.postseasonPicks = postseasonPicks;
+      }
+
+      if (worldSeriesPicks) {
+        body.worldSeriesPicks = worldSeriesPicks;
+      }
+
+      const res = await fetch(`/api/groups/${groupId}/sheet`, {
+        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+      });
+
+      if (res.ok) {
+        const updatedSheet = await res.json();
+        setSheet(updatedSheet);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,16 +129,16 @@ export default function LeagueDetailPage() {
             <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-2">
               <ToastIcon className="h-6 w-6 text-primary" />
-              <span className="font-semibold">{MOCK_GROUP.name}</span>
+              <span className="font-semibold">{group.name}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Badge className="hidden sm:flex" variant="secondary">
-              {MOCK_GROUP.sport} {MOCK_GROUP.season}
+              {group.sport} {group.season}
             </Badge>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              <span>{MOCK_GROUP.memberCount}</span>
+              <span>{group.members.length}</span>
             </div>
           </div>
         </div>
@@ -77,7 +167,7 @@ export default function LeagueDetailPage() {
                     <p className="font-medium">{daysUntilLock} days until picks lock</p>
                     <p className="text-sm text-muted-foreground">
                       Locks on{' '}
-                      {MOCK_GROUP.lockDate.toLocaleDateString('en-US', {
+                      {lockDate.toLocaleDateString('en-US', {
                         day: 'numeric',
                         month: 'long',
                         weekday: 'long',
@@ -87,9 +177,6 @@ export default function LeagueDetailPage() {
                 </>
               )}
             </div>
-            <Button className="shrink-0" onClick={() => setIsLocked(!isLocked)} size="sm" variant="outline">
-              Demo: Toggle Lock State
-            </Button>
           </CardContent>
         </Card>
 
@@ -200,17 +287,21 @@ export default function LeagueDetailPage() {
                     <CardContent className="p-4">
                       <p className="mb-4 text-sm text-muted-foreground">Your locked win total picks for the season.</p>
                       <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-                        {MOCK_PLAYER_PICKS.teamPicks.map((pick) => {
-                          const team = getTeamByAbbreviation(pick.teamId.toUpperCase());
+                        {sheet?.teamPicks.map((pick) => {
+                          const team = typeof pick.team === 'object' ? pick.team : null;
                           return (
                             <div
                               className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
-                              key={pick.teamId}
+                              key={team?.id ?? String(pick.team)}
                             >
-                              <span className="font-medium">{team?.abbreviation ?? pick.teamId}</span>
+                              <span className="font-medium">{team?.abbreviation ?? '???'}</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm text-muted-foreground">{pick.line}</span>
-                                <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
+                                {pick.pick ? (
+                                  <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
+                                ) : (
+                                  <Badge variant="outline">--</Badge>
+                                )}
                               </div>
                             </div>
                           );
@@ -218,6 +309,7 @@ export default function LeagueDetailPage() {
                       </div>
                     </CardContent>
                   </Card>
+
                 </TabsContent>
                 <TabsContent value="postseason">
                   <Card>
@@ -270,11 +362,20 @@ export default function LeagueDetailPage() {
             <section>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Your Picks</h2>
-                <Button size="sm">Save All Picks</Button>
+                <Button disabled={isSaving} onClick={handleSavePicks} size="sm">
+                  {isSaving ? 'Saving...' : 'Save All Picks'}
+                </Button>
               </div>
 
               {/* Sport-specific picks form - renders based on group.sport */}
-              <MlbPicksForm />
+              {sheet && (
+                <MlbPicksForm
+                  onPostseasonPicksChange={setPostseasonPicks}
+                  onTeamPicksChange={setTeamPicks}
+                  onWorldSeriesPicksChange={setWorldSeriesPicks}
+                  sheet={sheet}
+                />
+              )}
             </section>
 
             <section>
@@ -310,7 +411,7 @@ export default function LeagueDetailPage() {
         )}
       </main>
 
-      <Sheet onOpenChange={setSheetOpen} open={sheetOpen}>
+      <SheetUI onOpenChange={setSheetOpen} open={sheetOpen}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-3">
@@ -384,7 +485,7 @@ export default function LeagueDetailPage() {
             </div>
           </div>
         </SheetContent>
-      </Sheet>
+      </SheetUI>
     </div>
   );
 }

@@ -1,33 +1,57 @@
 'use client';
 
-import { Check } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AL_TEAMS, getTeamById, NL_TEAMS } from '@/static-data';
+import { Conference, PostseasonPicks, Team, TeamPick } from '@/types';
 
 const MAX_PICKS = 5;
 
-export function MlbPostseasonPicks() {
-  const [alPicks, setAlPicks] = useState<string[]>([]);
-  const [nlPicks, setNlPicks] = useState<string[]>([]);
+interface MlbPostseasonPicksProps {
+  initialPicks?: PostseasonPicks;
+  onPicksChange?: (picks: PostseasonPicks) => void;
+  teamPicks: TeamPick[];
+}
+
+export function MlbPostseasonPicks({ initialPicks, onPicksChange, teamPicks }: MlbPostseasonPicksProps) {
+  const [alPicks, setAlPicks] = useState<string[]>(initialPicks?.al ?? []);
+  const [nlPicks, setNlPicks] = useState<string[]>(initialPicks?.nl ?? []);
+
+  // Build team lists from populated teamPicks
+  const teams = teamPicks
+    .map((tp) => (typeof tp.team === 'object' ? (tp.team as Team) : null))
+    .filter(Boolean) as Team[];
+
+  const alTeams = teams.filter((t) => t.conference === Conference.AL).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+  const nlTeams = teams.filter((t) => t.conference === Conference.NL).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
   const togglePick = (teamId: string, league: 'AL' | 'NL') => {
+    let newAlPicks = alPicks;
+    let newNlPicks = nlPicks;
+
     if (league === 'AL') {
       if (alPicks.includes(teamId)) {
-        setAlPicks(alPicks.filter((id) => id !== teamId));
+        newAlPicks = alPicks.filter((id) => id !== teamId);
       } else if (alPicks.length < MAX_PICKS) {
-        setAlPicks([...alPicks, teamId]);
+        newAlPicks = [...alPicks, teamId];
       }
+
+      setAlPicks(newAlPicks);
     } else {
       if (nlPicks.includes(teamId)) {
-        setNlPicks(nlPicks.filter((id) => id !== teamId));
+        newNlPicks = nlPicks.filter((id) => id !== teamId);
       } else if (nlPicks.length < MAX_PICKS) {
-        setNlPicks([...nlPicks, teamId]);
+        newNlPicks = [...nlPicks, teamId];
       }
+
+      setNlPicks(newNlPicks);
     }
+
+    onPicksChange?.({ al: newAlPicks, nl: newNlPicks });
   };
+
+  const getTeamById = (id: string) => teams.find((t) => t.id === id);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -45,13 +69,13 @@ export function MlbPostseasonPicks() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {AL_TEAMS.map((team) => {
+            {alTeams.map((team) => {
               const isSelected = alPicks.includes(team.id);
               const isDisabled = !isSelected && alPicks.length >= MAX_PICKS;
               return (
                 <button
                   className={`
-                    relative flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all
+                    rounded-lg border px-3 py-2 text-sm font-medium transition-all
                     ${
                       isSelected
                         ? 'border-primary bg-primary text-primary-foreground'
@@ -63,7 +87,6 @@ export function MlbPostseasonPicks() {
                   key={team.id}
                   onClick={() => togglePick(team.id, 'AL')}
                 >
-                  {isSelected && <Check className="h-3.5 w-3.5" />}
                   {team.abbreviation}
                 </button>
               );
@@ -73,14 +96,15 @@ export function MlbPostseasonPicks() {
             <div className="mt-4 rounded-lg bg-muted/50 p-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">Your picks:</p>
               <div className="flex flex-wrap gap-1.5">
-                {alPicks.map((id) => {
-                  const team = getTeamById(id);
-                  return (
-                    <Badge key={id} variant="secondary">
-                      {team?.abbreviation}
+                {alPicks
+                  .map((id) => getTeamById(id))
+                  .filter(Boolean)
+                  .sort((a, b) => a!.abbreviation.localeCompare(b!.abbreviation))
+                  .map((team) => (
+                    <Badge key={team!.id} variant="secondary">
+                      {team!.abbreviation}
                     </Badge>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           )}
@@ -101,17 +125,17 @@ export function MlbPostseasonPicks() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {NL_TEAMS.map((team) => {
+            {nlTeams.map((team) => {
               const isSelected = nlPicks.includes(team.id);
               const isDisabled = !isSelected && nlPicks.length >= MAX_PICKS;
               return (
                 <button
                   className={`
-                    relative flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all
+                    rounded-lg border px-3 py-2 text-sm font-medium transition-all
                     ${
                       isSelected
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                        ? 'border-blue-800 bg-blue-800/90 text-white'
+                        : 'border-border bg-card hover:border-blue-400/50 hover:bg-muted/50'
                     }
                     ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
                   `}
@@ -119,7 +143,6 @@ export function MlbPostseasonPicks() {
                   key={team.id}
                   onClick={() => togglePick(team.id, 'NL')}
                 >
-                  {isSelected && <Check className="h-3.5 w-3.5" />}
                   {team.abbreviation}
                 </button>
               );
@@ -129,14 +152,15 @@ export function MlbPostseasonPicks() {
             <div className="mt-4 rounded-lg bg-muted/50 p-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">Your picks:</p>
               <div className="flex flex-wrap gap-1.5">
-                {nlPicks.map((id) => {
-                  const team = getTeamById(id);
-                  return (
-                    <Badge key={id} variant="secondary">
-                      {team?.abbreviation}
+                {nlPicks
+                  .map((id) => getTeamById(id))
+                  .filter(Boolean)
+                  .sort((a, b) => a!.abbreviation.localeCompare(b!.abbreviation))
+                  .map((team) => (
+                    <Badge key={team!.id} variant="secondary">
+                      {team!.abbreviation}
                     </Badge>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           )}

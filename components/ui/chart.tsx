@@ -11,7 +11,7 @@ export type ChartConfig = {
   [k in string]: {
     icon?: React.ComponentType;
     label?: React.ReactNode;
-  } & ({ color?: string; theme?: never } | { color?: never; theme: Record<keyof typeof THEMES, string> });
+  } & ({ color?: never; theme: Record<keyof typeof THEMES, string> } | { color?: string; theme?: never });
 };
 
 type ChartContextProps = {
