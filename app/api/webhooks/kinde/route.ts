@@ -73,12 +73,24 @@ export async function POST(request: Request) {
 
       case 'user.updated': {
         const { user } = event.data;
-        await updateUserByKindeId(user.id, {
-          email: user.email,
-          nameFirst: user.first_name || undefined,
-          nameLast: user.last_name || undefined,
-        });
-        console.log('[webhook] Updated user with kindeId:', user.id);
+        const existingUser = await getUserByKindeId(user.id);
+
+        if (existingUser) {
+          await updateUserByKindeId(user.id, {
+            email: user.email,
+            nameFirst: user.first_name || undefined,
+            nameLast: user.last_name || undefined,
+          });
+          console.log('[webhook] Updated user with kindeId:', user.id);
+        } else {
+          await createUser({
+            email: user.email,
+            kindeId: user.id,
+            nameFirst: user.first_name || undefined,
+            nameLast: user.last_name || undefined,
+          });
+          console.log('[webhook] Created user (via update event) with kindeId:', user.id);
+        }
         break;
       }
 
