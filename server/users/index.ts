@@ -47,3 +47,13 @@ export async function deleteUser(id: string): Promise<boolean> {
   const result = await UserModel.findByIdAndDelete(id);
   return !!result;
 }
+
+export async function updateUserByKindeId(
+  kindeId: string,
+  updates: Partial<Omit<User, 'createdAt' | 'id' | 'kindeId' | 'updatedAt'>>,
+): Promise<null | User> {
+  await dbConnect();
+
+  const user = await UserModel.findOneAndUpdate({ kindeId }, { $set: updates }, { new: true });
+  return user ? (user.toJSON() as User) : null;
+}
