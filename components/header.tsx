@@ -1,5 +1,6 @@
 'use client';
 
+import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -41,11 +42,11 @@ export function Header() {
 
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button className="text-muted-foreground hover:text-foreground" size="sm" variant="ghost">
-            Join
+          <Button asChild className="text-muted-foreground hover:text-foreground" size="sm" variant="ghost">
+            <LoginLink postLoginRedirectURL="/dashboard">Login</LoginLink>
           </Button>
-          <Button className="shadow-sm transition-shadow hover:shadow-md" size="sm">
-            Create a league
+          <Button asChild className="shadow-sm transition-shadow hover:shadow-md" size="sm">
+            <RegisterLink postLoginRedirectURL="/dashboard">Create a league</RegisterLink>
           </Button>
         </div>
 
@@ -69,10 +70,12 @@ export function Header() {
                 </Link>
               ))}
               <div className="mt-6 flex flex-col gap-3">
-                <Button className="w-full bg-transparent" variant="outline">
-                  Join
+                <Button asChild className="w-full bg-transparent" variant="outline">
+                  <LoginLink postLoginRedirectURL="/dashboard">Login</LoginLink>
                 </Button>
-                <Button className="w-full">Create a league</Button>
+                <Button asChild className="w-full">
+                  <RegisterLink postLoginRedirectURL="/dashboard">Create a league</RegisterLink>
+                </Button>
               </div>
             </nav>
           </SheetContent>

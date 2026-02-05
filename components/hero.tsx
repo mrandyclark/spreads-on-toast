@@ -1,3 +1,5 @@
+import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
+
 import { LeaderboardMockup } from '@/components/leaderboard-mockup';
 import { Button } from '@/components/ui/button';
 
@@ -20,11 +22,11 @@ export function Hero() {
               Pick season win totals vs the line, lock them in, and see who comes out on top by season{"'"}s end.
             </p>
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-              <Button className="w-full shadow-md transition-all hover:shadow-lg sm:w-auto" size="lg">
-                Create a league
+              <Button asChild className="w-full shadow-md transition-all hover:shadow-lg sm:w-auto" size="lg">
+                <RegisterLink postLoginRedirectURL="/dashboard">Create a league</RegisterLink>
               </Button>
-              <Button className="w-full bg-transparent sm:w-auto" size="lg" variant="outline">
-                Join a league
+              <Button asChild className="w-full bg-transparent sm:w-auto" size="lg" variant="outline">
+                <LoginLink postLoginRedirectURL="/dashboard">Join a league</LoginLink>
               </Button>
             </div>
           </div>
