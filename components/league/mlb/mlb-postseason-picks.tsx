@@ -9,7 +9,7 @@ import { AL_TEAMS, getTeamById, NL_TEAMS } from '@/static-data';
 
 const MAX_PICKS = 5;
 
-export function PostseasonPicks() {
+export function MlbPostseasonPicks() {
   const [alPicks, setAlPicks] = useState<string[]>([]);
   const [nlPicks, setNlPicks] = useState<string[]>([]);
 

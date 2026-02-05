@@ -4,10 +4,8 @@ import { ArrowLeft, Calendar, ChevronRight, Crown, Lock, Trophy, Users } from 'l
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { PostseasonPicks } from '@/components/league/postseason-picks';
+import { MlbPicksForm } from '@/components/league/mlb';
 import { StandingsChart } from '@/components/league/standings-chart';
-import { TeamPicksSection } from '@/components/league/team-picks-section';
-import { WorldSeriesPicks } from '@/components/league/world-series-picks';
 import { ToastIcon } from '@/components/toast-icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -275,25 +273,8 @@ export default function LeagueDetailPage() {
                 <Button size="sm">Save All Picks</Button>
               </div>
 
-              <Tabs className="w-full" defaultValue="teams">
-                <TabsList className="mb-6 w-full justify-start">
-                  <TabsTrigger value="teams">Team Win Totals</TabsTrigger>
-                  <TabsTrigger value="postseason">Postseason</TabsTrigger>
-                  <TabsTrigger value="worldseries">World Series</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="teams">
-                  <TeamPicksSection />
-                </TabsContent>
-
-                <TabsContent value="postseason">
-                  <PostseasonPicks />
-                </TabsContent>
-
-                <TabsContent value="worldseries">
-                  <WorldSeriesPicks />
-                </TabsContent>
-              </Tabs>
+              {/* Sport-specific picks form - renders based on group.sport */}
+              <MlbPicksForm />
             </section>
 
             <section>

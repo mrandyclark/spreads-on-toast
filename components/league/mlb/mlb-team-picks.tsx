@@ -19,7 +19,7 @@ const TEAMS_WITH_LINES = MLB_TEAMS.map((team) => ({
   line: getLineForTeam(team.id) ?? 0,
 }));
 
-export function TeamPicksSection() {
+export function MlbTeamPicks() {
   const [picks, setPicks] = useState<Record<string, Pick>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLeague, setFilterLeague] = useState<'AL' | 'NL' | 'all'>('all');

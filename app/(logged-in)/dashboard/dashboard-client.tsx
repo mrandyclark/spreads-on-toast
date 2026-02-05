@@ -20,17 +20,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MOCK_LEAGUES } from '@/static-data';
-import { GroupSummary, Sport } from '@/types';
-
-interface User {
-  email?: string;
-  id: string;
-  nameFirst?: string;
-  nameLast?: string;
-}
+import { GroupSummary, SessionUser, Sport } from '@/types';
 
 interface DashboardClientProps {
-  user: User;
+  user: SessionUser;
 }
 
 export function DashboardClient({ user }: DashboardClientProps) {

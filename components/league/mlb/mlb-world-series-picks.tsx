@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AL_TEAMS, getFullTeamName, getTeamById, NL_TEAMS } from '@/static-data';
 
-export function WorldSeriesPicks() {
+export function MlbWorldSeriesPicks() {
   const [alChampion, setAlChampion] = useState<string>('');
   const [nlChampion, setNlChampion] = useState<string>('');
 
