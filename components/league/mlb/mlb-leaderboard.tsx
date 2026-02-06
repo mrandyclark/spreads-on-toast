@@ -95,11 +95,8 @@ export function MlbLeaderboard({ currentUserId, groupId, onMemberSelect, selecte
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="text-green-500">{entry.wins}W</span>
-                      <span className="text-red-500">{entry.losses}L</span>
-                      {entry.pushes > 0 && <span className="text-yellow-500">{entry.pushes}P</span>}
-                      <span className="text-xs">({entry.winPct}%)</span>
+                    <div className="text-sm text-muted-foreground">
+                      {entry.wins} correct ({entry.winPct}%)
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

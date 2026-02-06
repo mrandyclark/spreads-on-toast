@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 
 import { getResultsAction, getSheetForMemberAction, GroupResults, TeamPickResult } from '@/app/(logged-in)/league/[id]/actions';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Conference, Sheet, Team } from '@/types';
@@ -14,9 +16,13 @@ interface MlbMemberSheetProps {
   isCurrentUser: boolean;
   memberInitials: string;
   memberName: string;
+  onDateChange?: (date: string | undefined) => void;
+  seasonEndDate?: string;
+  seasonStartDate?: string;
   selectedDate?: string;
   userId: string;
 }
+
 
 function ResultIcon({ result }: { result: 'loss' | 'pending' | 'push' | 'win' }) {
   switch (result) {
@@ -44,7 +50,7 @@ function getResultBgClass(result: 'loss' | 'pending' | 'push' | 'win') {
   }
 }
 
-export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberName, selectedDate, userId }: MlbMemberSheetProps) {
+export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberName, onDateChange, seasonEndDate, seasonStartDate, selectedDate, userId }: MlbMemberSheetProps) {
   const [results, setResults] = useState<GroupResults | null>(null);
   const [sheet, setSheet] = useState<null | Sheet>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,20 +117,30 @@ export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberN
         </SheetTitle>
         {results && (
           <SheetDescription>
-            <span className="text-green-500">{results.summary.wins}W</span>
-            {' · '}
-            <span className="text-red-500">{results.summary.losses}L</span>
-            {results.summary.pushes > 0 && (
-              <>
-                {' · '}
-                <span className="text-yellow-500">{results.summary.pushes}P</span>
-              </>
-            )}
-            {' · '}
-            {Math.round((results.summary.wins / results.summary.total) * 100)}% correct
+            {results.summary.wins} correct ({Math.round((results.summary.wins / results.summary.total) * 100)}%)
           </SheetDescription>
         )}
       </SheetHeader>
+
+      {/* Date picker */}
+      {seasonStartDate && seasonEndDate && onDateChange && (
+        <div className="mt-4 flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">View as of:</span>
+            <DatePicker
+              maxDate={seasonEndDate}
+              minDate={seasonStartDate}
+              onChange={onDateChange}
+              value={selectedDate || seasonEndDate}
+            />
+          </div>
+          {selectedDate && (
+            <Button className="h-auto p-0" onClick={() => onDateChange(undefined)} size="sm" variant="link">
+              Show Final Results
+            </Button>
+          )}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="mt-6 text-sm text-muted-foreground">Loading picks...</div>

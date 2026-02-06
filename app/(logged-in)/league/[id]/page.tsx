@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Calendar, CalendarDays, Lock, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, Lock, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -11,10 +11,46 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 import { getGroupAction, getSheetAction, savePicksAction } from './actions';
+
+// Helper to convert Date or string to YYYY-MM-DD string
+function toDateString(dateInput: Date | string | undefined): string {
+  if (!dateInput) {
+    // Fallback to today
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+  
+  const str = String(dateInput);
+  
+  // If already in YYYY-MM-DD format, return as-is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+  
+  // If it's an ISO string like "2025-09-26T00:00:00.000Z", extract the date part
+  if (str.includes('T')) {
+    return str.split('T')[0];
+  }
+  
+  // Parse as Date and extract local date parts
+  const d = new Date(dateInput);
+
+  if (isNaN(d.getTime())) {
+    // Invalid date, return today
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+  
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default function LeagueDetailPage() {
   const params = useParams();
@@ -162,21 +198,18 @@ export default function LeagueDetailPage() {
           <div className="space-y-8">
             {/* Date picker for historical view */}
             {group.seasonStartDate && group.seasonEndDate && (
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col items-end gap-1">
                 <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">View as of:</span>
+                  <DatePicker
+                    maxDate={toDateString(group.seasonEndDate)}
+                    minDate={toDateString(group.seasonStartDate)}
+                    onChange={setSelectedDate}
+                    value={selectedDate ?? toDateString(group.seasonEndDate)}
+                  />
                 </div>
-                <input
-                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                  max={new Date(group.seasonEndDate).toISOString().split('T')[0]}
-                  min={new Date(group.seasonStartDate).toISOString().split('T')[0]}
-                  onChange={(e) => setSelectedDate(e.target.value || undefined)}
-                  type="date"
-                  value={selectedDate ?? ''}
-                />
                 {selectedDate && (
-                  <Button onClick={() => setSelectedDate(undefined)} size="sm" variant="ghost">
+                  <Button className="h-auto p-0" onClick={() => setSelectedDate(undefined)} size="sm" variant="link">
                     Show Final Results
                   </Button>
                 )}
@@ -250,12 +283,15 @@ export default function LeagueDetailPage() {
       </main>
 
       <SheetUI onOpenChange={setSheetOpen} open={sheetOpen}>
-        {selectedMember && (
+        {selectedMember && group && (
           <MlbMemberSheet
             groupId={groupId}
             isCurrentUser={selectedMember.isCurrentUser}
             memberInitials={selectedMember.userInitials}
             memberName={selectedMember.userName}
+            onDateChange={setSelectedDate}
+            seasonEndDate={group.seasonEndDate?.toString()}
+            seasonStartDate={group.seasonStartDate?.toString()}
             selectedDate={selectedDate}
             userId={selectedMember.userId}
           />

@@ -25,7 +25,8 @@ export async function getGroupAction(groupId: string): Promise<{ error?: string;
     return { error: 'Group not found' };
   }
 
-  return { group };
+  // Ensure clean serialization to avoid circular references
+  return { group: JSON.parse(JSON.stringify(group)) };
 }
 
 export async function getSheetAction(groupId: string): Promise<{ error?: string; sheet?: Sheet }> {
@@ -41,7 +42,8 @@ export async function getSheetAction(groupId: string): Promise<{ error?: string;
     return { error: 'Sheet not found' };
   }
 
-  return { sheet };
+  // Ensure clean serialization to avoid circular references
+  return { sheet: JSON.parse(JSON.stringify(sheet)) };
 }
 
 export async function getSheetForMemberAction(groupId: string, memberId: string): Promise<{ error?: string; sheet?: Sheet }> {
@@ -64,7 +66,8 @@ export async function getSheetForMemberAction(groupId: string, memberId: string)
     return { error: 'Sheet not found' };
   }
 
-  return { sheet };
+  // Ensure clean serialization to avoid circular references
+  return { sheet: JSON.parse(JSON.stringify(sheet)) };
 }
 
 export interface SavePicksInput {
@@ -223,6 +226,16 @@ export async function getResultsAction(
 
     const result = calculatePickResult(teamPick.pick, teamPick.line, projectedWinsForComparison);
 
+    // Ensure team is a plain object to avoid circular references
+    const teamData = typeof team === 'object' && team !== null ? {
+      abbreviation: team.abbreviation,
+      city: team.city,
+      conference: team.conference,
+      id: team.id,
+      name: team.name,
+      sport: team.sport,
+    } : team;
+
     picks.push({
       actualWins,
       gamesPlayed,
@@ -230,7 +243,7 @@ export async function getResultsAction(
       pick: teamPick.pick,
       projectedWins: projectedWinsForDisplay,
       result,
-      team,
+      team: teamData as Team,
     });
 
     if (result === 'win') {wins++;}
