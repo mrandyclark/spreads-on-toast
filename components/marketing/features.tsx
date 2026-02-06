@@ -43,13 +43,13 @@ export function Features() {
 						<Card
 							className="group border-border/50 bg-card hover:border-primary/20 transition-all hover:shadow-lg"
 							key={feature.title}>
-							<CardHeader className="pb-4">
+							<CardHeader className="items-center pb-4 text-center sm:items-start sm:text-left">
 								<div className="bg-primary/10 group-hover:bg-primary/15 mb-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
 									<feature.icon className="text-primary h-6 w-6" />
 								</div>
 								<CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
 							</CardHeader>
-							<CardContent>
+							<CardContent className="text-center sm:text-left">
 								<p className="text-muted-foreground leading-relaxed">{feature.description}</p>
 							</CardContent>
 						</Card>

@@ -14,10 +14,11 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getResultBgClass, getResultIcon } from '@/lib/result-utils';
 import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
 import { Conference, Sheet } from '@/types';
+
+import { TeamPickCard } from './team-pick-card';
 
 interface MlbMemberSheetProps {
 	groupId: string;
@@ -77,7 +78,7 @@ export function MlbMemberSheet({
 	const { alChampion, nlChampion, winner: wsWinner } = getWorldSeriesChampions(sheet);
 
 	return (
-		<SheetContent className="overflow-y-auto sm:max-w-lg">
+		<SheetContent className="overflow-y-auto" side="responsive">
 			<SheetHeader>
 				<SheetTitle className="flex items-center gap-3">
 					<div
@@ -142,41 +143,17 @@ export function MlbMemberSheet({
 						</TabsList>
 
 						<TabsContent value="teams">
-							<div className="grid gap-2 sm:grid-cols-2">
+							<div className="space-y-3">
 								{results?.picks.map((pick: TeamPickResult) => (
-									<div
-										className={cn('rounded-lg border p-2.5', getResultBgClass(pick.result))}
-										key={pick.team.id}>
-										<div className="mb-1.5 flex items-center justify-between">
-											<div className="flex items-center gap-1.5">
-												{getResultIcon(pick.result, 'h-3 w-3')}
-												<span className="text-sm font-semibold">{pick.team.abbreviation}</span>
-											</div>
-											<Badge
-												className="text-xs"
-												variant={pick.pick === 'over' ? 'default' : 'secondary'}>
-												{pick.pick.toUpperCase()}
-											</Badge>
-										</div>
-										<div className="space-y-0.5 text-xs">
-											{pick.actualWins !== undefined && pick.actualWins !== pick.projectedWins && (
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">Wins:</span>
-													<span>{pick.actualWins}</span>
-												</div>
-											)}
-											<div className="flex justify-between">
-												<span className="text-muted-foreground">
-													{pick.gamesPlayed === 162 ? 'Final:' : 'Estimated:'}
-												</span>
-												<span>{pick.projectedWins}</span>
-											</div>
-											<div className="flex justify-between">
-												<span className="text-muted-foreground">Line:</span>
-												<span>{pick.line}</span>
-											</div>
-										</div>
-									</div>
+									<TeamPickCard
+										gamesPlayed={pick.gamesPlayed}
+										key={pick.team.id}
+										line={pick.line}
+										pick={pick.pick}
+										projectedWins={pick.projectedWins}
+										result={pick.result}
+										teamName={`${pick.team.city} ${pick.team.name}`}
+									/>
 								))}
 							</div>
 						</TabsContent>

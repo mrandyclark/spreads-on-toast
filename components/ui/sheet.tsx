@@ -35,9 +35,11 @@ const sheetVariants = cva('sheet-content fixed z-50 gap-4 bg-background p-6 shad
 	},
 	variants: {
 		side: {
-			bottom: 'sheet-bottom inset-x-0 bottom-0 border-t',
+			bottom: 'sheet-bottom inset-x-0 bottom-0 border-t h-[90vh] rounded-t-xl',
 			left: 'sheet-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
-			right: 'sheet-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
+			responsive:
+				'sheet-responsive inset-x-0 bottom-0 h-[90vh] rounded-t-xl border-t sm:inset-y-0 sm:right-0 sm:left-auto sm:h-full sm:w-3/4 sm:max-w-lg sm:rounded-none sm:border-t-0 sm:border-l',
+			right: 'sheet-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-lg',
 			top: 'sheet-top inset-x-0 top-0 border-b',
 		},
 	},

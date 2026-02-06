@@ -14,24 +14,35 @@ import {
 } from '@/components/ui/select';
 import { getFullTeamName, getTeamsByConferenceSortedByName } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
-import { Conference, TeamPick, WorldSeriesPicks } from '@/types';
+import { Conference, PostseasonPicks, TeamPick, WorldSeriesPicks } from '@/types';
 
 interface MlbWorldSeriesPicksProps {
 	initialPicks?: WorldSeriesPicks;
 	onPicksChange?: (picks: WorldSeriesPicks) => void;
+	postseasonPicks?: PostseasonPicks;
 	teamPicks: TeamPick[];
 }
 
 export function MlbWorldSeriesPicks({
 	initialPicks,
 	onPicksChange,
+	postseasonPicks,
 	teamPicks,
 }: MlbWorldSeriesPicksProps) {
 	const [alChampion, setAlChampion] = useState<string>(initialPicks?.alChampion ?? '');
 	const [nlChampion, setNlChampion] = useState<string>(initialPicks?.nlChampion ?? '');
 	const [winner, setWinner] = useState<Conference | undefined>(initialPicks?.winner);
 
-	const { al: alTeams, nl: nlTeams } = getTeamsByConferenceSortedByName(teamPicks);
+	const { al: allAlTeams, nl: allNlTeams } = getTeamsByConferenceSortedByName(teamPicks);
+
+	// Filter to only teams picked for postseason (if postseason picks exist)
+	const alTeams = postseasonPicks?.al?.length
+		? allAlTeams.filter((t) => postseasonPicks.al.includes(t.id))
+		: allAlTeams;
+
+	const nlTeams = postseasonPicks?.nl?.length
+		? allNlTeams.filter((t) => postseasonPicks.nl.includes(t.id))
+		: allNlTeams;
 
 	const alTeam = alTeams.find((t) => t.id === alChampion);
 	const nlTeam = nlTeams.find((t) => t.id === nlChampion);
@@ -116,7 +127,7 @@ export function MlbWorldSeriesPicks({
 							<button
 								className={cn(
 									'rounded-lg px-6 py-4 text-center transition-all',
-									!alChampion && 'border-border bg-background border-2 border-dashed',
+									!alChampion && 'bg-primary/50 text-primary-foreground border-2 border-dashed border-primary/30',
 									alChampion &&
 										winner === Conference.AL &&
 										'ring-primary bg-primary text-primary-foreground ring-2 ring-offset-2',
@@ -137,7 +148,7 @@ export function MlbWorldSeriesPicks({
 										)}
 									</>
 								) : (
-									<p className="text-muted-foreground text-sm">Select AL</p>
+									<p className="text-sm text-white/70">Select AL</p>
 								)}
 							</button>
 							<div className="flex flex-col items-center">
@@ -147,7 +158,7 @@ export function MlbWorldSeriesPicks({
 							<button
 								className={cn(
 									'rounded-lg px-6 py-4 text-center transition-all',
-									!nlChampion && 'border-border bg-background border-2 border-dashed',
+									!nlChampion && 'bg-blue-800/50 text-white border-2 border-dashed border-blue-800/30',
 									nlChampion &&
 										winner === Conference.NL &&
 										'bg-blue-800 text-white ring-2 ring-blue-800 ring-offset-2',
@@ -168,7 +179,7 @@ export function MlbWorldSeriesPicks({
 										)}
 									</>
 								) : (
-									<p className="text-muted-foreground text-sm">Select NL</p>
+									<p className="text-sm text-white/70">Select NL</p>
 								)}
 							</button>
 						</div>

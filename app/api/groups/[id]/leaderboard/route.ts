@@ -8,9 +8,8 @@ import {
 	calculatePickResult,
 	getFinalStandings,
 	getStandingsForDate,
-	PickResult,
 } from '@/server/standings';
-import { TeamPick, User } from '@/types';
+import { PickResult, TeamPick, User } from '@/types';
 
 export interface LeaderboardEntry {
 	losses: number;
@@ -113,11 +112,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 						: 0;
 				const result: PickResult = calculatePickResult(teamPick.pick, teamPick.line, projectedWins);
 
-				if (result === 'win') {
+				if (result === PickResult.Win) {
 					wins++;
-				} else if (result === 'loss') {
+				} else if (result === PickResult.Loss) {
 					losses++;
-				} else if (result === 'push') {
+				} else if (result === PickResult.Push) {
 					pushes++;
 				}
 			}

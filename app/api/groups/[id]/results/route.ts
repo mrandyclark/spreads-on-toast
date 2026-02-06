@@ -8,9 +8,8 @@ import {
 	calculatePickResult,
 	getFinalStandings,
 	getStandingsForDate,
-	PickResult,
 } from '@/server/standings';
-import { Team, TeamPick } from '@/types';
+import { PickResult, Team, TeamPick } from '@/types';
 
 export interface TeamPickResult {
 	actualWins?: number; // Actual wins at that point (for historical)
@@ -142,11 +141,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 			team,
 		});
 
-		if (result === 'win') {
+		if (result === PickResult.Win) {
 			wins++;
-		} else if (result === 'loss') {
+		} else if (result === PickResult.Loss) {
 			losses++;
-		} else if (result === 'push') {
+		} else if (result === PickResult.Push) {
 			pushes++;
 		}
 	}

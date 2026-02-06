@@ -11,10 +11,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getResultBorderClass, getResultIcon } from '@/lib/result-utils';
 import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
 import { Conference, Sheet } from '@/types';
+
+import { TeamPickCard } from './team-pick-card';
 
 interface MlbLockedResultsProps {
 	groupId: string;
@@ -84,39 +85,17 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
 								Your locked win total picks for the season. Final results based on end-of-season
 								standings.
 							</p>
-							<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+							<div className="space-y-3">
 								{results?.picks.map((pick: TeamPickResult) => (
-									<div
-										className={cn('rounded-lg border p-3', getResultBorderClass(pick.result))}
-										key={pick.team.id}>
-										<div className="mb-2 flex items-center justify-between">
-											<div className="flex items-center gap-2">
-												{getResultIcon(pick.result)}
-												<span className="font-semibold">{pick.team.abbreviation}</span>
-											</div>
-											<Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>
-												{pick.pick.toUpperCase()}
-											</Badge>
-										</div>
-										<div className="space-y-1 text-sm">
-											{selectedDate && (
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">Wins:</span>
-													<span className="font-medium">{pick.actualWins}</span>
-												</div>
-											)}
-											<div className="flex justify-between">
-												<span className="text-muted-foreground">
-													{selectedDate ? 'Estimated:' : 'Final:'}
-												</span>
-												<span className="font-medium">{pick.projectedWins}</span>
-											</div>
-											<div className="flex justify-between">
-												<span className="text-muted-foreground">Line:</span>
-												<span className="font-medium">{pick.line}</span>
-											</div>
-										</div>
-									</div>
+									<TeamPickCard
+										gamesPlayed={pick.gamesPlayed}
+										key={pick.team.id}
+										line={pick.line}
+										pick={pick.pick}
+										projectedWins={pick.projectedWins}
+										result={pick.result}
+										teamName={`${pick.team.city} ${pick.team.name}`}
+									/>
 								))}
 							</div>
 						</CardContent>

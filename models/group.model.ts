@@ -1,7 +1,7 @@
 import mongoose, { Model, Schema } from 'mongoose';
 
 import { configureSchema, enumToValues, UuidRefType, UuidType } from '@/lib/mongo-utils';
-import { Group, GroupMember, GroupRole, ModelName, With_id } from '@/types';
+import { Group, GroupMember, GroupRole, GroupVisibility, ModelName, With_id } from '@/types';
 
 const GroupMemberSchema = new Schema<GroupMember>(
 	{
@@ -21,6 +21,7 @@ const GroupSchema = new Schema<With_id<Group>>({
 	owner: { ...UuidRefType, index: true, ref: ModelName.User, required: true },
 	season: { required: true, type: String },
 	sport: { required: true, type: String },
+	visibility: { default: GroupVisibility.Active, enum: enumToValues(GroupVisibility), type: String },
 });
 
 GroupSchema.index({ 'members.user': 1 });

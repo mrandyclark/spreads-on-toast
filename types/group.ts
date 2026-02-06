@@ -3,12 +3,20 @@ import { Sport } from './sport';
 import { User } from './user';
 
 /**
- * Group status based on lock date
+ * Group status based on lock date (computed)
  */
 export enum GroupStatus {
 	Active = 'active', // Season in progress, picks locked
 	Completed = 'completed', // Season finished
 	Open = 'open', // Accepting picks (before lock date)
+}
+
+/**
+ * Group visibility status (owner/admin controlled)
+ */
+export enum GroupVisibility {
+	Active = 'active', // Visible in dashboard
+	Archived = 'archived', // Hidden from dashboard (can still be accessed directly)
 }
 
 /**
@@ -43,6 +51,7 @@ export interface Group extends BaseDocument {
 	seasonEndDate?: Date; // From Season model (for historical view)
 	seasonStartDate?: Date; // From Season model (for historical view)
 	sport: Sport; // e.g., 'MLB'
+	visibility?: GroupVisibility; // Owner-controlled visibility (defaults to active)
 }
 
 /**

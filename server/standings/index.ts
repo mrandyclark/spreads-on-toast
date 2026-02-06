@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { dbConnect } from '@/lib/mongoose';
 import { TeamStandingModel } from '@/models/team-standing.model';
 import { TeamModel } from '@/models/team.model';
-import { Sport, TeamStanding } from '@/types';
+import { PickResult, Sport, TeamStanding } from '@/types';
 
 import { calculateProjectedWins, calculatePythagoreanWins, fetchMlbStandings } from '../mlb-api';
 
@@ -250,11 +250,6 @@ export async function getStandingsForDate(
 }
 
 /**
- * Result of an over/under pick
- */
-export type PickResult = 'loss' | 'pending' | 'push' | 'win';
-
-/**
  * Calculate the result of an over/under pick
  */
 export function calculatePickResult(
@@ -263,10 +258,10 @@ export function calculatePickResult(
 	finalWins: number,
 ): PickResult {
 	if (finalWins > line) {
-		return pick === 'over' ? 'win' : 'loss';
+		return pick === 'over' ? PickResult.Win : PickResult.Loss;
 	} else if (finalWins < line) {
-		return pick === 'under' ? 'win' : 'loss';
+		return pick === 'under' ? PickResult.Win : PickResult.Loss;
 	} else {
-		return 'push'; // Exact match = push
+		return PickResult.Push;
 	}
 }

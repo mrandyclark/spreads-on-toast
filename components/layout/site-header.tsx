@@ -125,8 +125,20 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 							) : (
 								<>
 									{!isLoading && userName && (
-										<span className="text-muted-foreground text-lg">{userName}</span>
+										<span className="text-foreground text-lg font-medium">{userName}</span>
 									)}
+
+									<div className="border-border my-2 border-t" />
+
+									<Link
+										className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
+										href="/dashboard"
+										onClick={() => setMobileMenuOpen(false)}>
+										My Leagues
+									</Link>
+
+									<div className="border-border my-2 border-t" />
+
 									<Button asChild className="w-full" variant="outline">
 										{/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Intentionally using <a> to prevent prefetch on logout */}
 										<a href="/api/auth/logout">Sign Out</a>

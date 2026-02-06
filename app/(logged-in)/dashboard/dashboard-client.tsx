@@ -25,7 +25,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { Group, Season, Sport } from '@/types';
+import { Group, GroupVisibility, Season, Sport } from '@/types';
 
 import { createGroupAction, getGroupsAction, getSeasonsAction, joinGroupAction } from './actions';
 
@@ -43,6 +43,7 @@ export function DashboardClient() {
 	const [isCreating, setIsCreating] = useState(false);
 	const [joinError, setJoinError] = useState('');
 	const [isJoining, setIsJoining] = useState(false);
+	const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
 
 	useEffect(() => {
 		async function fetchGroups() {
@@ -131,82 +132,110 @@ export function DashboardClient() {
 						</p>
 					</div>
 
-					<Dialog onOpenChange={setIsCreateOpen} open={isCreateOpen}>
-						<DialogTrigger asChild>
-							<Button className="gap-2">
-								<Plus className="h-4 w-4" />
+					<div className="flex items-center justify-end gap-3">
+						{viewMode === 'active' && (
+							<Dialog onOpenChange={setIsCreateOpen} open={isCreateOpen}>
+								<DialogTrigger asChild>
+									<Button className="gap-2">
+										<Plus className="h-4 w-4" />
 								Create Group
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="sm:max-w-md">
-							<DialogHeader>
-								<DialogTitle>Create a new group</DialogTitle>
-								<DialogDescription>
+									</Button>
+								</DialogTrigger>
+								<DialogContent className="sm:max-w-md">
+									<DialogHeader>
+										<DialogTitle>Create a new group</DialogTitle>
+										<DialogDescription>
 									Give your group a name to get started. You can invite friends after creating it.
-								</DialogDescription>
-							</DialogHeader>
-							<div className="grid gap-4 py-4">
-								<div className="grid gap-2">
-									<Label htmlFor="group-name">Group name</Label>
-									<Input
-										id="group-name"
-										onChange={(e) => setGroupName(e.target.value)}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter') {
-												handleCreateGroup();
-											}
-										}}
-										placeholder="e.g. Sunday Squad"
-										value={groupName}
-									/>
-								</div>
-								<div className="grid gap-2">
-									<Label htmlFor="group-sport">Sport</Label>
-									<Select onValueChange={setGroupSport} value={groupSport}>
-										<SelectTrigger id="group-sport">
-											<SelectValue placeholder="Select a sport" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="MLB">MLB</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-								<div className="grid gap-2">
-									<Label htmlFor="group-season">Season</Label>
-									<Select
-										disabled={seasons.length === 0}
-										onValueChange={setGroupSeason}
-										value={groupSeason}>
-										<SelectTrigger id="group-season">
-											<SelectValue
-												placeholder={
-													seasons.length === 0 ? 'No seasons available' : 'Select a season'
-												}
+										</DialogDescription>
+									</DialogHeader>
+									<div className="grid gap-4 py-4">
+										<div className="grid gap-2">
+											<Label htmlFor="group-name">Group name</Label>
+											<Input
+												id="group-name"
+												onChange={(e) => setGroupName(e.target.value)}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') {
+														handleCreateGroup();
+													}
+												}}
+												placeholder="e.g. Sunday Squad"
+												value={groupName}
 											/>
-										</SelectTrigger>
-										<SelectContent>
-											{seasons.map((s) => (
-												<SelectItem key={s.id} value={s.season}>
-													{s.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-							</div>
-							{createError && <p className="text-destructive text-sm">{createError}</p>}
-							<DialogFooter>
-								<Button onClick={() => setIsCreateOpen(false)} variant="outline">
+										</div>
+										<div className="grid gap-2">
+											<Label htmlFor="group-sport">Sport</Label>
+											<Select onValueChange={setGroupSport} value={groupSport}>
+												<SelectTrigger id="group-sport">
+													<SelectValue placeholder="Select a sport" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="MLB">MLB</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="grid gap-2">
+											<Label htmlFor="group-season">Season</Label>
+											<Select
+												disabled={seasons.length === 0}
+												onValueChange={setGroupSeason}
+												value={groupSeason}>
+												<SelectTrigger id="group-season">
+													<SelectValue
+														placeholder={
+															seasons.length === 0 ? 'No seasons available' : 'Select a season'
+														}
+													/>
+												</SelectTrigger>
+												<SelectContent>
+													{seasons.map((s) => (
+														<SelectItem key={s.id} value={s.season}>
+															{s.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+									{createError && <p className="text-destructive text-sm">{createError}</p>}
+									<DialogFooter>
+										<Button onClick={() => setIsCreateOpen(false)} variant="outline">
 									Cancel
-								</Button>
-								<Button
-									disabled={!groupName.trim() || !groupSeason || isCreating}
-									onClick={handleCreateGroup}>
-									{isCreating ? 'Creating...' : 'Create Group'}
-								</Button>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
+										</Button>
+										<Button
+											disabled={!groupName.trim() || !groupSeason || isCreating}
+											onClick={handleCreateGroup}>
+											{isCreating ? 'Creating...' : 'Create Group'}
+										</Button>
+									</DialogFooter>
+								</DialogContent>
+							</Dialog>
+						)}
+						{groups.some((g) => g.visibility === GroupVisibility.Archived) && (
+							<div className="bg-muted flex rounded-lg p-1">
+								<button
+									className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+										viewMode === 'active'
+											? 'bg-background text-foreground shadow-sm'
+											: 'text-muted-foreground hover:text-foreground'
+									}`}
+									onClick={() => setViewMode('active')}
+									type="button">
+									Active
+								</button>
+								<button
+									className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+										viewMode === 'archived'
+											? 'bg-background text-foreground shadow-sm'
+											: 'text-muted-foreground hover:text-foreground'
+									}`}
+									onClick={() => setViewMode('archived')}
+									type="button">
+									Archived
+								</button>
+							</div>
+						)}
+					</div>
 				</div>
 
 				{isLoading ? (
@@ -223,101 +252,121 @@ export function DashboardClient() {
 							</Card>
 						))}
 					</div>
-				) : groups.length === 0 ? (
-					<Card className="border-dashed">
-						<CardContent className="flex flex-col items-center justify-center py-16 text-center">
-							<div className="bg-muted mb-4 rounded-full p-4">
-								<Trophy className="text-muted-foreground h-8 w-8" />
-							</div>
-							<h3 className="text-foreground mb-2 text-lg font-semibold">No groups yet</h3>
-							<p className="text-muted-foreground mb-6 max-w-sm">
-								Create your first group to start making picks and competing with friends.
-							</p>
-							<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
-								<Plus className="h-4 w-4" />
-								Create your first group
-							</Button>
-						</CardContent>
-					</Card>
-				) : (
-					<div className="grid gap-4">
-						{groups.map((group) => (
-							<Link href={`/league/${group.id}`} key={group.id}>
-								<Card className="group hover:border-primary/50 cursor-pointer transition-all hover:shadow-md">
-									<CardContent className="flex items-center justify-between p-4 sm:p-6">
-										<div className="flex items-center gap-4">
-											<div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-xl">
-												<Trophy className="h-6 w-6" />
-											</div>
-											<div>
-												<h3 className="text-foreground group-hover:text-primary font-semibold transition-colors">
-													{group.name}
-												</h3>
-												<div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-													<span className="inline-flex items-center gap-1">
-														<span className="bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
-															{group.sport}
+				) : (() => {
+					const filteredGroups = groups.filter((g) =>
+						viewMode === 'archived'
+							? g.visibility === GroupVisibility.Archived
+							: g.visibility !== GroupVisibility.Archived,
+					);
+
+					if (filteredGroups.length === 0) {
+						return (
+							<Card className="border-dashed">
+								<CardContent className="flex flex-col items-center justify-center py-16 text-center">
+									<div className="bg-muted mb-4 rounded-full p-4">
+										<Trophy className="text-muted-foreground h-8 w-8" />
+									</div>
+									<h3 className="text-foreground mb-2 text-lg font-semibold">
+										{viewMode === 'archived' ? 'No archived groups' : 'No groups yet'}
+									</h3>
+									<p className="text-muted-foreground mb-6 max-w-sm">
+										{viewMode === 'archived'
+											? 'Groups you archive will appear here.'
+											: 'Create your first group to start making picks and competing with friends.'}
+									</p>
+									{viewMode === 'active' && (
+										<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+											<Plus className="h-4 w-4" />
+											Create your first group
+										</Button>
+									)}
+								</CardContent>
+							</Card>
+						);
+					}
+
+					return (
+						<div className="grid gap-4">
+							{filteredGroups.map((group) => (
+								<Link href={`/league/${group.id}`} key={group.id}>
+									<Card className="group hover:border-primary/50 cursor-pointer transition-all hover:shadow-md">
+										<CardContent className="flex items-center justify-between p-4 sm:p-6">
+											<div className="flex items-center gap-4">
+												<div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-xl">
+													<Trophy className="h-6 w-6" />
+												</div>
+												<div>
+													<h3 className="text-foreground group-hover:text-primary font-semibold transition-colors">
+														{group.name}
+													</h3>
+													<div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+														<span className="inline-flex items-center gap-1">
+															<span className="bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
+																{group.sport}
+															</span>
 														</span>
-													</span>
-													<span className="inline-flex items-center gap-1">
-														<Users className="h-3.5 w-3.5" />
-														{group.members.length} members
-													</span>
-													<span>{group.season}</span>
+														<span className="inline-flex items-center gap-1">
+															<Users className="h-3.5 w-3.5" />
+															{group.members.length} members
+														</span>
+														<span>{group.season}</span>
+													</div>
 												</div>
 											</div>
-										</div>
-										<div className="flex items-center gap-4">
-											<ChevronRight className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-transform group-hover:translate-x-1" />
-										</div>
-									</CardContent>
-								</Card>
-							</Link>
-						))}
+											<div className="flex items-center gap-4">
+												<ChevronRight className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-transform group-hover:translate-x-1" />
+											</div>
+										</CardContent>
+									</Card>
+								</Link>
+							))}
+						</div>
+					);
+				})()}
+
+				{viewMode === 'active' && (
+					<div className="border-border bg-muted/30 mt-8 rounded-xl border border-dashed p-6 text-center">
+						<p className="text-muted-foreground mb-3">Have an invite code from a friend?</p>
+						<Dialog onOpenChange={setIsJoinOpen} open={isJoinOpen}>
+							<DialogTrigger asChild>
+								<Button variant="outline">Join an existing group</Button>
+							</DialogTrigger>
+							<DialogContent className="sm:max-w-md">
+								<DialogHeader>
+									<DialogTitle>Join a group</DialogTitle>
+									<DialogDescription>
+										Enter the invite code you received from a friend to join their group.
+									</DialogDescription>
+								</DialogHeader>
+								<div className="grid gap-4 py-4">
+									<div className="grid gap-2">
+										<Label htmlFor="invite-code">Invite code</Label>
+										<Input
+											id="invite-code"
+											onChange={(e) => setInviteCode(e.target.value)}
+											onKeyDown={(e) => {
+												if (e.key === 'Enter') {
+													handleJoinGroup();
+												}
+											}}
+											placeholder="e.g. ABC123"
+											value={inviteCode}
+										/>
+									</div>
+								</div>
+								{joinError && <p className="text-destructive text-sm">{joinError}</p>}
+								<DialogFooter>
+									<Button onClick={() => setIsJoinOpen(false)} variant="outline">
+										Cancel
+									</Button>
+									<Button disabled={!inviteCode.trim() || isJoining} onClick={handleJoinGroup}>
+										{isJoining ? 'Joining...' : 'Join Group'}
+									</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
 					</div>
 				)}
-
-				<div className="border-border bg-muted/30 mt-8 rounded-xl border border-dashed p-6 text-center">
-					<p className="text-muted-foreground mb-3">Have an invite code from a friend?</p>
-					<Dialog onOpenChange={setIsJoinOpen} open={isJoinOpen}>
-						<DialogTrigger asChild>
-							<Button variant="outline">Join an existing group</Button>
-						</DialogTrigger>
-						<DialogContent className="sm:max-w-md">
-							<DialogHeader>
-								<DialogTitle>Join a group</DialogTitle>
-								<DialogDescription>
-									Enter the invite code you received from a friend to join their group.
-								</DialogDescription>
-							</DialogHeader>
-							<div className="grid gap-4 py-4">
-								<div className="grid gap-2">
-									<Label htmlFor="invite-code">Invite code</Label>
-									<Input
-										id="invite-code"
-										onChange={(e) => setInviteCode(e.target.value)}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter') {
-												handleJoinGroup();
-											}
-										}}
-										placeholder="e.g. ABC123"
-										value={inviteCode}
-									/>
-								</div>
-							</div>
-							{joinError && <p className="text-destructive text-sm">{joinError}</p>}
-							<DialogFooter>
-								<Button onClick={() => setIsJoinOpen(false)} variant="outline">
-									Cancel
-								</Button>
-								<Button disabled={!inviteCode.trim() || isJoining} onClick={handleJoinGroup}>
-									{isJoining ? 'Joining...' : 'Join Group'}
-								</Button>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
-				</div>
 			</main>
 		</div>
 	);

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Calendar, Lock, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, Check, Copy, Lock, Pencil, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,11 +18,27 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { toDateString } from '@/lib/date-utils';
-import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
+import { Group, GroupRole, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
-import { getGroupAction, getSheetAction, savePicksAction } from './actions';
+import {
+	CopyableSheet,
+	copyPicksFromSheetAction,
+	getCopyableSheetsAction,
+	getGroupAction,
+	getSheetAction,
+	savePicksAction,
+	updateGroupNameAction,
+} from './actions';
 
 export default function LeagueDetailPage() {
 	const params = useParams();
@@ -32,19 +48,28 @@ export default function LeagueDetailPage() {
 	const [sheet, setSheet] = useState<null | Sheet>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
+	const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'success'>('idle');
 	const [teamPicks, setTeamPicks] = useState<Record<string, 'over' | 'under' | null>>({});
 	const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(null);
 	const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(null);
 	const [selectedMember, setSelectedMember] = useState<null | SelectedMember>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
+	const [copiedInvite, setCopiedInvite] = useState(false);
+	const [editNameOpen, setEditNameOpen] = useState(false);
+	const [editingName, setEditingName] = useState('');
+	const [isSavingName, setIsSavingName] = useState(false);
+	const [copyPicksOpen, setCopyPicksOpen] = useState(false);
+	const [copyableSheets, setCopyableSheets] = useState<CopyableSheet[]>([]);
+	const [isCopyingPicks, setIsCopyingPicks] = useState(false);
 
 	useEffect(() => {
 		async function fetchData() {
 			try {
-				const [groupResult, sheetResult] = await Promise.all([
+				const [groupResult, sheetResult, copyableSheetsResult] = await Promise.all([
 					getGroupAction(groupId),
 					getSheetAction(groupId),
+					getCopyableSheetsAction(groupId),
 				]);
 
 				if (groupResult.group) {
@@ -53,6 +78,23 @@ export default function LeagueDetailPage() {
 
 				if (sheetResult.sheet) {
 					setSheet(sheetResult.sheet);
+
+					// Initialize teamPicks from sheet data
+					const initialPicks: Record<string, 'over' | 'under' | null> = {};
+
+					sheetResult.sheet.teamPicks.forEach((tp) => {
+						const teamId = typeof tp.team === 'object' ? tp.team.id : tp.team;
+
+						if (tp.pick) {
+							initialPicks[teamId] = tp.pick as 'over' | 'under';
+						}
+					});
+
+					setTeamPicks(initialPicks);
+				}
+
+				if (copyableSheetsResult.sheets) {
+					setCopyableSheets(copyableSheetsResult.sheets);
 				}
 			} finally {
 				setIsLoading(false);
@@ -85,8 +127,69 @@ export default function LeagueDetailPage() {
 		Math.ceil((lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
 	);
 
+	// Check if current user is owner or admin
+	const currentUserMember = group.members.find(
+		(m) => typeof m.user === 'object' && m.user.id === sheet?.user,
+	);
+	const canEditGroup =
+		currentUserMember?.role === GroupRole.Owner || currentUserMember?.role === GroupRole.Admin;
+
+	const handleCopyInviteCode = async () => {
+		if (!group?.inviteCode) {
+			return;
+		}
+
+		await navigator.clipboard.writeText(group.inviteCode);
+		setCopiedInvite(true);
+
+		setTimeout(() => {
+			setCopiedInvite(false);
+		}, 2000);
+	};
+
+	const handleOpenEditName = () => {
+		setEditingName(group.name);
+		setEditNameOpen(true);
+	};
+
+	const handleSaveGroupName = async () => {
+		if (!editingName.trim()) {
+			return;
+		}
+
+		setIsSavingName(true);
+
+		try {
+			const result = await updateGroupNameAction(groupId, editingName.trim());
+
+			if (result.success) {
+				setGroup({ ...group, name: editingName.trim() });
+				setEditNameOpen(false);
+			}
+		} finally {
+			setIsSavingName(false);
+		}
+	};
+
+	const handleCopyPicks = async (sourceSheetId: string) => {
+		setIsCopyingPicks(true);
+
+		try {
+			const result = await copyPicksFromSheetAction(groupId, sourceSheetId);
+
+			if (result.success) {
+				// Reload the page to get the updated picks
+				window.location.reload();
+			}
+		} finally {
+			setIsCopyingPicks(false);
+			setCopyPicksOpen(false);
+		}
+	};
+
 	const handleSavePicks = async () => {
 		setIsSaving(true);
+		setSaveStatus('idle');
 
 		try {
 			const result = await savePicksAction(groupId, {
@@ -96,8 +199,24 @@ export default function LeagueDetailPage() {
 			});
 
 			if (result.sheet) {
-				setSheet(result.sheet);
+				setSaveStatus('success');
+
+				setTimeout(() => {
+					setSaveStatus('idle');
+				}, 3000);
+			} else if (result.error) {
+				setSaveStatus('error');
+
+				setTimeout(() => {
+					setSaveStatus('idle');
+				}, 3000);
 			}
+		} catch {
+			setSaveStatus('error');
+
+			setTimeout(() => {
+				setSaveStatus('idle');
+			}, 3000);
 		} finally {
 			setIsSaving(false);
 		}
@@ -118,8 +237,20 @@ export default function LeagueDetailPage() {
 
 				{/* League title and info */}
 				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{group.name}</h1>
-					<div className="flex items-center gap-3">
+					<div className="flex items-center gap-2">
+						<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{group.name}</h1>
+						{canEditGroup && (
+							<Button
+								aria-label="Edit group name"
+								className="h-8 w-8"
+								onClick={handleOpenEditName}
+								size="icon"
+								variant="ghost">
+								<Pencil className="h-4 w-4" />
+							</Button>
+						)}
+					</div>
+					<div className="flex flex-wrap items-center gap-3">
 						<Badge variant="secondary">
 							{group.sport} {group.season}
 						</Badge>
@@ -127,6 +258,23 @@ export default function LeagueDetailPage() {
 							<Users className="h-4 w-4" />
 							<span>{group.members.length}</span>
 						</div>
+						<Button
+							className="h-8 gap-1.5 text-xs"
+							onClick={handleCopyInviteCode}
+							size="sm"
+							variant="outline">
+							{copiedInvite ? (
+								<>
+									<Check className="h-3 w-3" />
+									Copied!
+								</>
+							) : (
+								<>
+									<Copy className="h-3 w-3" />
+									Invite: {group.inviteCode}
+								</>
+							)}
+						</Button>
 					</div>
 				</div>
 
@@ -217,11 +365,40 @@ export default function LeagueDetailPage() {
 				) : (
 					<div className="space-y-8">
 						<section>
-							<div className="mb-4 flex items-center justify-between">
+							<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-16 z-40 -mx-4 mb-4 flex items-center justify-between border-b px-4 py-3 backdrop-blur">
 								<h2 className="text-xl font-semibold">Your Picks</h2>
-								<Button disabled={isSaving} onClick={handleSavePicks} size="sm">
-									{isSaving ? 'Saving...' : 'Save All Picks'}
-								</Button>
+								<div className="flex items-center gap-2">
+									{copyableSheets.length > 0 && (
+										<Button
+											className="text-xs"
+											onClick={() => setCopyPicksOpen(true)}
+											size="sm"
+											variant="ghost">
+											Copy from another group
+										</Button>
+									)}
+									<Button
+										disabled={isSaving}
+										onClick={handleSavePicks}
+										size="sm"
+										variant={saveStatus === 'success' ? 'outline' : saveStatus === 'error' ? 'destructive' : 'default'}>
+										{isSaving ? (
+											'Saving...'
+										) : saveStatus === 'success' ? (
+											<>
+												<Check className="mr-1 h-4 w-4" />
+												Saved
+											</>
+										) : saveStatus === 'error' ? (
+											<>
+												<X className="mr-1 h-4 w-4" />
+												Error
+											</>
+										) : (
+											'Save All Picks'
+										)}
+									</Button>
+								</div>
 							</div>
 
 							{/* Sport-specific picks form - renders based on group.sport */}
@@ -287,6 +464,69 @@ export default function LeagueDetailPage() {
 					/>
 				)}
 			</SheetUI>
+
+			{/* Edit Group Name Dialog */}
+			<Dialog onOpenChange={setEditNameOpen} open={editNameOpen}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Edit League Name</DialogTitle>
+					</DialogHeader>
+					<div className="py-4">
+						<Input
+							onChange={(e) => setEditingName(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter') {
+									void handleSaveGroupName();
+								}
+							}}
+							placeholder="League name"
+							value={editingName}
+						/>
+					</div>
+					<DialogFooter>
+						<Button onClick={() => setEditNameOpen(false)} variant="outline">
+							Cancel
+						</Button>
+						<Button disabled={isSavingName || !editingName.trim()} onClick={handleSaveGroupName}>
+							{isSavingName ? 'Saving...' : 'Save'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Copy Picks Dialog */}
+			<Dialog onOpenChange={setCopyPicksOpen} open={copyPicksOpen}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Copy Picks from Another League</DialogTitle>
+					</DialogHeader>
+					<div className="py-4">
+						{copyableSheets.length === 0 ? (
+							<p className="text-muted-foreground text-center text-sm">
+								No other leagues found for this sport and season.
+							</p>
+						) : (
+							<div className="space-y-2">
+								{copyableSheets.map((s) => (
+									<Button
+										className="w-full justify-start"
+										disabled={isCopyingPicks}
+										key={s.sheetId}
+										onClick={() => handleCopyPicks(s.sheetId)}
+										variant="outline">
+										{isCopyingPicks ? 'Copying...' : s.groupName}
+									</Button>
+								))}
+							</div>
+						)}
+					</div>
+					<DialogFooter>
+						<Button onClick={() => setCopyPicksOpen(false)} variant="outline">
+							Cancel
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

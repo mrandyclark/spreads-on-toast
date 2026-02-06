@@ -13,11 +13,13 @@ import {
 	calculatePickResult,
 	getFinalStandings,
 	getStandingsForDate,
-	PickResult,
 } from '@/server/standings';
 import {
 	Group,
+	GroupRole,
+	GroupVisibility,
 	PickDirection,
+	PickResult,
 	PostseasonPicks,
 	Sheet,
 	Team,
@@ -29,15 +31,178 @@ import {
 export const getGroupAction = withAuth(async (user, groupId: string) => {
 	const group = await getGroupForMember(groupId, user.id);
 
-	if (!group) {return {};}
+	if (!group) {
+		return {};
+	}
+
 	return { group: JSON.parse(JSON.stringify(group)) as Group };
+});
+
+export const updateGroupNameAction = withAuth(async (user, groupId: string, name: string) => {
+	await dbConnect();
+
+	const group = await GroupModel.findById(groupId);
+
+	if (!group) {
+		return { error: 'Group not found' };
+	}
+
+	// Check if user is owner or admin
+	const member = group.members.find(
+		(m) => m.user.toString() === user.id,
+	);
+
+	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
+		return { error: 'Not authorized to edit group' };
+	}
+
+	group.name = name.trim();
+	await group.save();
+
+	return { success: true };
+});
+
+export const updateGroupVisibilityAction = withAuth(async (user, groupId: string, visibility: GroupVisibility) => {
+	await dbConnect();
+
+	const group = await GroupModel.findById(groupId);
+
+	if (!group) {
+		return { error: 'Group not found' };
+	}
+
+	// Check if user is owner or admin
+	const member = group.members.find(
+		(m) => m.user.toString() === user.id,
+	);
+
+	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
+		return { error: 'Not authorized to edit group' };
+	}
+
+	group.visibility = visibility;
+	await group.save();
+
+	return { success: true };
 });
 
 export const getSheetAction = withAuth(async (user, groupId: string) => {
 	const sheet = await getSheetByGroupAndUserPopulated(groupId, user.id);
 
-	if (!sheet) {return {};}
+	if (!sheet) {
+		return {};
+	}
+
 	return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
+});
+
+export interface CopyableSheet {
+	groupId: string;
+	groupName: string;
+	sheetId: string;
+}
+
+export const getCopyableSheetsAction = withAuth(async (user, groupId: string) => {
+	await dbConnect();
+
+	// Get the current group to know the sport/season
+	const currentGroup = await GroupModel.findById(groupId);
+
+	if (!currentGroup) {
+		return { sheets: [] };
+	}
+
+	// Find all groups the user is a member of with the same sport/season
+	const groups = await GroupModel.find({
+		'members.user': user.id,
+		season: currentGroup.season,
+		sport: currentGroup.sport,
+	});
+
+	// Filter out the current group
+	const otherGroups = groups.filter((g) => g.id !== groupId);
+
+	if (otherGroups.length === 0) {
+		return { sheets: [] };
+	}
+
+	// Get sheets for these groups
+	const sheets = await SheetModel.find({
+		group: { $in: otherGroups.map((g) => g.id) },
+		user: user.id,
+	});
+
+	// Build the result with group names
+	const result: CopyableSheet[] = sheets.map((s) => {
+		const group = otherGroups.find((g) => g.id === s.group.toString());
+
+		return {
+			groupId: s.group.toString(),
+			groupName: group?.name ?? 'Unknown',
+			sheetId: s.id,
+		};
+	});
+
+	return { sheets: result };
+});
+
+export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: string, sourceSheetId: string) => {
+	await dbConnect();
+
+	// Get the source sheet
+	const sourceSheet = await SheetModel.findById(sourceSheetId);
+
+	if (!sourceSheet || sourceSheet.user.toString() !== user.id) {
+		return { error: 'Source sheet not found' };
+	}
+
+	// Get the target sheet
+	const targetSheet = await SheetModel.findOne({ group: targetGroupId, user: user.id });
+
+	if (!targetSheet) {
+		return { error: 'Target sheet not found' };
+	}
+
+	// Get the target group to check lock status
+	const targetGroup = await GroupModel.findById(targetGroupId);
+
+	if (!targetGroup) {
+		return { error: 'Group not found' };
+	}
+
+	if (new Date(targetGroup.lockDate) < new Date()) {
+		return { error: 'Picks are locked' };
+	}
+
+	// Copy picks - match by team ID
+	const sourcePicksMap = new Map(
+		sourceSheet.teamPicks.map((tp: { pick?: PickDirection; team: { toString: () => string } }) => [tp.team.toString(), tp.pick]),
+	);
+
+	targetSheet.teamPicks = targetSheet.teamPicks.map((tp: { line: number; pick?: PickDirection; team: { toString: () => string } }) => {
+		const teamId = tp.team.toString();
+		const sourcePick = sourcePicksMap.get(teamId);
+
+		return {
+			line: tp.line,
+			pick: sourcePick ?? tp.pick,
+			team: teamId,
+		};
+	});
+
+	// Copy postseason picks if they exist
+	if (sourceSheet.postseasonPicks) {
+		targetSheet.postseasonPicks = sourceSheet.postseasonPicks;
+	}
+
+	// Copy world series picks if they exist
+	if (sourceSheet.worldSeriesPicks) {
+		targetSheet.worldSeriesPicks = sourceSheet.worldSeriesPicks;
+	}
+
+	await targetSheet.save();
+
+	return { success: true };
 });
 
 export const getSheetForMemberAction = withAuth(async (user, groupId: string, memberId: string) => {
@@ -74,8 +239,9 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 		const teamId = typeof tp.team === 'string' ? tp.team : tp.team.id;
 		const pick = input.teamPicks[teamId];
 		return {
-			...tp,
+			line: tp.line,
 			pick: pick ? (pick === 'over' ? PickDirection.Over : PickDirection.Under) : undefined,
+			team: teamId,
 		};
 	});
 
@@ -198,9 +364,13 @@ export const getResultsAction = withAuth(
 				team: teamData as Team,
 			});
 
-			if (result === 'win') {wins++;}
-			else if (result === 'loss') {losses++;}
-			else if (result === 'push') {pushes++;}
+			if (result === PickResult.Win) {
+				wins++;
+			} else if (result === PickResult.Loss) {
+				losses++;
+			} else if (result === PickResult.Push) {
+				pushes++;
+			}
 		}
 
 		picks.sort((a, b) => {

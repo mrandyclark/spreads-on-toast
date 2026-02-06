@@ -2,7 +2,7 @@ import { dbConnect } from '@/lib/mongoose';
 import { GroupModel } from '@/models/group.model';
 import { createSheet } from '@/server/sheets';
 import { getStandingsDateRange } from '@/server/standings';
-import { Group, GroupRole, Sport } from '@/types';
+import {Group, GroupRole, GroupVisibility, Sport} from '@/types';
 
 export interface CreateGroupInput {
 	lockDate: Date;
@@ -40,6 +40,7 @@ export async function createGroup(input: CreateGroupInput): Promise<Group> {
 		owner: input.owner,
 		season: input.season,
 		sport: input.sport,
+		visibility: GroupVisibility.Active,
 	});
 
 	const groupJson = group.toJSON() as Group;

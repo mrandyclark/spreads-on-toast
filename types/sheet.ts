@@ -18,12 +18,13 @@ export enum PickDirection {
 export type PickChoice = null | PickDirection;
 
 /**
- * Pick result after season ends
+ * Pick result (pending during season, resolved after)
  */
 export enum PickResult {
-	Correct = 'correct',
-	Incorrect = 'incorrect',
-	Push = 'push', // Exact match to line
+	Loss = 'loss',
+	Pending = 'pending',
+	Push = 'push',
+	Win = 'win',
 }
 
 /**

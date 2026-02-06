@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { PickChoice, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 import { MlbPostseasonPicks } from './mlb-postseason-picks';
@@ -23,6 +25,15 @@ export function MlbPicksForm({
 	onWorldSeriesPicksChange,
 	sheet,
 }: MlbPicksFormProps) {
+	const [postseasonPicks, setPostseasonPicks] = useState<PostseasonPicks>(
+		sheet.postseasonPicks ?? { al: [], nl: [] },
+	);
+
+	const handlePostseasonPicksChange = (picks: PostseasonPicks) => {
+		setPostseasonPicks(picks);
+		onPostseasonPicksChange?.(picks);
+	};
+
 	return (
 		<div className="space-y-8">
 			<section>
@@ -34,7 +45,7 @@ export function MlbPicksForm({
 				<h2 className="mb-4 text-xl font-semibold">Postseason Predictions</h2>
 				<MlbPostseasonPicks
 					initialPicks={sheet.postseasonPicks}
-					onPicksChange={onPostseasonPicksChange}
+					onPicksChange={handlePostseasonPicksChange}
 					teamPicks={sheet.teamPicks}
 				/>
 			</section>
@@ -44,6 +55,7 @@ export function MlbPicksForm({
 				<MlbWorldSeriesPicks
 					initialPicks={sheet.worldSeriesPicks}
 					onPicksChange={onWorldSeriesPicksChange}
+					postseasonPicks={postseasonPicks}
 					teamPicks={sheet.teamPicks}
 				/>
 			</section>
