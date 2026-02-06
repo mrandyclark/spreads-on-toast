@@ -125,9 +125,11 @@ export function MlbMemberSheet({
 				</div>
 			)}
 
-			{isLoading ? (
+			{isLoading && (
 				<div className="text-muted-foreground mt-6 text-sm">Loading picks...</div>
-			) : (
+			)}
+
+			{!isLoading && (
 				<div className="mt-6">
 					<Tabs className="w-full" defaultValue="teams">
 						<TabsList className="mb-4 w-full">
@@ -165,7 +167,7 @@ export function MlbMemberSheet({
 										American League
 									</h4>
 									<div className="flex flex-wrap gap-1.5">
-										{alPostseasonTeams.length > 0 ? (
+										{alPostseasonTeams.length > 0 &&
 											alPostseasonTeams.map((team) => (
 												<Badge
 													className="border-red-500/30 bg-red-500/10 text-xs text-red-700 dark:text-red-400"
@@ -173,8 +175,9 @@ export function MlbMemberSheet({
 													variant="outline">
 													{team.abbreviation}
 												</Badge>
-											))
-										) : (
+											))}
+
+										{alPostseasonTeams.length === 0 && (
 											<span className="text-muted-foreground text-sm">No picks</span>
 										)}
 									</div>
@@ -184,7 +187,7 @@ export function MlbMemberSheet({
 										National League
 									</h4>
 									<div className="flex flex-wrap gap-1.5">
-										{nlPostseasonTeams.length > 0 ? (
+										{nlPostseasonTeams.length > 0 &&
 											nlPostseasonTeams.map((team) => (
 												<Badge
 													className="border-blue-500/30 bg-blue-500/10 text-xs text-blue-700 dark:text-blue-400"
@@ -192,8 +195,9 @@ export function MlbMemberSheet({
 													variant="outline">
 													{team.abbreviation}
 												</Badge>
-											))
-										) : (
+											))}
+
+										{nlPostseasonTeams.length === 0 && (
 											<span className="text-muted-foreground text-sm">No picks</span>
 										)}
 									</div>

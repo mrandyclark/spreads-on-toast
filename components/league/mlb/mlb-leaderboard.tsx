@@ -89,9 +89,11 @@ export function MlbLeaderboard({
 										})
 									}>
 									<div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium">
-										{rank === 1 ? (
+										{rank === 1 && (
 											<Crown className="text-primary h-4 w-4" />
-										) : (
+										)}
+
+										{rank !== 1 && (
 											<span className="text-muted-foreground">{rank}</span>
 										)}
 									</div>

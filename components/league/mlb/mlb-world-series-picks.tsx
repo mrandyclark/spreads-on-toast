@@ -139,7 +139,7 @@ export function MlbWorldSeriesPicks({
 								disabled={!alChampion || !nlChampion}
 								onClick={() => alChampion && nlChampion && handleWinnerChange(Conference.AL)}
 								type="button">
-								{alTeam ? (
+								{alTeam && (
 									<>
 										<p className="text-2xl font-bold">{alTeam.abbreviation}</p>
 										<p className="text-xs opacity-80">AL Champion</p>
@@ -147,7 +147,9 @@ export function MlbWorldSeriesPicks({
 											<p className="mt-1 text-xs font-semibold">🏆 Winner</p>
 										)}
 									</>
-								) : (
+								)}
+
+								{!alTeam && (
 									<p className="text-sm text-white/70">Select AL</p>
 								)}
 							</button>
@@ -170,7 +172,7 @@ export function MlbWorldSeriesPicks({
 								disabled={!alChampion || !nlChampion}
 								onClick={() => alChampion && nlChampion && handleWinnerChange(Conference.NL)}
 								type="button">
-								{nlTeam ? (
+								{nlTeam && (
 									<>
 										<p className="text-2xl font-bold">{nlTeam.abbreviation}</p>
 										<p className="text-xs opacity-80">NL Champion</p>
@@ -178,7 +180,9 @@ export function MlbWorldSeriesPicks({
 											<p className="mt-1 text-xs font-semibold">🏆 Winner</p>
 										)}
 									</>
-								) : (
+								)}
+
+								{!nlTeam && (
 									<p className="text-sm text-white/70">Select NL</p>
 								)}
 							</button>

@@ -109,7 +109,7 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
 								<div>
 									<h4 className="mb-3 font-medium">American League</h4>
 									<div className="flex flex-wrap gap-2">
-										{alPostseasonTeams.length > 0 ? (
+										{alPostseasonTeams.length > 0 &&
 											alPostseasonTeams.map((team) => (
 												<Badge
 													className="border-red-500/30 bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-400"
@@ -117,8 +117,9 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
 													variant="outline">
 													{team.abbreviation}
 												</Badge>
-											))
-										) : (
+											))}
+
+										{alPostseasonTeams.length === 0 && (
 											<span className="text-muted-foreground text-sm">No picks</span>
 										)}
 									</div>
@@ -126,7 +127,7 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
 								<div>
 									<h4 className="mb-3 font-medium">National League</h4>
 									<div className="flex flex-wrap gap-2">
-										{nlPostseasonTeams.length > 0 ? (
+										{nlPostseasonTeams.length > 0 &&
 											nlPostseasonTeams.map((team) => (
 												<Badge
 													className="border-blue-500/30 bg-blue-500/10 px-3 py-1 text-blue-700 dark:text-blue-400"
@@ -134,8 +135,9 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
 													variant="outline">
 													{team.abbreviation}
 												</Badge>
-											))
-										) : (
+											))}
+
+										{nlPostseasonTeams.length === 0 && (
 											<span className="text-muted-foreground text-sm">No picks</span>
 										)}
 									</div>

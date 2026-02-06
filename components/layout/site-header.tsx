@@ -67,7 +67,7 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 
 				{/* Desktop CTAs */}
 				<div className="hidden items-center gap-3 md:flex">
-					{isMarketing ? (
+					{isMarketing && (
 						<>
 							<Button
 								asChild
@@ -80,7 +80,9 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 								<RegisterLink postLoginRedirectURL="/dashboard">Create a league</RegisterLink>
 							</Button>
 						</>
-					) : (
+					)}
+
+					{!isMarketing && (
 						<>
 							{!isLoading && userName && (
 								<span className="text-muted-foreground text-sm">{userName}</span>
@@ -102,7 +104,7 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 					</SheetTrigger>
 					<SheetContent className="bg-background w-[280px]" side="right">
 						<nav className="mt-8 flex flex-col gap-4">
-							{isMarketing ? (
+							{isMarketing && (
 								<>
 									{marketingNavLinks.map((link) => (
 										<Link
@@ -122,7 +124,9 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 										</Button>
 									</div>
 								</>
-							) : (
+							)}
+
+							{!isMarketing && (
 								<>
 									{!isLoading && userName && (
 										<span className="text-foreground text-lg font-medium">{userName}</span>

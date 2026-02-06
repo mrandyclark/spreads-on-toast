@@ -54,7 +54,7 @@ export function TeamPickCard({
 					</div>
 				</div>
 
-				{editable ? (
+				{editable && (
 					<ToggleGroup
 						className="gap-1"
 						onValueChange={(v) => onChange?.(v as PickChoice)}
@@ -73,11 +73,13 @@ export function TeamPickCard({
 							Under
 						</ToggleGroupItem>
 					</ToggleGroup>
-				) : pick ? (
+				)}
+
+				{!editable && pick && (
 					<Badge variant={pick === 'over' ? 'default' : 'secondary'}>
 						{pick.toUpperCase()}
 					</Badge>
-				) : null}
+				)}
 			</div>
 		</div>
 	);
