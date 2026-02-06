@@ -8,63 +8,65 @@ import { getSeasonsBySport } from '@/server/seasons';
 import { Group, Season, Sport } from '@/types';
 
 export async function getGroupsAction(): Promise<{ error?: string; groups?: Group[] }> {
-  const user = await getAuthUser();
+	const user = await getAuthUser();
 
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
+	if (!user) {
+		return { error: 'Unauthorized' };
+	}
 
-  const groups = await getGroupsByUser(user.id);
+	const groups = await getGroupsByUser(user.id);
 
-  return { groups };
+	return { groups };
 }
 
-export async function getSeasonsAction(sport: Sport): Promise<{ error?: string; seasons?: Season[] }> {
-  const user = await getAuthUser();
+export async function getSeasonsAction(
+	sport: Sport,
+): Promise<{ error?: string; seasons?: Season[] }> {
+	const user = await getAuthUser();
 
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
+	if (!user) {
+		return { error: 'Unauthorized' };
+	}
 
-  const seasons = await getSeasonsBySport(sport);
+	const seasons = await getSeasonsBySport(sport);
 
-  return { seasons };
+	return { seasons };
 }
 
 export interface CreateGroupInput {
-  lockDate: string;
-  name: string;
-  season: string;
-  sport: Sport;
+	lockDate: string;
+	name: string;
+	season: string;
+	sport: Sport;
 }
 
 export async function createGroupAction(
-  input: CreateGroupInput,
+	input: CreateGroupInput,
 ): Promise<{ error?: string; group?: Group }> {
-  const user = await getAuthUser();
+	const user = await getAuthUser();
 
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
+	if (!user) {
+		return { error: 'Unauthorized' };
+	}
 
-  if (!input.name.trim()) {
-    return { error: 'Group name is required' };
-  }
+	if (!input.name.trim()) {
+		return { error: 'Group name is required' };
+	}
 
-  try {
-    const group = await createGroup({
-      lockDate: new Date(input.lockDate),
-      name: input.name.trim(),
-      owner: user.id,
-      season: input.season,
-      sport: input.sport,
-    });
+	try {
+		const group = await createGroup({
+			lockDate: new Date(input.lockDate),
+			name: input.name.trim(),
+			owner: user.id,
+			season: input.season,
+			sport: input.sport,
+		});
 
-    revalidatePath('/dashboard');
+		revalidatePath('/dashboard');
 
-    return { group };
-  } catch (error) {
-    console.error('Failed to create group:', error);
-    return { error: 'Failed to create group' };
-  }
+		return { group };
+	} catch (error) {
+		console.error('Failed to create group:', error);
+		return { error: 'Failed to create group' };
+	}
 }

@@ -8,49 +8,49 @@ import { User } from './user';
  * Pick direction for team win totals
  */
 export enum PickDirection {
-  Over = 'over',
-  Under = 'under',
+	Over = 'over',
+	Under = 'under',
 }
 
 /**
  * Pick choice for UI state (includes null for unpicked)
  */
-export type PickChoice = PickDirection | null;
+export type PickChoice = null | PickDirection;
 
 /**
  * Pick result after season ends
  */
 export enum PickResult {
-  Correct = 'correct',
-  Incorrect = 'incorrect',
-  Push = 'push', // Exact match to line
+	Correct = 'correct',
+	Incorrect = 'incorrect',
+	Push = 'push', // Exact match to line
 }
 
 /**
  * A single team pick (over/under on win total)
  */
 export interface TeamPick {
-  line: number; // The line at time of pick (e.g., 91.5)
-  pick?: PickDirection; // 'over' or 'under' (undefined until user picks)
-  result?: PickResult; // Set after season ends
-  team: Ref<Team>; // Team ID or populated Team
+	line: number; // The line at time of pick (e.g., 91.5)
+	pick?: PickDirection; // 'over' or 'under' (undefined until user picks)
+	result?: PickResult; // Set after season ends
+	team: Ref<Team>; // Team ID or populated Team
 }
 
 /**
  * Postseason picks (5 teams per conference to make playoffs)
  */
 export interface PostseasonPicks {
-  al: string[]; // 5 AL team IDs
-  nl: string[]; // 5 NL team IDs
+	al: string[]; // 5 AL team IDs
+	nl: string[]; // 5 NL team IDs
 }
 
 /**
  * World Series picks (pennant winners)
  */
 export interface WorldSeriesPicks {
-  alChampion: string; // AL pennant winner team ID
-  nlChampion: string; // NL pennant winner team ID
-  winner?: Conference; // Which champion wins the WS (optional tiebreaker)
+	alChampion: string; // AL pennant winner team ID
+	nlChampion: string; // NL pennant winner team ID
+	winner?: Conference; // Which champion wins the WS (optional tiebreaker)
 }
 
 /**
@@ -58,43 +58,43 @@ export interface WorldSeriesPicks {
  * Contains all their picks for the season
  */
 export interface Sheet extends BaseDocument {
-  group: Ref<Group>; // Group ID or populated Group
-  postseasonPicks?: PostseasonPicks;
-  sport: Sport; // Sport this sheet is for
-  submittedAt?: Date; // When picks were finalized
-  teamPicks: TeamPick[];
-  user: Ref<User>;
-  worldSeriesPicks?: WorldSeriesPicks;
+	group: Ref<Group>; // Group ID or populated Group
+	postseasonPicks?: PostseasonPicks;
+	sport: Sport; // Sport this sheet is for
+	submittedAt?: Date; // When picks were finalized
+	teamPicks: TeamPick[];
+	user: Ref<User>;
+	worldSeriesPicks?: WorldSeriesPicks;
 }
 
 /**
  * Sheet summary for leaderboard
  */
 export interface SheetSummary {
-  correctPicks: number;
-  rank: number;
-  totalPicks: number;
-  userId: string;
-  userName: string;
+	correctPicks: number;
+	rank: number;
+	totalPicks: number;
+	userId: string;
+	userName: string;
 }
 
 /**
  * Sheet detail for viewing picks
  */
 export interface SheetDetail {
-  postseasonPicks?: PostseasonPicks;
-  teamPicks: TeamPickDisplay[];
-  worldSeriesPicks?: WorldSeriesPicks;
+	postseasonPicks?: PostseasonPicks;
+	teamPicks: TeamPickDisplay[];
+	worldSeriesPicks?: WorldSeriesPicks;
 }
 
 /**
  * Team pick with display info
  */
 export interface TeamPickDisplay {
-  actualWins?: number; // Filled in during/after season
-  line: number;
-  pick: PickDirection;
-  result?: PickResult;
-  teamAbbreviation: string;
-  teamName: string;
+	actualWins?: number; // Filled in during/after season
+	line: number;
+	pick: PickDirection;
+	result?: PickResult;
+	teamAbbreviation: string;
+	teamName: string;
 }

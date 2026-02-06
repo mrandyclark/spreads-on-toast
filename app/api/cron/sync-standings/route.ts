@@ -12,62 +12,62 @@ import { Sport } from '@/types';
  * Security: Vercel CRON requests include CRON_SECRET header
  */
 export async function GET(request: NextRequest) {
-  // Verify the request is from Vercel CRON
-  const authHeader = request.headers.get('authorization');
+	// Verify the request is from Vercel CRON
+	const authHeader = request.headers.get('authorization');
 
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+	if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+		return new Response('Unauthorized', { status: 401 });
+	}
 
-  try {
-    await dbConnect();
+	try {
+		await dbConnect();
 
-    const currentYear = new Date().getFullYear().toString();
-    const today = new Date();
+		const currentYear = new Date().getFullYear().toString();
+		const today = new Date();
 
-    // Check if we're within the season dates
-    const season = await SeasonModel.findOne({ season: currentYear, sport: Sport.MLB });
+		// Check if we're within the season dates
+		const season = await SeasonModel.findOne({ season: currentYear, sport: Sport.MLB });
 
-    if (!season) {
-      return Response.json({
-        message: 'No MLB season found for current year',
-        season: currentYear,
-        skipped: true,
-      });
-    }
+		if (!season) {
+			return Response.json({
+				message: 'No MLB season found for current year',
+				season: currentYear,
+				skipped: true,
+			});
+		}
 
-    // Skip if before season start or after season end
-    if (today < new Date(season.startDate)) {
-      return Response.json({
-        message: 'Season has not started yet',
-        season: currentYear,
-        skipped: true,
-        startDate: season.startDate,
-      });
-    }
+		// Skip if before season start or after season end
+		if (today < new Date(season.startDate)) {
+			return Response.json({
+				message: 'Season has not started yet',
+				season: currentYear,
+				skipped: true,
+				startDate: season.startDate,
+			});
+		}
 
-    if (today > new Date(season.endDate)) {
-      return Response.json({
-        endDate: season.endDate,
-        message: 'Season has ended',
-        season: currentYear,
-        skipped: true,
-      });
-    }
+		if (today > new Date(season.endDate)) {
+			return Response.json({
+				endDate: season.endDate,
+				message: 'Season has ended',
+				season: currentYear,
+				skipped: true,
+			});
+		}
 
-    // Season is active, sync standings
-    const result = await syncMlbStandings(currentYear);
+		// Season is active, sync standings
+		const result = await syncMlbStandings(currentYear);
 
-    return Response.json({
-      message: 'Standings synced successfully',
-      ...result,
-    });
-  } catch (error) {
-    console.error('Error syncing standings:', error);
+		return Response.json({
+			message: 'Standings synced successfully',
+			...result,
+		});
+	} catch (error) {
+		console.error('Error syncing standings:', error);
 
-    return Response.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 },
-    );
-  }
+		return Response.json(
+			{ error: error instanceof Error ? error.message : 'Unknown error' },
+			{ status: 500 },
+		);
+	}
 }

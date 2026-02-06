@@ -5,18 +5,18 @@ import { getTeamsBySport } from '@/server/teams';
 import { Sport } from '@/types';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const sport = searchParams.get('sport') as null | Sport;
+	const { searchParams } = new URL(request.url);
+	const sport = searchParams.get('sport') as null | Sport;
 
-  if (!sport) {
-    return errorResponse('Sport is required', 400);
-  }
+	if (!sport) {
+		return errorResponse('Sport is required', 400);
+	}
 
-  if (!Object.values(Sport).includes(sport)) {
-    return errorResponse('Invalid sport', 400);
-  }
+	if (!Object.values(Sport).includes(sport)) {
+		return errorResponse('Invalid sport', 400);
+	}
 
-  const teams = await getTeamsBySport(sport);
+	const teams = await getTeamsBySport(sport);
 
-  return jsonResponse(teams);
+	return jsonResponse(teams);
 }

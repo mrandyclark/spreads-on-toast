@@ -3,17 +3,17 @@
 import { getAuthUser } from '@/lib/auth';
 
 export async function getCurrentUserAction() {
-  const user = await getAuthUser();
-  
-  if (!user) {
-    return { user: null };
-  }
+	const user = await getAuthUser();
 
-  return {
-    user: {
-      email: user.email,
-      nameFirst: user.nameFirst,
-      nameLast: user.nameLast,
-    },
-  };
+	if (!user) {
+		return { user: null };
+	}
+
+	return {
+		user: {
+			email: user.email,
+			nameFirst: user.nameFirst,
+			nameLast: user.nameLast,
+		},
+	};
 }

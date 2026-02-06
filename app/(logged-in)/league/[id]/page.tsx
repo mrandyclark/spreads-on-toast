@@ -6,262 +6,287 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { SiteHeader } from '@/components/layout/site-header';
-import { MlbLeaderboard, MlbLockedResults, MlbMemberSheet, MlbPicksForm, SelectedMember } from '@/components/league/mlb';
+import {
+	MlbLeaderboard,
+	MlbLockedResults,
+	MlbMemberSheet,
+	MlbPicksForm,
+	SelectedMember,
+} from '@/components/league/mlb';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
-import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
-
 import { toDateString } from '@/lib/date-utils';
+import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 import { getGroupAction, getSheetAction, savePicksAction } from './actions';
 
 export default function LeagueDetailPage() {
-  const params = useParams();
-  const groupId = params.id as string;
+	const params = useParams();
+	const groupId = params.id as string;
 
-  const [group, setGroup] = useState<Group | null>(null);
-  const [sheet, setSheet] = useState<null | Sheet>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [teamPicks, setTeamPicks] = useState<Record<string, 'over' | 'under' | null>>({});
-  const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(null);
-  const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(null);
-  const [selectedMember, setSelectedMember] = useState<null | SelectedMember>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
+	const [group, setGroup] = useState<Group | null>(null);
+	const [sheet, setSheet] = useState<null | Sheet>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [isSaving, setIsSaving] = useState(false);
+	const [teamPicks, setTeamPicks] = useState<Record<string, 'over' | 'under' | null>>({});
+	const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(null);
+	const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(null);
+	const [selectedMember, setSelectedMember] = useState<null | SelectedMember>(null);
+	const [sheetOpen, setSheetOpen] = useState(false);
+	const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [groupResult, sheetResult] = await Promise.all([
-          getGroupAction(groupId),
-          getSheetAction(groupId),
-        ]);
+	useEffect(() => {
+		async function fetchData() {
+			try {
+				const [groupResult, sheetResult] = await Promise.all([
+					getGroupAction(groupId),
+					getSheetAction(groupId),
+				]);
 
-        if (groupResult.group) {
-          setGroup(groupResult.group);
-        }
+				if (groupResult.group) {
+					setGroup(groupResult.group);
+				}
 
-        if (sheetResult.sheet) {
-          setSheet(sheetResult.sheet);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    }
+				if (sheetResult.sheet) {
+					setSheet(sheetResult.sheet);
+				}
+			} finally {
+				setIsLoading(false);
+			}
+		}
 
-    fetchData();
-  }, [groupId]);
+		fetchData();
+	}, [groupId]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+	if (isLoading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<div className="text-muted-foreground">Loading...</div>
+			</div>
+		);
+	}
 
-  if (!group) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-muted-foreground">Group not found</div>
-      </div>
-    );
-  }
+	if (!group) {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<div className="text-muted-foreground">Group not found</div>
+			</div>
+		);
+	}
 
-  const lockDate = new Date(group.lockDate);
-  const isLocked = lockDate < new Date();
-  const daysUntilLock = Math.max(0, Math.ceil((lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+	const lockDate = new Date(group.lockDate);
+	const isLocked = lockDate < new Date();
+	const daysUntilLock = Math.max(
+		0,
+		Math.ceil((lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+	);
 
-  const handleSavePicks = async () => {
-    setIsSaving(true);
+	const handleSavePicks = async () => {
+		setIsSaving(true);
 
-    try {
-      const result = await savePicksAction(groupId, {
-        postseasonPicks: postseasonPicks ?? undefined,
-        teamPicks,
-        worldSeriesPicks: worldSeriesPicks ?? undefined,
-      });
+		try {
+			const result = await savePicksAction(groupId, {
+				postseasonPicks: postseasonPicks ?? undefined,
+				teamPicks,
+				worldSeriesPicks: worldSeriesPicks ?? undefined,
+			});
 
-      if (result.sheet) {
-        setSheet(result.sheet);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
+			if (result.sheet) {
+				setSheet(result.sheet);
+			}
+		} finally {
+			setIsSaving(false);
+		}
+	};
 
-  return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
+	return (
+		<div className="bg-background min-h-screen">
+			<SiteHeader />
 
-      <main className="mx-auto max-w-5xl px-4 py-8">
-        {/* Back link */}
-        <Link
-          className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          href="/dashboard"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Leagues
-        </Link>
+			<main className="mx-auto max-w-5xl px-4 py-8">
+				{/* Back link */}
+				<Link
+					className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 text-sm transition-colors"
+					href="/dashboard">
+					<ArrowLeft className="h-4 w-4" />
+					Back to Leagues
+				</Link>
 
-        {/* League title and info */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{group.name}</h1>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary">
-              {group.sport} {group.season}
-            </Badge>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>{group.members.length}</span>
-            </div>
-          </div>
-        </div>
+				{/* League title and info */}
+				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{group.name}</h1>
+					<div className="flex items-center gap-3">
+						<Badge variant="secondary">
+							{group.sport} {group.season}
+						</Badge>
+						<div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+							<Users className="h-4 w-4" />
+							<span>{group.members.length}</span>
+						</div>
+					</div>
+				</div>
 
-        {/* Lock status card */}
-        <Card className={`mb-8 ${isLocked ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/20'}`}>
-          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              {isLocked ? (
-                <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Lock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Picks are locked</p>
-                    <p className="text-sm text-muted-foreground">Season is in progress. Track your standings below.</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
-                    <Calendar className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{daysUntilLock} days until picks lock</p>
-                    <p className="text-sm text-muted-foreground">
-                      Locks on{' '}
-                      {lockDate.toLocaleDateString('en-US', {
-                        day: 'numeric',
-                        month: 'long',
-                        weekday: 'long',
-                      })}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+				{/* Lock status card */}
+				<Card
+					className={`mb-8 ${isLocked ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/20'}`}>
+					<CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+						<div className="flex items-center gap-3">
+							{isLocked ? (
+								<>
+									<div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+										<Lock className="text-primary h-5 w-5" />
+									</div>
+									<div>
+										<p className="font-medium">Picks are locked</p>
+										<p className="text-muted-foreground text-sm">
+											Season is in progress. Track your standings below.
+										</p>
+									</div>
+								</>
+							) : (
+								<>
+									<div className="bg-accent flex h-10 w-10 items-center justify-center rounded-full">
+										<Calendar className="text-foreground h-5 w-5" />
+									</div>
+									<div>
+										<p className="font-medium">{daysUntilLock} days until picks lock</p>
+										<p className="text-muted-foreground text-sm">
+											Locks on{' '}
+											{lockDate.toLocaleDateString('en-US', {
+												day: 'numeric',
+												month: 'long',
+												weekday: 'long',
+											})}
+										</p>
+									</div>
+								</>
+							)}
+						</div>
+					</CardContent>
+				</Card>
 
-        {isLocked ? (
-          <div className="space-y-8">
-            {/* Date picker for historical view */}
-            {group.seasonStartDate && group.seasonEndDate && (
-              <div className="flex flex-col items-end gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">View as of:</span>
-                  <DatePicker
-                    maxDate={toDateString(group.seasonEndDate)}
-                    minDate={toDateString(group.seasonStartDate)}
-                    onChange={setSelectedDate}
-                    value={selectedDate ?? toDateString(group.seasonEndDate)}
-                  />
-                </div>
-                {selectedDate && (
-                  <Button className="h-auto p-0" onClick={() => setSelectedDate(undefined)} size="sm" variant="link">
-                    Show Final Results
-                  </Button>
-                )}
-              </div>
-            )}
+				{isLocked ? (
+					<div className="space-y-8">
+						{/* Date picker for historical view */}
+						{group.seasonStartDate && group.seasonEndDate && (
+							<div className="flex flex-col items-end gap-1">
+								<div className="flex items-center gap-2">
+									<span className="text-muted-foreground text-sm">View as of:</span>
+									<DatePicker
+										maxDate={toDateString(group.seasonEndDate)}
+										minDate={toDateString(group.seasonStartDate)}
+										onChange={setSelectedDate}
+										value={selectedDate ?? toDateString(group.seasonEndDate)}
+									/>
+								</div>
+								{selectedDate && (
+									<Button
+										className="h-auto p-0"
+										onClick={() => setSelectedDate(undefined)}
+										size="sm"
+										variant="link">
+										Show Final Results
+									</Button>
+								)}
+							</div>
+						)}
 
-            <MlbLeaderboard
-              currentUserId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
-              groupId={groupId}
-              onMemberSelect={(member) => {
-                setSelectedMember(member);
-                setSheetOpen(true);
-              }}
-              selectedDate={selectedDate}
-            />
+						<MlbLeaderboard
+							currentUserId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
+							groupId={groupId}
+							onMemberSelect={(member) => {
+								setSelectedMember(member);
+								setSheetOpen(true);
+							}}
+							selectedDate={selectedDate}
+						/>
 
-            {sheet && (
-              <MlbLockedResults groupId={groupId} selectedDate={selectedDate} sheet={sheet} userId="e8291a50-6e79-4842-b85d-dc5ba36fec80" />
-            )}
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <section>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Your Picks</h2>
-                <Button disabled={isSaving} onClick={handleSavePicks} size="sm">
-                  {isSaving ? 'Saving...' : 'Save All Picks'}
-                </Button>
-              </div>
+						{sheet && (
+							<MlbLockedResults
+								groupId={groupId}
+								selectedDate={selectedDate}
+								sheet={sheet}
+								userId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
+							/>
+						)}
+					</div>
+				) : (
+					<div className="space-y-8">
+						<section>
+							<div className="mb-4 flex items-center justify-between">
+								<h2 className="text-xl font-semibold">Your Picks</h2>
+								<Button disabled={isSaving} onClick={handleSavePicks} size="sm">
+									{isSaving ? 'Saving...' : 'Save All Picks'}
+								</Button>
+							</div>
 
-              {/* Sport-specific picks form - renders based on group.sport */}
-              {sheet && (
-                <MlbPicksForm
-                  onPostseasonPicksChange={setPostseasonPicks}
-                  onTeamPicksChange={setTeamPicks}
-                  onWorldSeriesPicksChange={setWorldSeriesPicks}
-                  sheet={sheet}
-                />
-              )}
-            </section>
+							{/* Sport-specific picks form - renders based on group.sport */}
+							{sheet && (
+								<MlbPicksForm
+									onPostseasonPicksChange={setPostseasonPicks}
+									onTeamPicksChange={setTeamPicks}
+									onWorldSeriesPicksChange={setWorldSeriesPicks}
+									sheet={sheet}
+								/>
+							)}
+						</section>
 
-            <section>
-              <h2 className="mb-4 text-xl font-semibold">League Members</h2>
-              <Card>
-                <CardContent className="p-4">
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    Other members{"'"} picks will be visible after the lock date.
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {group.members.map((member) => {
-                      const user = typeof member.user === 'object' ? member.user : null;
-                      const displayName = user ? `${user.nameFirst ?? ''} ${user.nameLast ?? ''}`.trim() || 'Member' : 'Member';
-                      const initials = user?.nameFirst ? user.nameFirst.slice(0, 2).toUpperCase() : '??';
-                      return (
-                        <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5" key={typeof member.user === 'string' ? member.user : member.user.id}>
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">{displayName}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-          </div>
-        )}
-      </main>
+						<section>
+							<h2 className="mb-4 text-xl font-semibold">League Members</h2>
+							<Card>
+								<CardContent className="p-4">
+									<p className="text-muted-foreground mb-4 text-sm">
+										Other members{"'"} picks will be visible after the lock date.
+									</p>
+									<div className="flex flex-wrap gap-3">
+										{group.members.map((member) => {
+											const user = typeof member.user === 'object' ? member.user : null;
+											const displayName = user
+												? `${user.nameFirst ?? ''} ${user.nameLast ?? ''}`.trim() || 'Member'
+												: 'Member';
+											const initials = user?.nameFirst
+												? user.nameFirst.slice(0, 2).toUpperCase()
+												: '??';
+											return (
+												<div
+													className="bg-muted flex items-center gap-2 rounded-full px-3 py-1.5"
+													key={typeof member.user === 'string' ? member.user : member.user.id}>
+													<Avatar className="h-6 w-6">
+														<AvatarFallback className="bg-primary text-primary-foreground text-xs">
+															{initials}
+														</AvatarFallback>
+													</Avatar>
+													<span className="text-sm">{displayName}</span>
+												</div>
+											);
+										})}
+									</div>
+								</CardContent>
+							</Card>
+						</section>
+					</div>
+				)}
+			</main>
 
-      <SheetUI onOpenChange={setSheetOpen} open={sheetOpen}>
-        {selectedMember && group && (
-          <MlbMemberSheet
-            groupId={groupId}
-            isCurrentUser={selectedMember.isCurrentUser}
-            memberInitials={selectedMember.userInitials}
-            memberName={selectedMember.userName}
-            onDateChange={setSelectedDate}
-            seasonEndDate={group.seasonEndDate?.toString()}
-            seasonStartDate={group.seasonStartDate?.toString()}
-            selectedDate={selectedDate}
-            userId={selectedMember.userId}
-          />
-        )}
-      </SheetUI>
-    </div>
-  );
+			<SheetUI onOpenChange={setSheetOpen} open={sheetOpen}>
+				{selectedMember && group && (
+					<MlbMemberSheet
+						groupId={groupId}
+						isCurrentUser={selectedMember.isCurrentUser}
+						memberInitials={selectedMember.userInitials}
+						memberName={selectedMember.userName}
+						onDateChange={setSelectedDate}
+						seasonEndDate={group.seasonEndDate?.toString()}
+						seasonStartDate={group.seasonStartDate?.toString()}
+						selectedDate={selectedDate}
+						userId={selectedMember.userId}
+					/>
+				)}
+			</SheetUI>
+		</div>
+	);
 }

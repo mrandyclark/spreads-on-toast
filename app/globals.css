@@ -1,206 +1,206 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Warm cream/toast color palette */
-  --color-background: hsl(40 33% 96%);
-  --color-foreground: hsl(30 10% 20%);
-  
-  /* Card colors */
-  --color-card: hsl(40 40% 98%);
-  --color-card-foreground: hsl(30 10% 20%);
-  
-  /* Popover */
-  --color-popover: hsl(40 40% 98%);
-  --color-popover-foreground: hsl(30 10% 20%);
-  
-  /* Primary: Jam/rust accent */
-  --color-primary: hsl(12 70% 45%);
-  --color-primary-foreground: hsl(40 40% 98%);
-  
-  /* Secondary: Toast tan */
-  --color-secondary: hsl(35 40% 85%);
-  --color-secondary-foreground: hsl(30 10% 20%);
-  
-  /* Muted: Soft warm gray */
-  --color-muted: hsl(35 20% 90%);
-  --color-muted-foreground: hsl(30 10% 45%);
-  
-  /* Accent: Warm golden */
-  --color-accent: hsl(35 50% 75%);
-  --color-accent-foreground: hsl(30 10% 20%);
-  
-  /* Destructive */
-  --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  
-  /* Border: Soft toast edge */
-  --color-border: hsl(35 25% 85%);
-  --color-input: hsl(35 25% 85%);
-  --color-ring: hsl(12 70% 45%);
-  
-  /* Chart colors */
-  --color-chart-1: hsl(12 76% 61%);
-  --color-chart-2: hsl(35 58% 50%);
-  --color-chart-3: hsl(30 37% 40%);
-  --color-chart-4: hsl(43 74% 66%);
-  --color-chart-5: hsl(27 87% 67%);
-  
-  --radius: 0.75rem;
-  
-  /* Font families */
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-dm-serif), ui-serif, Georgia, serif;
+	/* Warm cream/toast color palette */
+	--color-background: hsl(40 33% 96%);
+	--color-foreground: hsl(30 10% 20%);
+
+	/* Card colors */
+	--color-card: hsl(40 40% 98%);
+	--color-card-foreground: hsl(30 10% 20%);
+
+	/* Popover */
+	--color-popover: hsl(40 40% 98%);
+	--color-popover-foreground: hsl(30 10% 20%);
+
+	/* Primary: Jam/rust accent */
+	--color-primary: hsl(12 70% 45%);
+	--color-primary-foreground: hsl(40 40% 98%);
+
+	/* Secondary: Toast tan */
+	--color-secondary: hsl(35 40% 85%);
+	--color-secondary-foreground: hsl(30 10% 20%);
+
+	/* Muted: Soft warm gray */
+	--color-muted: hsl(35 20% 90%);
+	--color-muted-foreground: hsl(30 10% 45%);
+
+	/* Accent: Warm golden */
+	--color-accent: hsl(35 50% 75%);
+	--color-accent-foreground: hsl(30 10% 20%);
+
+	/* Destructive */
+	--color-destructive: hsl(0 84.2% 60.2%);
+	--color-destructive-foreground: hsl(0 0% 98%);
+
+	/* Border: Soft toast edge */
+	--color-border: hsl(35 25% 85%);
+	--color-input: hsl(35 25% 85%);
+	--color-ring: hsl(12 70% 45%);
+
+	/* Chart colors */
+	--color-chart-1: hsl(12 76% 61%);
+	--color-chart-2: hsl(35 58% 50%);
+	--color-chart-3: hsl(30 37% 40%);
+	--color-chart-4: hsl(43 74% 66%);
+	--color-chart-5: hsl(27 87% 67%);
+
+	--radius: 0.75rem;
+
+	/* Font families */
+	--font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+	--font-serif: var(--font-dm-serif), ui-serif, Georgia, serif;
 }
 
 /* Dark mode overrides */
 .dark {
-  --color-background: hsl(30 15% 10%);
-  --color-foreground: hsl(40 30% 92%);
-  --color-card: hsl(30 15% 14%);
-  --color-card-foreground: hsl(40 30% 92%);
-  --color-popover: hsl(30 15% 14%);
-  --color-popover-foreground: hsl(40 30% 92%);
-  --color-primary: hsl(12 75% 55%);
-  --color-primary-foreground: hsl(30 15% 10%);
-  --color-secondary: hsl(30 20% 22%);
-  --color-secondary-foreground: hsl(40 30% 92%);
-  --color-muted: hsl(30 15% 18%);
-  --color-muted-foreground: hsl(35 15% 60%);
-  --color-accent: hsl(35 40% 30%);
-  --color-accent-foreground: hsl(40 30% 92%);
-  --color-destructive: hsl(0 62.8% 45%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  --color-border: hsl(30 15% 22%);
-  --color-input: hsl(30 15% 22%);
-  --color-ring: hsl(12 75% 55%);
+	--color-background: hsl(30 15% 10%);
+	--color-foreground: hsl(40 30% 92%);
+	--color-card: hsl(30 15% 14%);
+	--color-card-foreground: hsl(40 30% 92%);
+	--color-popover: hsl(30 15% 14%);
+	--color-popover-foreground: hsl(40 30% 92%);
+	--color-primary: hsl(12 75% 55%);
+	--color-primary-foreground: hsl(30 15% 10%);
+	--color-secondary: hsl(30 20% 22%);
+	--color-secondary-foreground: hsl(40 30% 92%);
+	--color-muted: hsl(30 15% 18%);
+	--color-muted-foreground: hsl(35 15% 60%);
+	--color-accent: hsl(35 40% 30%);
+	--color-accent-foreground: hsl(40 30% 92%);
+	--color-destructive: hsl(0 62.8% 45%);
+	--color-destructive-foreground: hsl(0 0% 98%);
+	--color-border: hsl(30 15% 22%);
+	--color-input: hsl(30 15% 22%);
+	--color-ring: hsl(12 75% 55%);
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
 }
 
 /* Animation keyframes for shadcn/ui components */
 @keyframes enter {
-  from {
-    opacity: var(--tw-enter-opacity, 1);
-    transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
-      scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1))
-      rotate(var(--tw-enter-rotate, 0));
-  }
+	from {
+		opacity: var(--tw-enter-opacity, 1);
+		transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
+			scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1))
+			rotate(var(--tw-enter-rotate, 0));
+	}
 }
 
 @keyframes exit {
-  to {
-    opacity: var(--tw-exit-opacity, 1);
-    transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0)
-      scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1))
-      rotate(var(--tw-exit-rotate, 0));
-  }
+	to {
+		opacity: var(--tw-exit-opacity, 1);
+		transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0)
+			scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1))
+			rotate(var(--tw-exit-rotate, 0));
+	}
 }
 
 /* Animation utilities */
 .animate-in {
-  animation-name: enter;
-  animation-duration: 150ms;
-  --tw-enter-opacity: initial;
-  --tw-enter-scale: initial;
-  --tw-enter-rotate: initial;
-  --tw-enter-translate-x: initial;
-  --tw-enter-translate-y: initial;
+	animation-name: enter;
+	animation-duration: 150ms;
+	--tw-enter-opacity: initial;
+	--tw-enter-scale: initial;
+	--tw-enter-rotate: initial;
+	--tw-enter-translate-x: initial;
+	--tw-enter-translate-y: initial;
 }
 
 .animate-out {
-  animation-name: exit;
-  animation-duration: 150ms;
-  --tw-exit-opacity: initial;
-  --tw-exit-scale: initial;
-  --tw-exit-rotate: initial;
-  --tw-exit-translate-x: initial;
-  --tw-exit-translate-y: initial;
+	animation-name: exit;
+	animation-duration: 150ms;
+	--tw-exit-opacity: initial;
+	--tw-exit-scale: initial;
+	--tw-exit-rotate: initial;
+	--tw-exit-translate-x: initial;
+	--tw-exit-translate-y: initial;
 }
 
 /* Fade animations */
 .fade-in-0 {
-  --tw-enter-opacity: 0;
+	--tw-enter-opacity: 0;
 }
 
 .fade-out-0 {
-  --tw-exit-opacity: 0;
+	--tw-exit-opacity: 0;
 }
 
 /* Zoom animations */
 .zoom-in-95 {
-  --tw-enter-scale: 0.95;
+	--tw-enter-scale: 0.95;
 }
 
 .zoom-out-95 {
-  --tw-exit-scale: 0.95;
+	--tw-exit-scale: 0.95;
 }
 
 /* Slide animations */
 .slide-in-from-top {
-  --tw-enter-translate-y: -100%;
+	--tw-enter-translate-y: -100%;
 }
 
 .slide-in-from-bottom {
-  --tw-enter-translate-y: 100%;
+	--tw-enter-translate-y: 100%;
 }
 
 .slide-in-from-left {
-  --tw-enter-translate-x: -100%;
+	--tw-enter-translate-x: -100%;
 }
 
 .slide-in-from-right {
-  --tw-enter-translate-x: 100%;
+	--tw-enter-translate-x: 100%;
 }
 
 .slide-out-to-top {
-  --tw-exit-translate-y: -100%;
+	--tw-exit-translate-y: -100%;
 }
 
 .slide-out-to-bottom {
-  --tw-exit-translate-y: 100%;
+	--tw-exit-translate-y: 100%;
 }
 
 .slide-out-to-left {
-  --tw-exit-translate-x: -100%;
+	--tw-exit-translate-x: -100%;
 }
 
 .slide-out-to-right {
-  --tw-exit-translate-x: 100%;
+	--tw-exit-translate-x: 100%;
 }
 
 /* Slide from top/left partial */
 .slide-in-from-top-\[48\%\] {
-  --tw-enter-translate-y: -48%;
+	--tw-enter-translate-y: -48%;
 }
 
 .slide-out-to-top-\[48\%\] {
-  --tw-exit-translate-y: -48%;
+	--tw-exit-translate-y: -48%;
 }
 
 .slide-in-from-left-1\/2 {
-  --tw-enter-translate-x: -50%;
+	--tw-enter-translate-x: -50%;
 }
 
 .slide-out-to-left-1\/2 {
-  --tw-exit-translate-x: -50%;
+	--tw-exit-translate-x: -50%;
 }
 
 /* Duration utilities */
 .duration-200 {
-  animation-duration: 200ms;
+	animation-duration: 200ms;
 }
 
 .duration-300 {
-  animation-duration: 300ms;
+	animation-duration: 300ms;
 }
 
 .duration-500 {
-  animation-duration: 500ms;
+	animation-duration: 500ms;
 }

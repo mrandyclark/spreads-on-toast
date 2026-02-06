@@ -77,20 +77,20 @@ types/
 
 ### Reference Data (rarely changes, seeded by admin)
 
-| Collection | Purpose | Notes |
-|------------|---------|-------|
-| `Team` | Team info (NYY, LAD, etc.) | Seed once per sport, update rarely |
-| `Season` | Season metadata & dates | Created yearly by admin |
-| `TeamLine` | Win total lines per team/season | Set before each season starts |
+| Collection | Purpose                         | Notes                              |
+| ---------- | ------------------------------- | ---------------------------------- |
+| `Team`     | Team info (NYY, LAD, etc.)      | Seed once per sport, update rarely |
+| `Season`   | Season metadata & dates         | Created yearly by admin            |
+| `TeamLine` | Win total lines per team/season | Set before each season starts      |
 
 ### User Data (changes frequently)
 
-| Collection | Purpose | Notes |
-|------------|---------|-------|
-| `User` | User accounts from Kinde | Created on first login |
-| `Group` | Competition groups | Created by users, has embedded members |
-| `Sheet` | User's picks for a group | One per user per group |
-| `Invitation` | Pending group invites | Email-based (works before signup) |
+| Collection   | Purpose                  | Notes                                  |
+| ------------ | ------------------------ | -------------------------------------- |
+| `User`       | User accounts from Kinde | Created on first login                 |
+| `Group`      | Competition groups       | Created by users, has embedded members |
+| `Sheet`      | User's picks for a group | One per user per group                 |
+| `Invitation` | Pending group invites    | Email-based (works before signup)      |
 
 ## Key Design Decisions
 

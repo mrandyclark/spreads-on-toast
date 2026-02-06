@@ -89,6 +89,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ### Authentication
 
 The `getAuthUser()` function in `lib/auth.ts` handles:
+
 - Cookie-based sessions (web)
 - Bearer token authentication (API/mobile)
 - Auto-creates users in MongoDB on first login
@@ -98,7 +99,7 @@ import { getAuthUser } from '@/lib/auth';
 
 const user = await getAuthUser();
 if (!user) {
-  // Not authenticated
+	// Not authenticated
 }
 ```
 
@@ -140,9 +141,9 @@ isValidEmail('test@example.com'); // true
 import { BaseDocument } from './mongo';
 
 export interface Post extends BaseDocument {
-  title: string;
-  content: string;
-  authorId: string;
+	title: string;
+	content: string;
+	authorId: string;
 }
 ```
 
@@ -150,8 +151,8 @@ export interface Post extends BaseDocument {
 
 ```typescript
 export enum ModelName {
-  Post = 'Post',
-  User = 'User',
+	Post = 'Post',
+	User = 'User',
 }
 ```
 
@@ -165,16 +166,16 @@ import { ModelName, With_id } from '@/types';
 import { Post } from '@/types/post';
 
 const postSchema = new Schema<With_id<Post>>({
-  _id: UuidType,
-  title: { required: true, type: String },
-  content: { type: String },
-  authorId: { required: true, type: String, index: true },
+	_id: UuidType,
+	title: { required: true, type: String },
+	content: { type: String },
+	authorId: { required: true, type: String, index: true },
 });
 
 configureSchema(postSchema);
 
 export const PostModel: Model<With_id<Post>> =
-  mongoose.models[ModelName.Post] || mongoose.model(ModelName.Post, postSchema);
+	mongoose.models[ModelName.Post] || mongoose.model(ModelName.Post, postSchema);
 ```
 
 4. Import in `lib/mongoose.ts`:
@@ -195,6 +196,7 @@ import '@/models/post.model';
 ### Environment Variables for Production
 
 Update Kinde URLs for your production domain:
+
 - `KINDE_SITE_URL`
 - `KINDE_POST_LOGOUT_REDIRECT_URL`
 - `KINDE_POST_LOGIN_REDIRECT_URL`

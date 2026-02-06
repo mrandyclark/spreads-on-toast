@@ -5,18 +5,18 @@ import { getAvailableSeasons } from '@/server/seasons';
 import { Sport } from '@/types';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const sport = searchParams.get('sport') as null | Sport;
+	const { searchParams } = new URL(request.url);
+	const sport = searchParams.get('sport') as null | Sport;
 
-  if (!sport) {
-    return errorResponse('Sport is required', 400);
-  }
+	if (!sport) {
+		return errorResponse('Sport is required', 400);
+	}
 
-  if (!Object.values(Sport).includes(sport)) {
-    return errorResponse('Invalid sport', 400);
-  }
+	if (!Object.values(Sport).includes(sport)) {
+		return errorResponse('Invalid sport', 400);
+	}
 
-  const seasons = await getAvailableSeasons(sport);
+	const seasons = await getAvailableSeasons(sport);
 
-  return jsonResponse(seasons);
+	return jsonResponse(seasons);
 }
