@@ -1,22 +1,18 @@
 'use client';
 
-import { ArrowLeft, Calendar, ChevronRight, Crown, Lock, Trophy, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, CalendarDays, Lock, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { MlbPicksForm } from '@/components/league/mlb';
-import { StandingsChart } from '@/components/league/standings-chart';
+import { MlbLeaderboard, MlbLockedResults, MlbMemberSheet, MlbPicksForm, SelectedMember } from '@/components/league/mlb';
 import { ToastIcon } from '@/components/toast-icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { SheetContent, SheetDescription, SheetHeader, SheetTitle, Sheet as SheetUI } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getTeamByAbbreviation, MOCK_MEMBERS, MOCK_PLAYER_PICKS } from '@/static-data';
-import { Group, GroupMemberSummary, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Sheet as SheetUI } from '@/components/ui/sheet';
+import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 export default function LeagueDetailPage() {
   const params = useParams();
@@ -29,8 +25,9 @@ export default function LeagueDetailPage() {
   const [teamPicks, setTeamPicks] = useState<Record<string, 'over' | 'under' | null>>({});
   const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(null);
   const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(null);
-  const [selectedPlayer, setSelectedPlayer] = useState<GroupMemberSummary | null>(null);
+  const [selectedMember, setSelectedMember] = useState<null | SelectedMember>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     async function fetchData() {
@@ -182,180 +179,42 @@ export default function LeagueDetailPage() {
 
         {isLocked ? (
           <div className="space-y-8">
-            <section>
-              <h2 className="mb-4 text-xl font-semibold">Standings</h2>
-              <Card>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-border">
-                    {MOCK_MEMBERS.map((member, index) => (
-                      <button
-                        className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-muted/50"
-                        key={member.id}
-                        onClick={() => {
-                          setSelectedPlayer(member);
-                          setSheetOpen(true);
-                        }}
-                      >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                          {index === 0 ? (
-                            <Crown className="h-4 w-4 text-primary" />
-                          ) : (
-                            <span className="text-muted-foreground">{member.rank}</span>
-                          )}
-                        </div>
-                        <Avatar className="h-10 w-10 border-2 border-border">
-                          <AvatarFallback className={member.isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
-                            {member.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{member.name}</span>
-                            {member.isCurrentUser && (
-                              <Badge className="text-xs" variant="outline">
-                                You
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>
-                              {member.correctPicks}/{member.totalPicks} correct
-                            </span>
-                            <span className="text-xs">({Math.round((member.correctPicks / member.totalPicks) * 100)}%)</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Progress className="hidden h-2 w-20 sm:block" value={(member.correctPicks / member.totalPicks) * 100} />
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-xl font-semibold">Season Progress</h2>
-              <div className="grid gap-6 md:grid-cols-2">
-                <StandingsChart members={MOCK_MEMBERS} />
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Pick Distribution</CardTitle>
-                    <CardDescription>How the league picked</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="mb-1 flex justify-between text-sm">
-                          <span>Over picks</span>
-                          <span className="text-muted-foreground">58%</span>
-                        </div>
-                        <Progress className="h-3" value={58} />
-                      </div>
-                      <div>
-                        <div className="mb-1 flex justify-between text-sm">
-                          <span>Under picks</span>
-                          <span className="text-muted-foreground">42%</span>
-                        </div>
-                        <Progress className="h-3" value={42} />
-                      </div>
-                      <div className="mt-6 rounded-lg bg-muted/50 p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Most picked over: <span className="font-medium text-foreground">LAD (5/6)</span>
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Most picked under: <span className="font-medium text-foreground">OAK (6/6)</span>
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Date picker for historical view */}
+            {group.seasonStartDate && group.seasonEndDate && (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">View as of:</span>
+                </div>
+                <input
+                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                  max={new Date(group.seasonEndDate).toISOString().split('T')[0]}
+                  min={new Date(group.seasonStartDate).toISOString().split('T')[0]}
+                  onChange={(e) => setSelectedDate(e.target.value || undefined)}
+                  type="date"
+                  value={selectedDate ?? ''}
+                />
+                {selectedDate && (
+                  <Button onClick={() => setSelectedDate(undefined)} size="sm" variant="ghost">
+                    Show Final Results
+                  </Button>
+                )}
               </div>
-            </section>
+            )}
 
-            <section>
-              <h2 className="mb-4 text-xl font-semibold">Your Picks</h2>
-              <Tabs className="w-full" defaultValue="teams">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="teams">Team Picks</TabsTrigger>
-                  <TabsTrigger value="postseason">Postseason</TabsTrigger>
-                  <TabsTrigger value="worldseries">World Series</TabsTrigger>
-                </TabsList>
-                <TabsContent value="teams">
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="mb-4 text-sm text-muted-foreground">Your locked win total picks for the season.</p>
-                      <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-                        {sheet?.teamPicks.map((pick) => {
-                          const team = typeof pick.team === 'object' ? pick.team : null;
-                          return (
-                            <div
-                              className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
-                              key={team?.id ?? String(pick.team)}
-                            >
-                              <span className="font-medium">{team?.abbreviation ?? '???'}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">{pick.line}</span>
-                                {pick.pick ? (
-                                  <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
-                                ) : (
-                                  <Badge variant="outline">--</Badge>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
+            <MlbLeaderboard
+              currentUserId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
+              groupId={groupId}
+              onMemberSelect={(member) => {
+                setSelectedMember(member);
+                setSheetOpen(true);
+              }}
+              selectedDate={selectedDate}
+            />
 
-                </TabsContent>
-                <TabsContent value="postseason">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="grid gap-6 md:grid-cols-2">
-                        <div>
-                          <h4 className="mb-3 font-medium">American League</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {MOCK_PLAYER_PICKS.postseasonAL.map((team) => (
-                              <Badge className="px-3 py-1" key={team} variant="outline">
-                                {team}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="mb-3 font-medium">National League</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {MOCK_PLAYER_PICKS.postseasonNL.map((team) => (
-                              <Badge className="px-3 py-1" key={team} variant="outline">
-                                {team}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="worldseries">
-                  <Card>
-                    <CardContent className="flex flex-col items-center gap-4 p-6 sm:flex-row sm:justify-center">
-                      <div className="flex items-center gap-3 rounded-lg bg-muted px-4 py-3">
-                        <Badge className="bg-primary">{MOCK_PLAYER_PICKS.worldSeriesAL}</Badge>
-                        <span className="text-sm text-muted-foreground">AL Champion</span>
-                      </div>
-                      <Trophy className="h-6 w-6 text-primary" />
-                      <div className="flex items-center gap-3 rounded-lg bg-muted px-4 py-3">
-                        <Badge className="bg-primary">{MOCK_PLAYER_PICKS.worldSeriesNL}</Badge>
-                        <span className="text-sm text-muted-foreground">NL Champion</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </section>
+            {sheet && (
+              <MlbLockedResults groupId={groupId} selectedDate={selectedDate} sheet={sheet} userId="e8291a50-6e79-4842-b85d-dc5ba36fec80" />
+            )}
           </div>
         ) : (
           <div className="space-y-8">
@@ -386,23 +245,21 @@ export default function LeagueDetailPage() {
                     Other members{"'"} picks will be visible after the lock date.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    {MOCK_MEMBERS.map((member) => (
-                      <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5" key={member.id}>
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback
-                            className={member.isCurrentUser ? 'bg-primary text-xs text-primary-foreground' : 'bg-secondary text-xs'}
-                          >
-                            {member.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{member.name}</span>
-                        {member.isCurrentUser && (
-                          <Badge className="text-xs" variant="outline">
-                            You
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
+                    {group.members.map((member) => {
+                      const user = typeof member.user === 'object' ? member.user : null;
+                      const displayName = user ? `${user.nameFirst ?? ''} ${user.nameLast ?? ''}`.trim() || 'Member' : 'Member';
+                      const initials = user?.nameFirst ? user.nameFirst.slice(0, 2).toUpperCase() : '??';
+                      return (
+                        <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5" key={typeof member.user === 'string' ? member.user : member.user.id}>
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{displayName}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -412,79 +269,16 @@ export default function LeagueDetailPage() {
       </main>
 
       <SheetUI onOpenChange={setSheetOpen} open={sheetOpen}>
-        <SheetContent className="overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-3">
-              <Avatar>
-                <AvatarFallback className={selectedPlayer?.isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
-                  {selectedPlayer?.avatar}
-                </AvatarFallback>
-              </Avatar>
-              <span>{selectedPlayer?.name}{"'"}s Picks</span>
-            </SheetTitle>
-            <SheetDescription>
-              {selectedPlayer?.correctPicks}/{selectedPlayer?.totalPicks} correct picks (
-              {selectedPlayer ? Math.round((selectedPlayer.correctPicks / selectedPlayer.totalPicks) * 100) : 0}%)
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="mt-6 space-y-6">
-            <div>
-              <h4 className="mb-3 text-sm font-medium text-muted-foreground">Team Picks</h4>
-              <div className="space-y-2">
-                {MOCK_PLAYER_PICKS.teamPicks.map((pick) => {
-                  const team = getTeamByAbbreviation(pick.teamId.toUpperCase());
-                  return (
-                    <div className="flex items-center justify-between rounded-lg border border-border p-3" key={pick.teamId}>
-                      <span className="font-medium">{team?.abbreviation ?? pick.teamId}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">{pick.line}</span>
-                        <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick}</Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="mb-3 text-sm font-medium text-muted-foreground">Postseason Picks</h4>
-              <div className="space-y-3">
-                <div>
-                  <p className="mb-2 text-xs text-muted-foreground">American League</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {MOCK_PLAYER_PICKS.postseasonAL.map((team) => (
-                      <Badge className="text-xs" key={team} variant="outline">
-                        {team}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-2 text-xs text-muted-foreground">National League</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {MOCK_PLAYER_PICKS.postseasonNL.map((team) => (
-                      <Badge className="text-xs" key={team} variant="outline">
-                        {team}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="mb-3 text-sm font-medium text-muted-foreground">World Series</h4>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-primary">{MOCK_PLAYER_PICKS.worldSeriesAL}</Badge>
-                  <span className="text-xs text-muted-foreground">vs</span>
-                  <Badge className="bg-primary">{MOCK_PLAYER_PICKS.worldSeriesNL}</Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-        </SheetContent>
+        {selectedMember && (
+          <MlbMemberSheet
+            groupId={groupId}
+            isCurrentUser={selectedMember.isCurrentUser}
+            memberInitials={selectedMember.userInitials}
+            memberName={selectedMember.userName}
+            selectedDate={selectedDate}
+            userId={selectedMember.userId}
+          />
+        )}
       </SheetUI>
     </div>
   );

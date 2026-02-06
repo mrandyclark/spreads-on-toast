@@ -9,6 +9,7 @@ const TeamSchema = new Schema<With_id<Team>>({
   city: { required: true, trim: true, type: String },
   conference: { enum: enumToValues(Conference), required: true, type: String },
   division: { enum: enumToValues(Division), required: true, type: String },
+  externalId: { index: true, type: Number },
   logoUrl: { type: String },
   name: { required: true, trim: true, type: String },
   sport: { enum: enumToValues(Sport), required: true, type: String },

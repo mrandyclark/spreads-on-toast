@@ -6,37 +6,38 @@ import { TeamLineModel } from '@/models/team-line.model';
 import { TeamModel } from '@/models/team.model';
 import { Conference, Division, SeasonStatus, Sport } from '@/types';
 
+// MLB Stats API team IDs: https://statsapi.mlb.com/api/v1/teams?sportId=1
 const MLB_TEAMS = [
-  { abbreviation: 'LAD', city: 'Los Angeles', conference: Conference.NL, division: Division.NL_West, name: 'Dodgers' },
-  { abbreviation: 'NYY', city: 'New York', conference: Conference.AL, division: Division.AL_East, name: 'Yankees' },
-  { abbreviation: 'PHI', city: 'Philadelphia', conference: Conference.NL, division: Division.NL_East, name: 'Phillies' },
-  { abbreviation: 'SEA', city: 'Seattle', conference: Conference.AL, division: Division.AL_West, name: 'Mariners' },
-  { abbreviation: 'NYM', city: 'New York', conference: Conference.NL, division: Division.NL_East, name: 'Mets' },
-  { abbreviation: 'CHC', city: 'Chicago', conference: Conference.NL, division: Division.NL_Central, name: 'Cubs' },
-  { abbreviation: 'ATL', city: 'Atlanta', conference: Conference.NL, division: Division.NL_East, name: 'Braves' },
-  { abbreviation: 'TOR', city: 'Toronto', conference: Conference.AL, division: Division.AL_East, name: 'Blue Jays' },
-  { abbreviation: 'BOS', city: 'Boston', conference: Conference.AL, division: Division.AL_East, name: 'Red Sox' },
-  { abbreviation: 'HOU', city: 'Houston', conference: Conference.AL, division: Division.AL_West, name: 'Astros' },
-  { abbreviation: 'SD', city: 'San Diego', conference: Conference.NL, division: Division.NL_West, name: 'Padres' },
-  { abbreviation: 'DET', city: 'Detroit', conference: Conference.AL, division: Division.AL_Central, name: 'Tigers' },
-  { abbreviation: 'BAL', city: 'Baltimore', conference: Conference.AL, division: Division.AL_East, name: 'Orioles' },
-  { abbreviation: 'MIL', city: 'Milwaukee', conference: Conference.NL, division: Division.NL_Central, name: 'Brewers' },
-  { abbreviation: 'TEX', city: 'Texas', conference: Conference.AL, division: Division.AL_West, name: 'Rangers' },
-  { abbreviation: 'CIN', city: 'Cincinnati', conference: Conference.NL, division: Division.NL_Central, name: 'Reds' },
-  { abbreviation: 'KC', city: 'Kansas City', conference: Conference.AL, division: Division.AL_Central, name: 'Royals' },
-  { abbreviation: 'SF', city: 'San Francisco', conference: Conference.NL, division: Division.NL_West, name: 'Giants' },
-  { abbreviation: 'CLE', city: 'Cleveland', conference: Conference.AL, division: Division.AL_Central, name: 'Guardians' },
-  { abbreviation: 'ARI', city: 'Arizona', conference: Conference.NL, division: Division.NL_West, name: 'Diamondbacks' },
-  { abbreviation: 'TB', city: 'Tampa Bay', conference: Conference.AL, division: Division.AL_East, name: 'Rays' },
-  { abbreviation: 'PIT', city: 'Pittsburgh', conference: Conference.NL, division: Division.NL_Central, name: 'Pirates' },
-  { abbreviation: 'OAK', city: 'Oakland', conference: Conference.AL, division: Division.AL_West, name: 'Athletics' },
-  { abbreviation: 'MIN', city: 'Minnesota', conference: Conference.AL, division: Division.AL_Central, name: 'Twins' },
-  { abbreviation: 'MIA', city: 'Miami', conference: Conference.NL, division: Division.NL_East, name: 'Marlins' },
-  { abbreviation: 'LAA', city: 'Los Angeles', conference: Conference.AL, division: Division.AL_West, name: 'Angels' },
-  { abbreviation: 'STL', city: 'St. Louis', conference: Conference.NL, division: Division.NL_Central, name: 'Cardinals' },
-  { abbreviation: 'CWS', city: 'Chicago', conference: Conference.AL, division: Division.AL_Central, name: 'White Sox' },
-  { abbreviation: 'WSH', city: 'Washington', conference: Conference.NL, division: Division.NL_East, name: 'Nationals' },
-  { abbreviation: 'COL', city: 'Colorado', conference: Conference.NL, division: Division.NL_West, name: 'Rockies' },
+  { abbreviation: 'ARI', city: 'Arizona', conference: Conference.NL, division: Division.NL_West, externalId: 109, name: 'Diamondbacks' },
+  { abbreviation: 'ATL', city: 'Atlanta', conference: Conference.NL, division: Division.NL_East, externalId: 144, name: 'Braves' },
+  { abbreviation: 'BAL', city: 'Baltimore', conference: Conference.AL, division: Division.AL_East, externalId: 110, name: 'Orioles' },
+  { abbreviation: 'BOS', city: 'Boston', conference: Conference.AL, division: Division.AL_East, externalId: 111, name: 'Red Sox' },
+  { abbreviation: 'CHC', city: 'Chicago', conference: Conference.NL, division: Division.NL_Central, externalId: 112, name: 'Cubs' },
+  { abbreviation: 'CIN', city: 'Cincinnati', conference: Conference.NL, division: Division.NL_Central, externalId: 113, name: 'Reds' },
+  { abbreviation: 'CLE', city: 'Cleveland', conference: Conference.AL, division: Division.AL_Central, externalId: 114, name: 'Guardians' },
+  { abbreviation: 'COL', city: 'Colorado', conference: Conference.NL, division: Division.NL_West, externalId: 115, name: 'Rockies' },
+  { abbreviation: 'CWS', city: 'Chicago', conference: Conference.AL, division: Division.AL_Central, externalId: 145, name: 'White Sox' },
+  { abbreviation: 'DET', city: 'Detroit', conference: Conference.AL, division: Division.AL_Central, externalId: 116, name: 'Tigers' },
+  { abbreviation: 'HOU', city: 'Houston', conference: Conference.AL, division: Division.AL_West, externalId: 117, name: 'Astros' },
+  { abbreviation: 'KC', city: 'Kansas City', conference: Conference.AL, division: Division.AL_Central, externalId: 118, name: 'Royals' },
+  { abbreviation: 'LAA', city: 'Los Angeles', conference: Conference.AL, division: Division.AL_West, externalId: 108, name: 'Angels' },
+  { abbreviation: 'LAD', city: 'Los Angeles', conference: Conference.NL, division: Division.NL_West, externalId: 119, name: 'Dodgers' },
+  { abbreviation: 'MIA', city: 'Miami', conference: Conference.NL, division: Division.NL_East, externalId: 146, name: 'Marlins' },
+  { abbreviation: 'MIL', city: 'Milwaukee', conference: Conference.NL, division: Division.NL_Central, externalId: 158, name: 'Brewers' },
+  { abbreviation: 'MIN', city: 'Minnesota', conference: Conference.AL, division: Division.AL_Central, externalId: 142, name: 'Twins' },
+  { abbreviation: 'NYM', city: 'New York', conference: Conference.NL, division: Division.NL_East, externalId: 121, name: 'Mets' },
+  { abbreviation: 'NYY', city: 'New York', conference: Conference.AL, division: Division.AL_East, externalId: 147, name: 'Yankees' },
+  { abbreviation: 'OAK', city: 'Oakland', conference: Conference.AL, division: Division.AL_West, externalId: 133, name: 'Athletics' },
+  { abbreviation: 'PHI', city: 'Philadelphia', conference: Conference.NL, division: Division.NL_East, externalId: 143, name: 'Phillies' },
+  { abbreviation: 'PIT', city: 'Pittsburgh', conference: Conference.NL, division: Division.NL_Central, externalId: 134, name: 'Pirates' },
+  { abbreviation: 'SD', city: 'San Diego', conference: Conference.NL, division: Division.NL_West, externalId: 135, name: 'Padres' },
+  { abbreviation: 'SEA', city: 'Seattle', conference: Conference.AL, division: Division.AL_West, externalId: 136, name: 'Mariners' },
+  { abbreviation: 'SF', city: 'San Francisco', conference: Conference.NL, division: Division.NL_West, externalId: 137, name: 'Giants' },
+  { abbreviation: 'STL', city: 'St. Louis', conference: Conference.NL, division: Division.NL_Central, externalId: 138, name: 'Cardinals' },
+  { abbreviation: 'TB', city: 'Tampa Bay', conference: Conference.AL, division: Division.AL_East, externalId: 139, name: 'Rays' },
+  { abbreviation: 'TEX', city: 'Texas', conference: Conference.AL, division: Division.AL_West, externalId: 140, name: 'Rangers' },
+  { abbreviation: 'TOR', city: 'Toronto', conference: Conference.AL, division: Division.AL_East, externalId: 141, name: 'Blue Jays' },
+  { abbreviation: 'WSH', city: 'Washington', conference: Conference.NL, division: Division.NL_East, externalId: 120, name: 'Nationals' },
 ];
 
 const DRAFTKINGS_LINES_2026: Record<string, number> = {
@@ -95,15 +96,22 @@ async function seed() {
     console.log('Created 2026 MLB Season');
   }
 
-  // 2. Create teams (upsert by abbreviation)
+  // 2. Create or update teams (upsert by abbreviation)
   const teamIds: Record<string, string> = {};
 
   for (const team of MLB_TEAMS) {
     const existing = await TeamModel.findOne({ abbreviation: team.abbreviation });
 
     if (existing) {
+      // Update externalId if not set
+      if (!existing.externalId && team.externalId) {
+        await TeamModel.updateOne({ _id: existing._id }, { $set: { externalId: team.externalId } });
+        console.log(`Updated team ${team.abbreviation} with externalId ${team.externalId}`);
+      } else {
+        console.log(`Team ${team.abbreviation} already exists`);
+      }
+
       teamIds[team.abbreviation] = existing._id.toString();
-      console.log(`Team ${team.abbreviation} already exists`);
     } else {
       const created = await TeamModel.create({ ...team, sport: Sport.MLB });
       teamIds[team.abbreviation] = created._id.toString();

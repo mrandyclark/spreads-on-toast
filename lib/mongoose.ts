@@ -7,6 +7,7 @@ import '@/models/sheet.model';
 import '@/models/group.model';
 import '@/models/season.model';
 import '@/models/team-line.model';
+import '@/models/team-standing.model';
 
 const MONGO_URI = process.env.MONGO_URI!;
 const MONGO_USER = process.env.MONGO_USER;

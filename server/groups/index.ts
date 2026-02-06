@@ -1,6 +1,7 @@
 import { dbConnect } from '@/lib/mongoose';
 import { GroupModel } from '@/models/group.model';
 import { createSheet } from '@/server/sheets';
+import { getStandingsDateRange } from '@/server/standings';
 import { Group, GroupRole, Sport } from '@/types';
 
 export interface CreateGroupInput {
@@ -122,10 +123,32 @@ export async function isGroupOwner(groupId: string, userId: string): Promise<boo
   return !!group;
 }
 
-export async function getGroupForMember(groupId: string, userId: string): Promise<Group | null> {
+export interface GroupWithSeasonDates extends Group {
+  seasonEndDate?: Date;
+  seasonStartDate?: Date;
+}
+
+export async function getGroupForMember(groupId: string, userId: string): Promise<GroupWithSeasonDates | null> {
   await dbConnect();
 
-  const group = await GroupModel.findOne({ _id: groupId, 'members.user': userId });
+  const group = await GroupModel.findOne({ _id: groupId, 'members.user': userId }).populate('members.user');
 
-  return (group?.toJSON() as Group) ?? null;
+  if (!group) {
+    return null;
+  }
+
+  const groupJson = group.toJSON() as GroupWithSeasonDates;
+
+  // Get the actual date range we have standings data for (not season dates)
+  const dateRange = await getStandingsDateRange(group.season);
+
+  if (dateRange.minDate) {
+    groupJson.seasonStartDate = dateRange.minDate;
+  }
+
+  if (dateRange.maxDate) {
+    groupJson.seasonEndDate = dateRange.maxDate;
+  }
+
+  return groupJson;
 }

@@ -40,6 +40,8 @@ export interface Group extends BaseDocument {
   name: string; // e.g., 'Toast Masters'
   owner: Ref<User>; // User who created the group
   season: string; // e.g., '2025'
+  seasonEndDate?: Date; // From Season model (for historical view)
+  seasonStartDate?: Date; // From Season model (for historical view)
   sport: Sport; // e.g., 'MLB'
 }
 

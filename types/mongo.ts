@@ -75,5 +75,6 @@ export enum ModelName {
   Sheet = 'Sheet',
   Team = 'Team',
   TeamLine = 'TeamLine',
+  TeamStanding = 'TeamStanding',
   User = 'User',
 }
