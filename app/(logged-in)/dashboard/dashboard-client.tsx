@@ -116,7 +116,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
               {user.nameFirst ? `${user.nameFirst} ${user.nameLast || ''}`.trim() : user.email}
             </span>
             <Button asChild size="sm" variant="ghost">
-              <Link href="/api/auth/logout">Sign Out</Link>
+              <a href="/api/auth/logout">Sign Out</a>
             </Button>
           </nav>
         </div>

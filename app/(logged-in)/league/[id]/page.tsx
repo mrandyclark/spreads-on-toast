@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { getGroupAction, getSheetAction, savePicksAction } from './actions';
+
 import { MlbLeaderboard, MlbLockedResults, MlbMemberSheet, MlbPicksForm, SelectedMember } from '@/components/league/mlb';
 import { ToastIcon } from '@/components/toast-icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -13,8 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
-
-import { getGroupAction, getSheetAction, savePicksAction } from './actions';
 
 export default function LeagueDetailPage() {
   const params = useParams();
@@ -34,18 +34,28 @@ export default function LeagueDetailPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log('[LeaguePage] Fetching data for group:', groupId);
         const [groupResult, sheetResult] = await Promise.all([
           getGroupAction(groupId),
           getSheetAction(groupId),
         ]);
 
+        console.log('[LeaguePage] Group result:', groupResult);
+        console.log('[LeaguePage] Sheet result:', sheetResult);
+
         if (groupResult.group) {
           setGroup(groupResult.group);
+        } else if (groupResult.error) {
+          console.error('[LeaguePage] Group error:', groupResult.error);
         }
 
         if (sheetResult.sheet) {
           setSheet(sheetResult.sheet);
+        } else if (sheetResult.error) {
+          console.error('[LeaguePage] Sheet error:', sheetResult.error);
         }
+      } catch (error) {
+        console.error('[LeaguePage] Fetch error:', error);
       } finally {
         setIsLoading(false);
       }
