@@ -12,6 +12,7 @@ import {
 	YAxis,
 } from 'recharts';
 
+import { ScheduleDifficulty } from '@/components/league/schedule-difficulty';
 import { TeamChips } from '@/components/league/team-chip';
 import { WinProfile } from '@/components/league/win-profile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,12 +33,13 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { SeasonWithDates, TeamDetailData, TeamHistoryDataPoint } from '@/types';
+import { ScheduleDifficultyData, SeasonWithDates, TeamDetailData, TeamHistoryDataPoint } from '@/types';
 
 interface TeamDetailClientProps {
 	availableDates: string[];
 	current: null | TeamDetailData;
 	history: TeamHistoryDataPoint[];
+	scheduleDifficulty: ScheduleDifficultyData | null;
 	season: string;
 	seasons: SeasonWithDates[];
 	selectedDate: string;
@@ -128,6 +130,7 @@ export function TeamDetailClient({
 	availableDates,
 	current,
 	history,
+	scheduleDifficulty,
 	season,
 	seasons,
 	selectedDate,
@@ -375,6 +378,9 @@ export function TeamDetailClient({
 					</div>
 				</CardContent>
 			</Card>
+
+			{/* Schedule Difficulty */}
+			{scheduleDifficulty && <ScheduleDifficulty data={scheduleDifficulty} />}
 
 			{/* Run Production & Rankings */}
 			<div className="grid gap-6 lg:grid-cols-2">

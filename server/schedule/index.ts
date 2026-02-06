@@ -69,6 +69,7 @@ export async function syncAllSchedules(
 	}
 
 	console.log(`[Schedule Sync] Fetched ${allGames.length} unique games`);
+	console.log(`[Schedule Sync] Starting database sync...`);
 
 	const result = await syncGamesToDatabase(allGames, season);
 
@@ -98,6 +99,7 @@ async function syncGamesToDatabase(
 	let created = 0;
 	let updated = 0;
 	const errors: string[] = [];
+	let processed = 0;
 
 	for (const game of games) {
 		try {
@@ -175,6 +177,12 @@ async function syncGamesToDatabase(
 			const msg = `Error syncing game ${game.mlbGameId}: ${error}`;
 			console.error(`[Schedule Sync] ${msg}`);
 			errors.push(msg);
+		}
+
+		processed++;
+
+		if (processed % 100 === 0) {
+			console.log(`[Schedule Sync] Processed ${processed}/${games.length} games...`);
 		}
 	}
 

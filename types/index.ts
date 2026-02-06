@@ -1,5 +1,6 @@
 export * from './chip';
 export * from './game';
+export * from './schedule-difficulty';
 export * from './group';
 export * from './invitation';
 export * from './mongo';

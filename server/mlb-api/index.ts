@@ -544,7 +544,7 @@ export async function fetchMlbSchedule(
 	teamMlbId: number,
 	season: string,
 ): Promise<ScheduleGameData[]> {
-	const url = `${MLB_API_BASE}/schedule?sportId=1&teamId=${teamMlbId}&season=${season}`;
+	const url = `${MLB_API_BASE}/schedule?sportId=1&teamId=${teamMlbId}&season=${season}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R,F,D,L,W`;
 
 	console.log(`[MLB API] Fetching schedule for team ${teamMlbId}, season ${season}`);
 
