@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 export interface SelectedMember {
   isCurrentUser: boolean;
@@ -65,7 +66,7 @@ export function MlbLeaderboard({ currentUserId, groupId, onMemberSelect, selecte
 
               return (
                 <button
-                  className={`flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-muted/50 ${isCurrentUser ? 'bg-primary/5' : ''}`}
+                  className={cn('flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-muted/50', isCurrentUser && 'bg-primary/5')}
                   key={entry.userId}
                   onClick={() => onMemberSelect?.({
                     isCurrentUser,

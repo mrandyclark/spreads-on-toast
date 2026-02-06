@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Conference, PostseasonPicks, Team, TeamPick } from '@/types';
+import { getTeamsByConference, getTeamsFromPicks } from '@/lib/sheet-utils';
+import { cn } from '@/lib/utils';
+import { PostseasonPicks, Team, TeamPick } from '@/types';
 
 const MAX_PICKS = 5;
 
@@ -18,13 +20,8 @@ export function MlbPostseasonPicks({ initialPicks, onPicksChange, teamPicks }: M
   const [alPicks, setAlPicks] = useState<string[]>(initialPicks?.al ?? []);
   const [nlPicks, setNlPicks] = useState<string[]>(initialPicks?.nl ?? []);
 
-  // Build team lists from populated teamPicks
-  const teams = teamPicks
-    .map((tp) => (typeof tp.team === 'object' ? (tp.team as Team) : null))
-    .filter(Boolean) as Team[];
-
-  const alTeams = teams.filter((t) => t.conference === Conference.AL).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
-  const nlTeams = teams.filter((t) => t.conference === Conference.NL).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+  const teams = getTeamsFromPicks(teamPicks);
+  const { al: alTeams, nl: nlTeams } = getTeamsByConference(teamPicks);
 
   const togglePick = (teamId: string, league: 'AL' | 'NL') => {
     let newAlPicks = alPicks;
@@ -74,15 +71,13 @@ export function MlbPostseasonPicks({ initialPicks, onPicksChange, teamPicks }: M
               const isDisabled = !isSelected && alPicks.length >= MAX_PICKS;
               return (
                 <button
-                  className={`
-                    rounded-lg border px-3 py-2 text-sm font-medium transition-all
-                    ${
-                      isSelected
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
-                    }
-                    ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                  `}
+                  className={cn(
+                    'rounded-lg border px-3 py-2 text-sm font-medium transition-all',
+                    isSelected
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50',
+                    isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                  )}
                   disabled={isDisabled}
                   key={team.id}
                   onClick={() => togglePick(team.id, 'AL')}
@@ -130,15 +125,13 @@ export function MlbPostseasonPicks({ initialPicks, onPicksChange, teamPicks }: M
               const isDisabled = !isSelected && nlPicks.length >= MAX_PICKS;
               return (
                 <button
-                  className={`
-                    rounded-lg border px-3 py-2 text-sm font-medium transition-all
-                    ${
-                      isSelected
-                        ? 'border-blue-800 bg-blue-800/90 text-white'
-                        : 'border-border bg-card hover:border-blue-400/50 hover:bg-muted/50'
-                    }
-                    ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                  `}
+                  className={cn(
+                    'rounded-lg border px-3 py-2 text-sm font-medium transition-all',
+                    isSelected
+                      ? 'border-blue-800 bg-blue-800/90 text-white'
+                      : 'border-border bg-card hover:border-blue-400/50 hover:bg-muted/50',
+                    isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                  )}
                   disabled={isDisabled}
                   key={team.id}
                   onClick={() => togglePick(team.id, 'NL')}

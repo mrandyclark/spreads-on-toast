@@ -7,23 +7,22 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Conference, Team, TeamPick } from '@/types';
-
-type Pick = 'over' | 'under' | null;
+import { cn } from '@/lib/utils';
+import { Conference, PickChoice, Team, TeamPick } from '@/types';
 
 interface MlbTeamPicksProps {
-  onPicksChange?: (picks: Record<string, Pick>) => void;
+  onPicksChange?: (picks: Record<string, PickChoice>) => void;
   teamPicks: TeamPick[];
 }
 
 export function MlbTeamPicks({ onPicksChange, teamPicks }: MlbTeamPicksProps) {
-  const [picks, setPicks] = useState<Record<string, Pick>>(() => {
-    const initial: Record<string, Pick> = {};
+  const [picks, setPicks] = useState<Record<string, PickChoice>>(() => {
+    const initial: Record<string, PickChoice> = {};
     teamPicks.forEach((tp) => {
       const teamId = typeof tp.team === 'object' ? tp.team.id : tp.team;
 
       if (tp.pick) {
-        initial[teamId] = tp.pick as Pick;
+        initial[teamId] = tp.pick;
       }
     });
     return initial;
@@ -56,7 +55,7 @@ export function MlbTeamPicks({ onPicksChange, teamPicks }: MlbTeamPicksProps) {
     line: number;
   }>;
 
-  const handlePickChange = (teamId: string, pick: Pick) => {
+  const handlePickChange = (teamId: string, pick: PickChoice) => {
     const newPicks = { ...picks, [teamId]: pick };
     setPicks(newPicks);
     onPicksChange?.(newPicks);
@@ -122,7 +121,7 @@ export function MlbTeamPicks({ onPicksChange, teamPicks }: MlbTeamPicksProps) {
             >
               <div className="flex items-center gap-3">
                 <Badge
-                  className={`w-12 justify-center ${team.conference === Conference.AL ? 'border-primary/30 bg-primary/5' : 'border-blue-500/30 bg-blue-500/10'}`}
+                  className={cn('w-12 justify-center', team.conference === Conference.AL ? 'border-primary/30 bg-primary/5' : 'border-blue-500/30 bg-blue-500/10')}
                   variant="outline"
                 >
                   {team.abbreviation}
@@ -138,7 +137,7 @@ export function MlbTeamPicks({ onPicksChange, teamPicks }: MlbTeamPicksProps) {
                 <span className="text-sm font-medium tabular-nums text-muted-foreground">{team.line}</span>
                 <ToggleGroup
                   className="gap-1"
-                  onValueChange={(v) => handlePickChange(team.id, v as Pick)}
+                  onValueChange={(v) => handlePickChange(team.id, v as PickChoice)}
                   type="single"
                   value={picks[team.id] || ''}
                 >

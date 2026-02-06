@@ -1,12 +1,15 @@
 'use client';
 
-import { Check, Minus, Trophy, X } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { getResultsAction, GroupResults, TeamPickResult } from '@/app/(logged-in)/league/[id]/actions';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getResultBorderClass, getResultIcon } from '@/lib/result-utils';
+import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
+import { cn } from '@/lib/utils';
 import { Conference, Sheet, Team } from '@/types';
 
 interface MlbLockedResultsProps {
@@ -14,32 +17,6 @@ interface MlbLockedResultsProps {
   selectedDate?: string; // YYYY-MM-DD format for historical lookup
   sheet: Sheet;
   userId: string;
-}
-
-function ResultIcon({ result }: { result: 'loss' | 'pending' | 'push' | 'win' }) {
-  switch (result) {
-    case 'win':
-      return <Check className="h-4 w-4 text-green-500" />;
-    case 'loss':
-      return <X className="h-4 w-4 text-red-500" />;
-    case 'push':
-      return <Minus className="h-4 w-4 text-yellow-500" />;
-    default:
-      return null;
-  }
-}
-
-function getResultBorderClass(result: 'loss' | 'pending' | 'push' | 'win') {
-  switch (result) {
-    case 'win':
-      return 'border-green-500/50 bg-green-500/5';
-    case 'loss':
-      return 'border-red-500/50 bg-red-500/5';
-    case 'push':
-      return 'border-yellow-500/50 bg-yellow-500/5';
-    default:
-      return 'border-border';
-  }
 }
 
 export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLockedResultsProps) {
@@ -68,25 +45,8 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
     return <div className="text-muted-foreground">Loading results...</div>;
   }
 
-  // Get postseason picks from sheet
-  const alPostseasonTeams = (sheet.postseasonPicks?.al ?? [])
-    .map((id) => sheet.teamPicks.find((tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === id)?.team)
-    .filter((t): t is Team => typeof t === 'object');
-
-  const nlPostseasonTeams = (sheet.postseasonPicks?.nl ?? [])
-    .map((id) => sheet.teamPicks.find((tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === id)?.team)
-    .filter((t): t is Team => typeof t === 'object');
-
-  // Get World Series picks
-  const alChampion = sheet.teamPicks.find(
-    (tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === sheet.worldSeriesPicks?.alChampion,
-  )?.team as Team | undefined;
-
-  const nlChampion = sheet.teamPicks.find(
-    (tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === sheet.worldSeriesPicks?.nlChampion,
-  )?.team as Team | undefined;
-
-  const wsWinner = sheet.worldSeriesPicks?.winner;
+  const { al: alPostseasonTeams, nl: nlPostseasonTeams } = getPostseasonTeams(sheet);
+  const { alChampion, nlChampion, winner: wsWinner } = getWorldSeriesChampions(sheet);
 
   return (
     <section>
@@ -120,12 +80,12 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {results?.picks.map((pick: TeamPickResult) => (
                   <div
-                    className={`rounded-lg border p-3 ${getResultBorderClass(pick.result)}`}
+                    className={cn('rounded-lg border p-3', getResultBorderClass(pick.result))}
                     key={pick.team.id}
                   >
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <ResultIcon result={pick.result} />
+                        {getResultIcon(pick.result)}
                         <span className="font-semibold">{pick.team.abbreviation}</span>
                       </div>
                       <Badge variant={pick.pick === 'over' ? 'default' : 'secondary'}>{pick.pick.toUpperCase()}</Badge>
@@ -194,14 +154,14 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
           <Card>
             <CardContent className="flex flex-col items-center gap-4 p-6 sm:flex-row sm:justify-center">
               <div
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 ${wsWinner === Conference.AL ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}
+                className={cn('flex items-center gap-3 rounded-lg px-4 py-3', wsWinner === Conference.AL ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted')}
               >
                 <Badge className="bg-primary">{alChampion?.abbreviation ?? '???'}</Badge>
                 <span className="text-sm text-muted-foreground">AL Champion</span>
               </div>
               <Trophy className="h-6 w-6 text-primary" />
               <div
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 ${wsWinner === Conference.NL ? 'bg-blue-800/20 ring-2 ring-blue-800' : 'bg-muted'}`}
+                className={cn('flex items-center gap-3 rounded-lg px-4 py-3', wsWinner === Conference.NL ? 'bg-blue-800/20 ring-2 ring-blue-800' : 'bg-muted')}
               >
                 <Badge className="bg-blue-800">{nlChampion?.abbreviation ?? '???'}</Badge>
                 <span className="text-sm text-muted-foreground">NL Champion</span>

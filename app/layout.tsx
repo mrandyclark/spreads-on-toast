@@ -19,6 +19,15 @@ const dmSerif = DM_Serif_Display({
 export const metadata: Metadata = {
   description:
     "Pick season win totals vs the line, lock them in, and see who comes out on top by season's end. A fun friend-group competition tracker.",
+   icons: {
+    apple: '/apple-touch-icon.png',
+    icon: [
+      { sizes: '32x32', type: 'image/png', url: '/favicon-32x32.png' },
+      { sizes: '16x16', type: 'image/png', url: '/favicon-16x16.png' },
+    ],
+    shortcut: '/favicon.ico',
+  },
+  manifest: '/site.webmanifest',
   title: 'spreadsontoast - Lock Your Preseason Spreads',
 };
 

@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { getAuthUser } from '@/lib/auth';
 import { dbConnect } from '@/lib/mongoose';
+import { withAuth } from '@/lib/with-auth-action';
 import { GroupModel } from '@/models/group.model';
 import { SheetModel } from '@/models/sheet.model';
 import { getGroupForMember } from '@/server/groups';
@@ -12,63 +12,26 @@ import { getSheetByGroupAndUserPopulated, updateSheet } from '@/server/sheets';
 import { calculatePickResult, getFinalStandings, getStandingsForDate, PickResult } from '@/server/standings';
 import { Group, PickDirection, PostseasonPicks, Sheet, Team, TeamPick, User, WorldSeriesPicks } from '@/types';
 
-export async function getGroupAction(groupId: string): Promise<{ error?: string; group?: Group }> {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
+export const getGroupAction = withAuth(async (user, groupId: string) => {
   const group = await getGroupForMember(groupId, user.id);
+  if (!group) return {};
+  return { group: JSON.parse(JSON.stringify(group)) as Group };
+});
 
-  if (!group) {
-    return { error: 'Group not found' };
-  }
-
-  // Ensure clean serialization to avoid circular references
-  return { group: JSON.parse(JSON.stringify(group)) };
-}
-
-export async function getSheetAction(groupId: string): Promise<{ error?: string; sheet?: Sheet }> {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
+export const getSheetAction = withAuth(async (user, groupId: string) => {
   const sheet = await getSheetByGroupAndUserPopulated(groupId, user.id);
+  if (!sheet) return {};
+  return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
+});
 
-  if (!sheet) {
-    return { error: 'Sheet not found' };
-  }
-
-  // Ensure clean serialization to avoid circular references
-  return { sheet: JSON.parse(JSON.stringify(sheet)) };
-}
-
-export async function getSheetForMemberAction(groupId: string, memberId: string): Promise<{ error?: string; sheet?: Sheet }> {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
-  // Verify current user is a member of the group
+export const getSheetForMemberAction = withAuth(async (user, groupId: string, memberId: string) => {
   const group = await getGroupForMember(groupId, user.id);
-
-  if (!group) {
-    return { error: 'Group not found' };
-  }
-
+  if (!group) return {};
+  
   const sheet = await getSheetByGroupAndUserPopulated(groupId, memberId);
-
-  if (!sheet) {
-    return { error: 'Sheet not found' };
-  }
-
-  // Ensure clean serialization to avoid circular references
-  return { sheet: JSON.parse(JSON.stringify(sheet)) };
-}
+  if (!sheet) return {};
+  return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
+});
 
 export interface SavePicksInput {
   postseasonPicks?: PostseasonPicks;
@@ -76,39 +39,20 @@ export interface SavePicksInput {
   worldSeriesPicks?: WorldSeriesPicks;
 }
 
-export async function savePicksAction(
-  groupId: string,
-  input: SavePicksInput,
-): Promise<{ error?: string; sheet?: Sheet }> {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
-  // Get the user's sheet
+export const savePicksAction = withAuth(async (user, groupId: string, input: SavePicksInput) => {
   const sheet = await getSheetByGroupAndUserPopulated(groupId, user.id);
+  if (!sheet) return { error: 'Sheet not found' };
 
-  if (!sheet) {
-    return { error: 'Sheet not found' };
-  }
-
-  // Check if group is locked
   const group = await getGroupForMember(groupId, user.id);
-
-  if (!group) {
-    return { error: 'Group not found' };
-  }
+  if (!group) return { error: 'Group not found' };
 
   if (new Date(group.lockDate) < new Date()) {
     return { error: 'Picks are locked' };
   }
 
-  // Update team picks
   const updatedTeamPicks: TeamPick[] = sheet.teamPicks.map((tp: TeamPick) => {
     const teamId = typeof tp.team === 'string' ? tp.team : tp.team.id;
     const pick = input.teamPicks[teamId];
-
     return {
       ...tp,
       pick: pick ? (pick === 'over' ? PickDirection.Over : PickDirection.Under) : undefined,
@@ -121,15 +65,13 @@ export async function savePicksAction(
       teamPicks: updatedTeamPicks,
       worldSeriesPicks: input.worldSeriesPicks,
     });
-
     revalidatePath(`/league/${groupId}`);
-
     return { sheet: updatedSheet ?? undefined };
   } catch (error) {
     console.error('Failed to save picks:', error);
     return { error: 'Failed to save picks' };
   }
-}
+});
 
 // Results types
 export interface TeamPickResult {
@@ -154,35 +96,15 @@ export interface GroupResults {
   };
 }
 
-export async function getResultsAction(
-  groupId: string,
-  userId?: string,
-  date?: string,
-): Promise<{ error?: string; results?: GroupResults }> {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
+export const getResultsAction = withAuth(async (user, groupId: string, userId?: string, date?: string) => {
   await dbConnect();
 
-  // Get group and verify membership
   const group = await GroupModel.findOne({ _id: groupId, 'members.user': user.id });
+  if (!group) return {};
 
-  if (!group) {
-    return { error: 'Group not found' };
-  }
-
-  // Use provided userId or current user
   const targetUserId = userId || user.id;
-
-  // Get the user's sheet
   const sheet = await SheetModel.findOne({ group: groupId, user: targetUserId }).populate('teamPicks.team');
-
-  if (!sheet) {
-    return { error: 'Sheet not found' };
-  }
+  if (!sheet) return {};
 
   // Get standings data
   let standingsData: Map<string, { projectedWins: number; wins: number; gamesPlayed: number }>;
@@ -191,14 +113,12 @@ export async function getResultsAction(
     const dateObj = new Date(date);
     const historicalStandings = await getStandingsForDate(group.season, dateObj);
     standingsData = new Map();
-
     for (const [teamId, data] of historicalStandings) {
       standingsData.set(teamId, { gamesPlayed: data.gamesPlayed, projectedWins: data.projectedWins, wins: data.wins });
     }
   } else {
     const finalStandings = await getFinalStandings(group.season);
     standingsData = new Map();
-
     for (const [teamId, wins] of finalStandings) {
       standingsData.set(teamId, { gamesPlayed: 162, projectedWins: wins, wins });
     }
@@ -211,7 +131,7 @@ export async function getResultsAction(
   let pushes = 0;
 
   for (const teamPick of sheet.teamPicks as TeamPick[]) {
-    if (!teamPick.pick) {continue;}
+    if (!teamPick.pick) continue;
 
     const team = teamPick.team as Team;
     const teamId = typeof teamPick.team === 'string' ? teamPick.team : team.id;
@@ -226,7 +146,6 @@ export async function getResultsAction(
 
     const result = calculatePickResult(teamPick.pick, teamPick.line, projectedWinsForComparison);
 
-    // Ensure team is a plain object to avoid circular references
     const teamData = typeof team === 'object' && team !== null ? {
       abbreviation: team.abbreviation,
       city: team.city,
@@ -246,9 +165,9 @@ export async function getResultsAction(
       team: teamData as Team,
     });
 
-    if (result === 'win') {wins++;}
-    else if (result === 'loss') {losses++;}
-    else if (result === 'push') {pushes++;}
+    if (result === 'win') wins++;
+    else if (result === 'loss') losses++;
+    else if (result === 'push') pushes++;
   }
 
   picks.sort((a, b) => {
@@ -261,16 +180,10 @@ export async function getResultsAction(
     results: {
       date,
       picks,
-      summary: {
-        losses,
-        pending: 0,
-        pushes,
-        total: wins + losses + pushes,
-        wins,
-      },
-    },
+      summary: { losses, pending: 0, pushes, total: wins + losses + pushes, wins },
+    } as GroupResults,
   };
-}
+});
 
 // Leaderboard types
 export interface LeaderboardEntry {
@@ -289,24 +202,11 @@ export interface LeaderboardData {
   entries: LeaderboardEntry[];
 }
 
-export async function getLeaderboardAction(
-  groupId: string,
-  date?: string,
-): Promise<{ error?: string; leaderboard?: LeaderboardData }> {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
+export const getLeaderboardAction = withAuth(async (user, groupId: string, date?: string) => {
   await dbConnect();
 
-  // Get group and verify membership
   const group = await GroupModel.findOne({ _id: groupId, 'members.user': user.id }).populate('members.user');
-
-  if (!group) {
-    return { error: 'Group not found' };
-  }
+  if (!group) return {};
 
   // Get standings data
   let standingsData: Map<string, { wins: number; gamesPlayed: number }>;
@@ -315,29 +215,23 @@ export async function getLeaderboardAction(
     const dateObj = new Date(date);
     const historicalStandings = await getStandingsForDate(group.season, dateObj);
     standingsData = new Map();
-
     for (const [teamId, data] of historicalStandings) {
       standingsData.set(teamId, { gamesPlayed: data.gamesPlayed, wins: data.wins });
     }
   } else {
     const finalStandings = await getFinalStandings(group.season);
     standingsData = new Map();
-
     for (const [teamId, wins] of finalStandings) {
       standingsData.set(teamId, { gamesPlayed: 162, wins });
     }
   }
 
-  // Get all sheets for this group
   const sheets = await SheetModel.find({ group: groupId }).populate('teamPicks.team');
-
-  // Calculate results for each member
   const entries: LeaderboardEntry[] = [];
 
   for (const member of group.members) {
     const memberUser = member.user as User;
     const memberId = typeof member.user === 'string' ? member.user : memberUser.id;
-
     const sheet = sheets.find((s) => s.user.toString() === memberId);
 
     let wins = 0;
@@ -346,7 +240,7 @@ export async function getLeaderboardAction(
 
     if (sheet) {
       for (const teamPick of sheet.teamPicks as TeamPick[]) {
-        if (!teamPick.pick) {continue;}
+        if (!teamPick.pick) continue;
 
         const teamId = typeof teamPick.team === 'string' ? teamPick.team : (teamPick.team as { id: string }).id;
         const standing = standingsData.get(teamId);
@@ -356,9 +250,9 @@ export async function getLeaderboardAction(
           : 0;
         const result: PickResult = calculatePickResult(teamPick.pick, teamPick.line, projectedWins);
 
-        if (result === 'win') {wins++;}
-        else if (result === 'loss') {losses++;}
-        else if (result === 'push') {pushes++;}
+        if (result === 'win') wins++;
+        else if (result === 'loss') losses++;
+        else if (result === 'push') pushes++;
       }
     }
 
@@ -373,25 +267,10 @@ export async function getLeaderboardAction(
       ? `${memberUser.nameFirst?.[0] ?? ''}${memberUser.nameLast?.[0] ?? ''}`.toUpperCase() || '?'
       : '?';
 
-    entries.push({
-      losses,
-      pushes,
-      total,
-      userId: memberId,
-      userInitials,
-      userName,
-      winPct,
-      wins,
-    });
+    entries.push({ losses, pushes, total, userId: memberId, userInitials, userName, winPct, wins });
   }
 
-  // Sort by wins descending
   entries.sort((a, b) => b.wins - a.wins || b.winPct - a.winPct);
 
-  return {
-    leaderboard: {
-      date,
-      entries,
-    },
-  };
-}
+  return { leaderboard: { date, entries } as LeaderboardData };
+});

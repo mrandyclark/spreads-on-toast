@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { SiteHeader } from '@/components/layout/site-header';
 import { MlbLeaderboard, MlbLockedResults, MlbMemberSheet, MlbPicksForm, SelectedMember } from '@/components/league/mlb';
-import { ToastIcon } from '@/components/toast-icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,42 +15,9 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
+import { toDateString } from '@/lib/date-utils';
+
 import { getGroupAction, getSheetAction, savePicksAction } from './actions';
-
-// Helper to convert Date or string to YYYY-MM-DD string
-function toDateString(dateInput: Date | string | undefined): string {
-  if (!dateInput) {
-    // Fallback to today
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  }
-  
-  const str = String(dateInput);
-  
-  // If already in YYYY-MM-DD format, return as-is
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    return str;
-  }
-  
-  // If it's an ISO string like "2025-09-26T00:00:00.000Z", extract the date part
-  if (str.includes('T')) {
-    return str.split('T')[0];
-  }
-  
-  // Parse as Date and extract local date parts
-  const d = new Date(dateInput);
-
-  if (isNaN(d.getTime())) {
-    // Invalid date, return today
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  }
-  
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 export default function LeagueDetailPage() {
   const params = useParams();
@@ -130,24 +97,23 @@ export default function LeagueDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <Link
-              className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              href="/dashboard"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Leagues</span>
-            </Link>
-            <div className="h-6 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <ToastIcon className="h-6 w-6 text-primary" />
-              <span className="font-semibold">{group.name}</span>
-            </div>
-          </div>
+      <SiteHeader />
+
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        {/* Back link */}
+        <Link
+          className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          href="/dashboard"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Leagues
+        </Link>
+
+        {/* League title and info */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{group.name}</h1>
           <div className="flex items-center gap-3">
-            <Badge className="hidden sm:flex" variant="secondary">
+            <Badge variant="secondary">
               {group.sport} {group.season}
             </Badge>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -156,9 +122,8 @@ export default function LeagueDetailPage() {
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8">
+        {/* Lock status card */}
         <Card className={`mb-8 ${isLocked ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/20'}`}>
           <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">

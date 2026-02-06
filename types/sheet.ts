@@ -13,6 +13,11 @@ export enum PickDirection {
 }
 
 /**
+ * Pick choice for UI state (includes null for unpicked)
+ */
+export type PickChoice = PickDirection | null;
+
+/**
  * Pick result after season ends
  */
 export enum PickResult {

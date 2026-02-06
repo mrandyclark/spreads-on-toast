@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Minus, Trophy, X } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { getResultsAction, getSheetForMemberAction, GroupResults, TeamPickResult } from '@/app/(logged-in)/league/[id]/actions';
@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getResultBgClass, getResultIcon } from '@/lib/result-utils';
+import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
+import { cn } from '@/lib/utils';
 import { Conference, Sheet, Team } from '@/types';
 
 interface MlbMemberSheetProps {
@@ -21,33 +24,6 @@ interface MlbMemberSheetProps {
   seasonStartDate?: string;
   selectedDate?: string;
   userId: string;
-}
-
-
-function ResultIcon({ result }: { result: 'loss' | 'pending' | 'push' | 'win' }) {
-  switch (result) {
-    case 'win':
-      return <Check className="h-3 w-3 text-green-500" />;
-    case 'loss':
-      return <X className="h-3 w-3 text-red-500" />;
-    case 'push':
-      return <Minus className="h-3 w-3 text-yellow-500" />;
-    default:
-      return null;
-  }
-}
-
-function getResultBgClass(result: 'loss' | 'pending' | 'push' | 'win') {
-  switch (result) {
-    case 'win':
-      return 'bg-green-500/10';
-    case 'loss':
-      return 'bg-red-500/10';
-    case 'push':
-      return 'bg-yellow-500/10';
-    default:
-      return '';
-  }
 }
 
 export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberName, onDateChange, seasonEndDate, seasonStartDate, selectedDate, userId }: MlbMemberSheetProps) {
@@ -82,35 +58,14 @@ export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberN
     }
   }, [groupId, userId, selectedDate]);
 
-  // Get postseason picks from sheet
-  const alPostseasonTeams = sheet
-    ? (sheet.postseasonPicks?.al ?? [])
-        .map((id) => sheet.teamPicks.find((tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === id)?.team)
-        .filter((t): t is Team => typeof t === 'object')
-    : [];
-
-  const nlPostseasonTeams = sheet
-    ? (sheet.postseasonPicks?.nl ?? [])
-        .map((id) => sheet.teamPicks.find((tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === id)?.team)
-        .filter((t): t is Team => typeof t === 'object')
-    : [];
-
-  // Get World Series picks
-  const alChampion = sheet?.teamPicks.find(
-    (tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === sheet?.worldSeriesPicks?.alChampion,
-  )?.team as Team | undefined;
-
-  const nlChampion = sheet?.teamPicks.find(
-    (tp) => (typeof tp.team === 'object' ? tp.team.id : tp.team) === sheet?.worldSeriesPicks?.nlChampion,
-  )?.team as Team | undefined;
-
-  const wsWinner = sheet?.worldSeriesPicks?.winner;
+  const { al: alPostseasonTeams, nl: nlPostseasonTeams } = getPostseasonTeams(sheet);
+  const { alChampion, nlChampion, winner: wsWinner } = getWorldSeriesChampions(sheet);
 
   return (
     <SheetContent className="overflow-y-auto sm:max-w-lg">
       <SheetHeader>
         <SheetTitle className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
+          <div className={cn('flex h-10 w-10 items-center justify-center rounded-full', isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
             {memberInitials}
           </div>
           <span>{memberName}{isCurrentUser ? '' : "'s"} Picks</span>
@@ -157,12 +112,12 @@ export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberN
               <div className="grid gap-2 sm:grid-cols-2">
                 {results?.picks.map((pick: TeamPickResult) => (
                   <div
-                    className={`rounded-lg border p-2.5 ${getResultBgClass(pick.result)}`}
+                    className={cn('rounded-lg border p-2.5', getResultBgClass(pick.result))}
                     key={pick.team.id}
                   >
                     <div className="mb-1.5 flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <ResultIcon result={pick.result} />
+                        {getResultIcon(pick.result, 'h-3 w-3')}
                         <span className="text-sm font-semibold">{pick.team.abbreviation}</span>
                       </div>
                       <Badge className="text-xs" variant={pick.pick === 'over' ? 'default' : 'secondary'}>
@@ -227,14 +182,14 @@ export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberN
               <div className="flex flex-col items-center gap-4 py-4">
                 <div className="flex items-center gap-4">
                   <div
-                    className={`rounded-lg px-4 py-3 text-center ${wsWinner === Conference.AL ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}
+                    className={cn('rounded-lg px-4 py-3 text-center', wsWinner === Conference.AL ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted')}
                   >
                     <Badge className="bg-primary">{alChampion?.abbreviation ?? '???'}</Badge>
                     <p className="mt-1 text-xs text-muted-foreground">AL Champion</p>
                   </div>
                   <Trophy className="h-5 w-5 text-primary" />
                   <div
-                    className={`rounded-lg px-4 py-3 text-center ${wsWinner === Conference.NL ? 'bg-blue-800/20 ring-2 ring-blue-800' : 'bg-muted'}`}
+                    className={cn('rounded-lg px-4 py-3 text-center', wsWinner === Conference.NL ? 'bg-blue-800/20 ring-2 ring-blue-800' : 'bg-muted')}
                   >
                     <Badge className="bg-blue-800">{nlChampion?.abbreviation ?? '???'}</Badge>
                     <p className="mt-1 text-xs text-muted-foreground">NL Champion</p>

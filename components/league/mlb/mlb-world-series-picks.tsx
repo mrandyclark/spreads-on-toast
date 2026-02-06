@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getFullTeamName, getTeamsByConferenceSortedByName } from '@/lib/sheet-utils';
+import { cn } from '@/lib/utils';
 import { Conference, Team, TeamPick, WorldSeriesPicks } from '@/types';
 
 interface MlbWorldSeriesPicksProps {
@@ -19,19 +21,7 @@ export function MlbWorldSeriesPicks({ initialPicks, onPicksChange, teamPicks }: 
   const [nlChampion, setNlChampion] = useState<string>(initialPicks?.nlChampion ?? '');
   const [winner, setWinner] = useState<Conference | undefined>(initialPicks?.winner);
 
-  // Build team lists from populated teamPicks
-  const teams = teamPicks
-    .map((tp) => (typeof tp.team === 'object' ? (tp.team as Team) : null))
-    .filter(Boolean) as Team[];
-
-  const getFullTeamName = (team: Team) => `${team.city} ${team.name}`;
-
-  const alTeams = teams
-    .filter((t) => t.conference === Conference.AL)
-    .sort((a, b) => getFullTeamName(a).localeCompare(getFullTeamName(b)));
-  const nlTeams = teams
-    .filter((t) => t.conference === Conference.NL)
-    .sort((a, b) => getFullTeamName(a).localeCompare(getFullTeamName(b)));
+  const { al: alTeams, nl: nlTeams } = getTeamsByConferenceSortedByName(teamPicks);
 
   const alTeam = alTeams.find((t) => t.id === alChampion);
   const nlTeam = nlTeams.find((t) => t.id === nlChampion);
@@ -110,13 +100,13 @@ export function MlbWorldSeriesPicks({ initialPicks, onPicksChange, teamPicks }: 
             <p className="mb-4 text-center text-sm font-medium text-muted-foreground">Your World Series Matchup</p>
             <div className="flex items-center justify-center gap-4">
               <button
-                className={`rounded-lg px-6 py-4 text-center transition-all ${
-                  !alChampion
-                    ? 'border-2 border-dashed border-border bg-background'
-                    : winner === Conference.AL
-                      ? 'ring-2 ring-primary ring-offset-2 bg-primary text-primary-foreground'
-                      : 'bg-primary/70 text-primary-foreground hover:bg-primary'
-                } ${alChampion && nlChampion ? 'cursor-pointer' : ''}`}
+                className={cn(
+                  'rounded-lg px-6 py-4 text-center transition-all',
+                  !alChampion && 'border-2 border-dashed border-border bg-background',
+                  alChampion && winner === Conference.AL && 'ring-2 ring-primary ring-offset-2 bg-primary text-primary-foreground',
+                  alChampion && winner !== Conference.AL && 'bg-primary/70 text-primary-foreground hover:bg-primary',
+                  alChampion && nlChampion && 'cursor-pointer',
+                )}
                 disabled={!alChampion || !nlChampion}
                 onClick={() => alChampion && nlChampion && handleWinnerChange(Conference.AL)}
                 type="button"
@@ -136,13 +126,13 @@ export function MlbWorldSeriesPicks({ initialPicks, onPicksChange, teamPicks }: 
                 <Trophy className="mt-1 h-5 w-5 text-primary" />
               </div>
               <button
-                className={`rounded-lg px-6 py-4 text-center transition-all ${
-                  !nlChampion
-                    ? 'border-2 border-dashed border-border bg-background'
-                    : winner === Conference.NL
-                      ? 'ring-2 ring-blue-800 ring-offset-2 bg-blue-800 text-white'
-                      : 'bg-blue-800/70 text-white hover:bg-blue-800'
-                } ${alChampion && nlChampion ? 'cursor-pointer' : ''}`}
+                className={cn(
+                  'rounded-lg px-6 py-4 text-center transition-all',
+                  !nlChampion && 'border-2 border-dashed border-border bg-background',
+                  nlChampion && winner === Conference.NL && 'ring-2 ring-blue-800 ring-offset-2 bg-blue-800 text-white',
+                  nlChampion && winner !== Conference.NL && 'bg-blue-800/70 text-white hover:bg-blue-800',
+                  alChampion && nlChampion && 'cursor-pointer',
+                )}
                 disabled={!alChampion || !nlChampion}
                 onClick={() => alChampion && nlChampion && handleWinnerChange(Conference.NL)}
                 type="button"

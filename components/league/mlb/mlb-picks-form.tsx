@@ -1,16 +1,14 @@
 'use client';
 
-import { PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
+import { PickChoice, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 import { MlbPostseasonPicks } from './mlb-postseason-picks';
 import { MlbTeamPicks } from './mlb-team-picks';
 import { MlbWorldSeriesPicks } from './mlb-world-series-picks';
 
-type Pick = 'over' | 'under' | null;
-
 interface MlbPicksFormProps {
   onPostseasonPicksChange?: (picks: PostseasonPicks) => void;
-  onTeamPicksChange?: (picks: Record<string, Pick>) => void;
+  onTeamPicksChange?: (picks: Record<string, PickChoice>) => void;
   onWorldSeriesPicksChange?: (picks: WorldSeriesPicks) => void;
   sheet: Sheet;
 }

@@ -4,7 +4,7 @@ import { ChevronRight, Plus, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { ToastIcon } from '@/components/toast-icon';
+import { SiteHeader } from '@/components/layout/site-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -105,23 +105,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-          <Link className="flex items-center gap-2" href="/">
-            <ToastIcon className="h-8 w-8" />
-            <span className="text-lg font-semibold text-foreground">spreadsontoast</span>
-          </Link>
-          <nav className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {user.nameFirst ? `${user.nameFirst} ${user.nameLast || ''}`.trim() : user.email}
-            </span>
-            <Button asChild size="sm" variant="ghost">
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Intentionally using <a> to prevent prefetch on logout */}
-              <a href="/api/auth/logout">Sign Out</a>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
