@@ -1,7 +1,7 @@
 /**
  * Difficulty label based on percentile bands
  */
-export type DifficultyLabel = 'Easy' | 'Average' | 'Hard';
+export type DifficultyLabel = 'Average' | 'Easy' | 'Hard';
 
 /**
  * SOS data for a single direction (played or remaining)
@@ -18,7 +18,7 @@ export interface SOSData {
  * Complete schedule difficulty data for a team
  */
 export interface ScheduleDifficultyData {
-	played: SOSData | null;
-	remaining: SOSData | null;
+	played: null | SOSData;
+	remaining: null | SOSData;
 	teamCount: number;
 }

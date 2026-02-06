@@ -38,7 +38,7 @@ interface TeamSOS {
 /**
  * Parse a win percentage string like ".615" to a number (0.615)
  */
-function parseWinPct(pct: string | undefined): number | null {
+function parseWinPct(pct: string | undefined): null | number {
 	if (!pct) {
 		return null;
 	}
@@ -104,7 +104,7 @@ function isGameFinal(game: Game): boolean {
 /**
  * Get opponent win percentage for a game from the team's perspective
  */
-function getOpponentWinPct(game: Game, teamMlbId: number): number | null {
+function getOpponentWinPct(game: Game, teamMlbId: number): null | number {
 	const isHome = game.homeTeam.teamMlbId === teamMlbId;
 	const opponent = isHome ? game.awayTeam : game.homeTeam;
 
@@ -118,7 +118,7 @@ function getOpponentWinPct(game: Game, teamMlbId: number): number | null {
 /**
  * Calculate SOS for a set of games
  */
-function calculateSOS(games: Game[], teamMlbId: number): TeamSOS | null {
+function calculateSOS(games: Game[], teamMlbId: number): null | TeamSOS {
 	const opponentWinPcts: number[] = [];
 
 	for (const game of games) {
@@ -171,7 +171,7 @@ async function calculateTeamScheduleDifficulty(
 	teamMlbId: number,
 	season: string,
 	asOfDate: string,
-): Promise<{ played: TeamSOS | null; remaining: TeamSOS | null }> {
+): Promise<{ played: null | TeamSOS; remaining: null | TeamSOS }> {
 	const games = await getTeamGames(teamMlbId, season);
 
 	// Split into played and remaining
@@ -219,8 +219,8 @@ export async function getScheduleDifficulty(
 	// Calculate SOS for all teams (for percentile calculation)
 	const allPlayedSOS: number[] = [];
 	const allRemainingSOS: number[] = [];
-	let targetPlayed: TeamSOS | null = null;
-	let targetRemaining: TeamSOS | null = null;
+	let targetPlayed: null | TeamSOS = null;
+	let targetRemaining: null | TeamSOS = null;
 
 	for (const mlbId of teamMlbIds) {
 		const { played, remaining } = await calculateTeamScheduleDifficulty(mlbId, season, asOfDate);
@@ -254,8 +254,8 @@ export async function getScheduleDifficulty(
 	}
 
 	// Build response with percentiles
-	let playedData: SOSData | null = null;
-	let remainingData: SOSData | null = null;
+	let playedData: null | SOSData = null;
+	let remainingData: null | SOSData = null;
 
 	if (targetPlayed) {
 		const percentile = calculatePercentile(targetPlayed.avgOpponentWinPct, allPlayedSOS);
@@ -297,7 +297,7 @@ export async function getScheduleDifficultyByTeamId(
 	teamId: string,
 	season: string,
 	asOfDate: string,
-): Promise<ScheduleDifficultyData | null> {
+): Promise<null | ScheduleDifficultyData> {
 	await dbConnect();
 
 	const team = await TeamModel.findById(teamId);

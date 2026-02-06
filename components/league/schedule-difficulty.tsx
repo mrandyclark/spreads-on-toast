@@ -12,20 +12,20 @@ interface ScheduleDifficultyProps {
 }
 
 const LABEL_DISPLAY: Record<DifficultyLabel, string> = {
-	Easy: 'Below Average',
 	Average: 'Average',
+	Easy: 'Below Average',
 	Hard: 'Above Average',
 };
 
 const LABEL_COLORS: Record<DifficultyLabel, string> = {
-	Easy: 'text-green-600 dark:text-green-400',
 	Average: 'text-yellow-600 dark:text-yellow-400',
+	Easy: 'text-green-600 dark:text-green-400',
 	Hard: 'text-red-600 dark:text-red-400',
 };
 
 const LABEL_BG_COLORS: Record<DifficultyLabel, string> = {
-	Easy: 'bg-green-600',
 	Average: 'bg-yellow-600',
+	Easy: 'bg-green-600',
 	Hard: 'bg-red-600',
 };
 
@@ -44,7 +44,7 @@ function SOSCard({
 	title,
 	tooltipContent,
 }: {
-	data: SOSData | null;
+	data: null | SOSData;
 	title: string;
 	tooltipContent: string;
 }) {

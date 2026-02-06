@@ -39,7 +39,7 @@ interface TeamDetailClientProps {
 	availableDates: string[];
 	current: null | TeamDetailData;
 	history: TeamHistoryDataPoint[];
-	scheduleDifficulty: ScheduleDifficultyData | null;
+	scheduleDifficulty: null | ScheduleDifficultyData;
 	season: string;
 	seasons: SeasonWithDates[];
 	selectedDate: string;
