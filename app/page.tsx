@@ -1,17 +1,10 @@
-import {
-	FAQ,
-	Features,
-	Footer,
-	Header,
-	Hero,
-	HowItWorks,
-	SupportedLeagues,
-} from '@/components/marketing';
+import { SiteHeader } from '@/components/layout/site-header';
+import { FAQ, Features, Footer, Hero, HowItWorks, SupportedLeagues } from '@/components/marketing';
 
 export default function Home() {
 	return (
 		<main className="bg-background min-h-screen">
-			<Header />
+			<SiteHeader variant="marketing" />
 			<Hero />
 			<HowItWorks />
 			<SupportedLeagues />
