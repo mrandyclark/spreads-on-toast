@@ -41,12 +41,9 @@ async function getKindeId(): Promise<null | string> {
   const headersList = await headers();
   const authHeader = headersList.get('authorization');
 
-  console.log('[Auth] Checking auth - has Authorization header:', !!authHeader);
-
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
     const kindeId = await verifyBearerToken(token);
-    console.log('[Auth] Bearer token verification result:', kindeId ? 'valid' : 'invalid');
 
     if (kindeId) {
       return kindeId;
@@ -55,12 +52,9 @@ async function getKindeId(): Promise<null | string> {
 
   // Fall back to Kinde session (cookie-based)
   const { getUser, isAuthenticated } = getKindeServerSession();
-  const isAuth = await isAuthenticated();
-  console.log('[Auth] Kinde session isAuthenticated:', isAuth);
 
-  if (isAuth) {
+  if (await isAuthenticated()) {
     const kindeUser = await getUser();
-    console.log('[Auth] Kinde user from session:', kindeUser?.id ?? 'null');
 
     if (kindeUser) {
       return kindeUser.id;
@@ -74,15 +68,11 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   const kindeId = await getKindeId();
 
   if (!kindeId) {
-    console.log('[Auth] No kindeId found - user not authenticated');
     return null;
   }
 
-  console.log('[Auth] Found kindeId:', kindeId);
-
   // Look up user in our database by kindeId
   let dbUser = await getUserByKindeId(kindeId);
-  console.log('[Auth] DB user lookup result:', dbUser ? `Found user ${dbUser.id}` : 'Not found');
 
   // Auto-create user if they don't exist (webhook may have failed)
   if (!dbUser) {

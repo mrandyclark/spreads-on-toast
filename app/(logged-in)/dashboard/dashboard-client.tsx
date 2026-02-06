@@ -116,6 +116,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
               {user.nameFirst ? `${user.nameFirst} ${user.nameLast || ''}`.trim() : user.email}
             </span>
             <Button asChild size="sm" variant="ghost">
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Intentionally using <a> to prevent prefetch on logout */}
               <a href="/api/auth/logout">Sign Out</a>
             </Button>
           </nav>

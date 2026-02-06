@@ -13,16 +13,13 @@ import { calculatePickResult, getFinalStandings, getStandingsForDate, PickResult
 import { Group, PickDirection, PostseasonPicks, Sheet, Team, TeamPick, User, WorldSeriesPicks } from '@/types';
 
 export async function getGroupAction(groupId: string): Promise<{ error?: string; group?: Group }> {
-  console.log('[getGroupAction] Starting for groupId:', groupId);
   const user = await getAuthUser();
-  console.log('[getGroupAction] User:', user ? user.id : 'null');
 
   if (!user) {
     return { error: 'Unauthorized' };
   }
 
   const group = await getGroupForMember(groupId, user.id);
-  console.log('[getGroupAction] Group found:', !!group);
 
   if (!group) {
     return { error: 'Group not found' };
