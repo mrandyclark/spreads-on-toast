@@ -232,7 +232,7 @@ export default function LeagueDetailPage() {
 					className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 text-sm transition-colors"
 					href="/dashboard">
 					<ArrowLeft className="h-4 w-4" />
-					Back to Leagues
+					Dashboard
 				</Link>
 
 				{/* League title and info */}

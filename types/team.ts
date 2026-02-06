@@ -56,21 +56,86 @@ export interface Streak {
 }
 
 /**
+ * Split record (home/away, vs L/R, last 10, etc.)
+ */
+export interface SplitRecord {
+	losses: number;
+	pct: string;
+	wins: number;
+}
+
+/**
+ * Expected record from MLB API
+ */
+export interface ExpectedRecord {
+	losses: number;
+	pct: string;
+	source: string; // e.g., 'mlb'
+	type: string; // e.g., 'xWinLoss'
+	wins: number;
+}
+
+/**
+ * League record
+ */
+export interface LeagueRecord {
+	losses: number;
+	pct: string;
+	wins: number;
+}
+
+/**
+ * All split records for a team
+ */
+export interface TeamSplits {
+	away?: SplitRecord;
+	day?: SplitRecord;
+	extraInning?: SplitRecord;
+	grass?: SplitRecord;
+	home?: SplitRecord;
+	lastTen?: SplitRecord;
+	left?: SplitRecord; // vs LHP
+	leftAway?: SplitRecord;
+	leftHome?: SplitRecord;
+	night?: SplitRecord;
+	oneRun?: SplitRecord;
+	right?: SplitRecord; // vs RHP
+	rightAway?: SplitRecord;
+	rightHome?: SplitRecord;
+	turf?: SplitRecord;
+	winners?: SplitRecord;
+}
+
+/**
  * Daily snapshot of a team's record for a season
  * Used to track win totals and calculate projected wins over time
  */
 export interface TeamStanding extends BaseDocument {
 	// Playoff status
 	clinched?: boolean; // Has clinched playoff spot
+	clinchIndicator?: string; // Raw clinch indicator (e.g., "x"|"y"|"z"|"w")
 	date: Date; // The date of this snapshot
+
+	// Games back
+	divisionChamp?: boolean; // Is division champion
+	divisionGamesBack?: string; // Games behind division leader
+	divisionLeader?: boolean; // Is division leader
+
 	// Rankings
 	divisionRank?: number; // 1-5 within division
 	eliminated?: boolean; // Has been eliminated
 
-	// Games back
+	// MLB expected record
+	expectedRecord?: ExpectedRecord;
 	gamesBack?: string; // Games behind division leader (can be "-" or "1.0")
+
 	gamesPlayed: number;
+	hasWildcard?: boolean; // Has wildcard spot
+
+	// League record
+	leagueGamesBack?: string; // Games behind league leader
 	leagueRank?: number; // 1-15 within AL/NL
+	leagueRecord?: LeagueRecord;
 
 	losses: number;
 	// Calculated projections
@@ -84,12 +149,18 @@ export interface TeamStanding extends BaseDocument {
 	runsScored?: number;
 	season: string; // e.g., '2026'
 
+	// Splits (home/away, vs L/R, last 10, etc.)
+	splits?: TeamSplits;
 	sport: Sport;
+	sportGamesBack?: string; // Games behind sport leader
+	sportRank?: number; // Rank across entire sport
+
 	// Streak
 	streak?: Streak;
 	team: Ref<Team>; // Team ID or populated Team
 
 	wildCardGamesBack?: string; // Games behind wild card
+	wildCardLeader?: boolean; // Is wild card leader
 
 	wildCardRank?: number; // Wild card position
 	// Core record

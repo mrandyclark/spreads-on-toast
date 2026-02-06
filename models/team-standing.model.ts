@@ -12,6 +12,57 @@ const StreakSchema = new Schema(
 	{ _id: false },
 );
 
+const SplitRecordSchema = new Schema(
+	{
+		losses: { type: Number },
+		pct: { type: String },
+		wins: { type: Number },
+	},
+	{ _id: false },
+);
+
+const ExpectedRecordSchema = new Schema(
+	{
+		losses: { type: Number },
+		pct: { type: String },
+		source: { type: String },
+		type: { type: String },
+		wins: { type: Number },
+	},
+	{ _id: false },
+);
+
+const LeagueRecordSchema = new Schema(
+	{
+		losses: { type: Number },
+		pct: { type: String },
+		wins: { type: Number },
+	},
+	{ _id: false },
+);
+
+const TeamSplitsSchema = new Schema(
+	{
+		away: { type: SplitRecordSchema },
+		day: { type: SplitRecordSchema },
+		extraInning: { type: SplitRecordSchema },
+		grass: { type: SplitRecordSchema },
+		home: { type: SplitRecordSchema },
+		lastTen: { type: SplitRecordSchema },
+		left: { type: SplitRecordSchema },
+		leftAway: { type: SplitRecordSchema },
+		leftHome: { type: SplitRecordSchema },
+		night: { type: SplitRecordSchema },
+		oneRun: { type: SplitRecordSchema },
+		right: { type: SplitRecordSchema },
+		rightAway: { type: SplitRecordSchema },
+		rightHome: { type: SplitRecordSchema },
+		turf: { type: SplitRecordSchema },
+		winners: { type: SplitRecordSchema },
+	},
+	{ _id: false },
+);
+
 const TeamStandingSchema = new Schema<With_id<TeamStanding>>({
 	_id: UuidType,
 	date: { required: true, type: Date },
@@ -31,10 +82,14 @@ const TeamStandingSchema = new Schema<With_id<TeamStanding>>({
 	// Rankings
 	divisionRank: { type: Number },
 	leagueRank: { type: Number },
+	sportRank: { type: Number },
 	wildCardRank: { type: Number },
 
 	// Games back
+	divisionGamesBack: { type: String },
 	gamesBack: { type: String },
+	leagueGamesBack: { type: String },
+	sportGamesBack: { type: String },
 	wildCardGamesBack: { type: String },
 
 	// Run production
@@ -47,7 +102,21 @@ const TeamStandingSchema = new Schema<With_id<TeamStanding>>({
 
 	// Playoff status
 	clinched: { type: Boolean },
+	clinchIndicator: { type: String },
+	divisionChamp: { type: Boolean },
+	divisionLeader: { type: Boolean },
 	eliminated: { type: Boolean },
+	hasWildcard: { type: Boolean },
+	wildCardLeader: { type: Boolean },
+
+	// Splits
+	splits: { type: TeamSplitsSchema },
+
+	// Expected record (from MLB API)
+	expectedRecord: { type: ExpectedRecordSchema },
+
+	// League record
+	leagueRecord: { type: LeagueRecordSchema },
 });
 
 // Unique constraint + index for querying standings by team and season (for trend charts)

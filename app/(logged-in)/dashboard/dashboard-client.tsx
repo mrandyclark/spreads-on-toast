@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { SiteHeader } from '@/components/layout/site-header';
+import { MlbStandingsBoard } from '@/components/league/mlb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -367,6 +368,10 @@ export function DashboardClient() {
 						</Dialog>
 					</div>
 				)}
+
+				<div className="mt-12">
+					<MlbStandingsBoard />
+				</div>
 			</main>
 		</div>
 	);

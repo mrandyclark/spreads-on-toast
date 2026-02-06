@@ -46,7 +46,7 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 		<header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur">
 			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
 				{/* Logo */}
-				<Link className="flex items-center gap-2 transition-opacity hover:opacity-80" href="/">
+				<Link className="flex items-center gap-2 transition-opacity hover:opacity-80" href={isMarketing ? '/' : '/dashboard'}>
 					<Image alt="spreadsontoast" height={32} src="/toast-icon.svg" width={32} />
 					<span className="text-foreground font-serif text-xl font-medium">spreads on toast.</span>
 				</Link>
