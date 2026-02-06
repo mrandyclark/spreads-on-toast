@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAuthUser } from '@/lib/auth';
-import { createGroup, getGroupsByUser } from '@/server/groups';
+import { createGroup, getGroupsByUser, joinGroupByInviteCode } from '@/server/groups';
 import { getSeasonsBySport } from '@/server/seasons';
 import { Group, Season, Sport } from '@/types';
 
@@ -68,5 +68,34 @@ export async function createGroupAction(
 	} catch (error) {
 		console.error('Failed to create group:', error);
 		return { error: 'Failed to create group' };
+	}
+}
+
+export async function joinGroupAction(
+	inviteCode: string,
+): Promise<{ error?: string; group?: Group }> {
+	const user = await getAuthUser();
+
+	if (!user) {
+		return { error: 'Unauthorized' };
+	}
+
+	if (!inviteCode.trim()) {
+		return { error: 'Invite code is required' };
+	}
+
+	try {
+		const result = await joinGroupByInviteCode(inviteCode, user.id);
+
+		if (result.error) {
+			return { error: result.error };
+		}
+
+		revalidatePath('/dashboard');
+
+		return { group: result.group };
+	} catch (error) {
+		console.error('Failed to join group:', error);
+		return { error: 'Failed to join group' };
 	}
 }

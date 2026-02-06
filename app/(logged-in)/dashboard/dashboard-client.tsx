@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Group, Season, Sport } from '@/types';
 
-import { createGroupAction, getGroupsAction, getSeasonsAction } from './actions';
+import { createGroupAction, getGroupsAction, getSeasonsAction, joinGroupAction } from './actions';
 
 export function DashboardClient() {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -41,6 +41,8 @@ export function DashboardClient() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [createError, setCreateError] = useState('');
 	const [isCreating, setIsCreating] = useState(false);
+	const [joinError, setJoinError] = useState('');
+	const [isJoining, setIsJoining] = useState(false);
 
 	useEffect(() => {
 		async function fetchGroups() {
@@ -97,11 +99,22 @@ export function DashboardClient() {
 		}
 	};
 
-	const handleJoinGroup = () => {
+	const handleJoinGroup = async () => {
 		if (inviteCode.trim()) {
-			// TODO: Implement join group API
-			setInviteCode('');
-			setIsJoinOpen(false);
+			setJoinError('');
+			setIsJoining(true);
+
+			const result = await joinGroupAction(inviteCode.trim());
+
+			if (result.group) {
+				setGroups([result.group, ...groups]);
+				setInviteCode('');
+				setIsJoinOpen(false);
+			} else {
+				setJoinError(result.error || 'Failed to join group');
+			}
+
+			setIsJoining(false);
 		}
 	};
 
@@ -293,12 +306,13 @@ export function DashboardClient() {
 									/>
 								</div>
 							</div>
+							{joinError && <p className="text-destructive text-sm">{joinError}</p>}
 							<DialogFooter>
 								<Button onClick={() => setIsJoinOpen(false)} variant="outline">
 									Cancel
 								</Button>
-								<Button disabled={!inviteCode.trim()} onClick={handleJoinGroup}>
-									Join Group
+								<Button disabled={!inviteCode.trim() || isJoining} onClick={handleJoinGroup}>
+									{isJoining ? 'Joining...' : 'Join Group'}
 								</Button>
 							</DialogFooter>
 						</DialogContent>

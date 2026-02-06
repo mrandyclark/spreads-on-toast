@@ -123,6 +123,55 @@ export async function isGroupOwner(groupId: string, userId: string): Promise<boo
 	return !!group;
 }
 
+export interface JoinGroupResult {
+	error?: string;
+	group?: Group;
+}
+
+export async function joinGroupByInviteCode(
+	inviteCode: string,
+	userId: string,
+): Promise<JoinGroupResult> {
+	await dbConnect();
+
+	// Normalize invite code (uppercase, trim)
+	const normalizedCode = inviteCode.trim().toUpperCase();
+
+	const group = await GroupModel.findOne({ inviteCode: normalizedCode });
+
+	if (!group) {
+		return { error: 'Invalid invite code' };
+	}
+
+	// Check if user is already a member
+	const isMember = group.members.some((m) => m.user.toString() === userId);
+
+	if (isMember) {
+		return { error: 'You are already a member of this group' };
+	}
+
+	// Add user to group
+	group.members.push({
+		joinedAt: new Date(),
+		role: GroupRole.Member,
+		user: userId as unknown as Group['members'][0]['user'],
+	});
+
+	await group.save();
+
+	const groupJson = group.toJSON() as Group;
+
+	// Create a sheet for the new member
+	await createSheet({
+		group: groupJson.id,
+		season: groupJson.season,
+		sport: groupJson.sport,
+		user: userId,
+	});
+
+	return { group: groupJson };
+}
+
 export interface GroupWithSeasonDates extends Group {
 	seasonEndDate?: Date;
 	seasonStartDate?: Date;

@@ -48,7 +48,7 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 				{/* Logo */}
 				<Link className="flex items-center gap-2 transition-opacity hover:opacity-80" href="/">
 					<Image alt="spreadsontoast" height={32} src="/toast-icon.svg" width={32} />
-					<span className="text-foreground font-serif text-xl font-medium">spreadsontoast</span>
+					<span className="text-foreground font-serif text-xl font-medium">spreads on toast.</span>
 				</Link>
 
 				{/* Desktop Navigation - Marketing only */}
