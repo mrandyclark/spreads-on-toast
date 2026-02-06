@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     if (!season) {
       return Response.json({
         message: 'No MLB season found for current year',
-        skipped: true,
         season: currentYear,
+        skipped: true,
       });
     }
 
@@ -40,18 +40,18 @@ export async function GET(request: NextRequest) {
     if (today < new Date(season.startDate)) {
       return Response.json({
         message: 'Season has not started yet',
-        skipped: true,
         season: currentYear,
+        skipped: true,
         startDate: season.startDate,
       });
     }
 
     if (today > new Date(season.endDate)) {
       return Response.json({
-        message: 'Season has ended',
-        skipped: true,
-        season: currentYear,
         endDate: season.endDate,
+        message: 'Season has ended',
+        season: currentYear,
+        skipped: true,
       });
     }
 

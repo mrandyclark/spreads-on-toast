@@ -14,6 +14,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { Group, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
+import { getGroupAction, getSheetAction, savePicksAction } from './actions';
+
 export default function LeagueDetailPage() {
   const params = useParams();
   const groupId = params.id as string;
@@ -32,19 +34,17 @@ export default function LeagueDetailPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [groupRes, sheetRes] = await Promise.all([
-          fetch(`/api/groups/${groupId}`),
-          fetch(`/api/groups/${groupId}/sheet`),
+        const [groupResult, sheetResult] = await Promise.all([
+          getGroupAction(groupId),
+          getSheetAction(groupId),
         ]);
 
-        if (groupRes.ok) {
-          const groupData = await groupRes.json();
-          setGroup(groupData);
+        if (groupResult.group) {
+          setGroup(groupResult.group);
         }
 
-        if (sheetRes.ok) {
-          const sheetData = await sheetRes.json();
-          setSheet(sheetData);
+        if (sheetResult.sheet) {
+          setSheet(sheetResult.sheet);
         }
       } finally {
         setIsLoading(false);
@@ -78,33 +78,14 @@ export default function LeagueDetailPage() {
     setIsSaving(true);
 
     try {
-      const teamPicksToSave = Object.entries(teamPicks)
-        .filter(([, pick]) => pick !== null)
-        .map(([team, pick]) => ({ pick: pick as 'over' | 'under', team }));
-
-      const body: Record<string, unknown> = {};
-
-      if (teamPicksToSave.length > 0) {
-        body.teamPicks = teamPicksToSave;
-      }
-
-      if (postseasonPicks) {
-        body.postseasonPicks = postseasonPicks;
-      }
-
-      if (worldSeriesPicks) {
-        body.worldSeriesPicks = worldSeriesPicks;
-      }
-
-      const res = await fetch(`/api/groups/${groupId}/sheet`, {
-        body: JSON.stringify(body),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PATCH',
+      const result = await savePicksAction(groupId, {
+        postseasonPicks: postseasonPicks ?? undefined,
+        teamPicks,
+        worldSeriesPicks: worldSeriesPicks ?? undefined,
       });
 
-      if (res.ok) {
-        const updatedSheet = await res.json();
-        setSheet(updatedSheet);
+      if (result.sheet) {
+        setSheet(result.sheet);
       }
     } finally {
       setIsSaving(false);

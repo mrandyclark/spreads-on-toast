@@ -19,7 +19,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Group, Season, SessionUser } from '@/types';
+import { Group, Season, SessionUser, Sport } from '@/types';
+
+import { createGroupAction, getGroupsAction, getSeasonsAction } from './actions';
 
 interface DashboardClientProps {
   user: SessionUser;
@@ -41,11 +43,10 @@ export function DashboardClient({ user }: DashboardClientProps) {
   useEffect(() => {
     async function fetchGroups() {
       try {
-        const res = await fetch('/api/groups');
+        const result = await getGroupsAction();
 
-        if (res.ok) {
-          const data = await res.json();
-          setGroups(data);
+        if (result.groups) {
+          setGroups(result.groups);
         }
       } finally {
         setIsLoading(false);
@@ -57,12 +58,11 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
   useEffect(() => {
     async function fetchSeasons() {
-      const res = await fetch(`/api/seasons?sport=${groupSport}`);
+      const result = await getSeasonsAction(groupSport as Sport);
 
-      if (res.ok) {
-        const data = await res.json();
-        setSeasons(data);
-        setGroupSeason(data[0]?.season ?? '');
+      if (result.seasons) {
+        setSeasons(result.seasons);
+        setGroupSeason(result.seasons[0]?.season ?? '');
       }
     }
 
@@ -74,27 +74,21 @@ export function DashboardClient({ user }: DashboardClientProps) {
       setCreateError('');
       setIsCreating(true);
 
-      const res = await fetch('/api/groups', {
-        body: JSON.stringify({
-          lockDate: new Date(`${groupSeason}-03-28`).toISOString(),
-          name: groupName.trim(),
-          season: groupSeason,
-          sport: groupSport,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
+      const result = await createGroupAction({
+        lockDate: new Date(`${groupSeason}-03-28`).toISOString(),
+        name: groupName.trim(),
+        season: groupSeason,
+        sport: groupSport as Sport,
       });
 
-      if (res.ok) {
-        const newGroup = await res.json();
-        setGroups([newGroup, ...groups]);
+      if (result.group) {
+        setGroups([result.group, ...groups]);
         setGroupName('');
         setGroupSport('MLB');
         setGroupSeason(seasons[0]?.season ?? '');
         setIsCreateOpen(false);
       } else {
-        const data = await res.json();
-        setCreateError(data.error || 'Failed to create group');
+        setCreateError(result.error || 'Failed to create group');
       }
 
       setIsCreating(false);

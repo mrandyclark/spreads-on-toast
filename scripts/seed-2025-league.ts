@@ -78,6 +78,7 @@ async function seed() {
     }
 
     const line = linesByTeamId.get(teamId);
+
     if (line !== undefined) {
       teamPicks.push({ line, pick: PickDirection.Over, team: teamId });
     }
@@ -92,6 +93,7 @@ async function seed() {
     }
 
     const line = linesByTeamId.get(teamId);
+
     if (line !== undefined) {
       teamPicks.push({ line, pick: PickDirection.Under, team: teamId });
     }

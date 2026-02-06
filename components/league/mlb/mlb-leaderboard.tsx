@@ -3,7 +3,7 @@
 import { ChevronRight, Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { LeaderboardEntry, LeaderboardResponse } from '@/app/api/groups/[id]/leaderboard/route';
+import { getLeaderboardAction, LeaderboardData, LeaderboardEntry } from '@/app/(logged-in)/league/[id]/actions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,7 +24,7 @@ interface MlbLeaderboardProps {
 }
 
 export function MlbLeaderboard({ currentUserId, groupId, onMemberSelect, selectedDate }: MlbLeaderboardProps) {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,12 +32,10 @@ export function MlbLeaderboard({ currentUserId, groupId, onMemberSelect, selecte
       setIsLoading(true);
 
       try {
-        const dateParam = selectedDate ? `?date=${selectedDate}` : '';
-        const res = await fetch(`/api/groups/${groupId}/leaderboard${dateParam}`);
+        const result = await getLeaderboardAction(groupId, selectedDate);
 
-        if (res.ok) {
-          const data = await res.json();
-          setLeaderboard(data);
+        if (result.leaderboard) {
+          setLeaderboard(result.leaderboard);
         }
       } finally {
         setIsLoading(false);
@@ -61,8 +59,9 @@ export function MlbLeaderboard({ currentUserId, groupId, onMemberSelect, selecte
       <Card>
         <CardContent className="p-0">
           <div className="divide-y divide-border">
-            {leaderboard.entries.map((entry: LeaderboardEntry) => {
+            {leaderboard.entries.map((entry: LeaderboardEntry, index: number) => {
               const isCurrentUser = entry.userId.toLowerCase() === currentUserId.toLowerCase();
+              const rank = index + 1;
 
               return (
                 <button
@@ -76,10 +75,10 @@ export function MlbLeaderboard({ currentUserId, groupId, onMemberSelect, selecte
                   })}
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                    {entry.rank === 1 ? (
+                    {rank === 1 ? (
                       <Crown className="h-4 w-4 text-primary" />
                     ) : (
-                      <span className="text-muted-foreground">{entry.rank}</span>
+                      <span className="text-muted-foreground">{rank}</span>
                     )}
                   </div>
                   <Avatar className="h-10 w-10 border-2 border-border">

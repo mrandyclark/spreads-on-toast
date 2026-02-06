@@ -3,7 +3,7 @@
 import { Check, Minus, Trophy, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { GroupResults, TeamPickResult } from '@/app/api/groups/[id]/results/route';
+import { getResultsAction, getSheetForMemberAction, GroupResults, TeamPickResult } from '@/app/(logged-in)/league/[id]/actions';
 import { Badge } from '@/components/ui/badge';
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -54,20 +54,17 @@ export function MlbMemberSheet({ groupId, isCurrentUser, memberInitials, memberN
       setIsLoading(true);
 
       try {
-        const dateParam = selectedDate ? `&date=${selectedDate}` : '';
-        const [resultsRes, sheetRes] = await Promise.all([
-          fetch(`/api/groups/${groupId}/results?userId=${userId}${dateParam}`),
-          fetch(`/api/groups/${groupId}/sheet?userId=${userId}`),
+        const [resultsResult, sheetResult] = await Promise.all([
+          getResultsAction(groupId, userId, selectedDate),
+          getSheetForMemberAction(groupId, userId),
         ]);
 
-        if (resultsRes.ok) {
-          const data = await resultsRes.json();
-          setResults(data);
+        if (resultsResult.results) {
+          setResults(resultsResult.results);
         }
 
-        if (sheetRes.ok) {
-          const data = await sheetRes.json();
-          setSheet(data);
+        if (sheetResult.sheet) {
+          setSheet(sheetResult.sheet);
         }
       } finally {
         setIsLoading(false);

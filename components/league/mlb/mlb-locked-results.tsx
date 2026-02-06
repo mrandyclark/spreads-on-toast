@@ -3,7 +3,7 @@
 import { Check, Minus, Trophy, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { GroupResults, TeamPickResult } from '@/app/api/groups/[id]/results/route';
+import { getResultsAction, GroupResults, TeamPickResult } from '@/app/(logged-in)/league/[id]/actions';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,12 +51,10 @@ export function MlbLockedResults({ groupId, selectedDate, sheet, userId }: MlbLo
       setIsLoading(true);
 
       try {
-        const dateParam = selectedDate ? `&date=${selectedDate}` : '';
-        const res = await fetch(`/api/groups/${groupId}/results?userId=${userId}${dateParam}`);
+        const result = await getResultsAction(groupId, userId, selectedDate);
 
-        if (res.ok) {
-          const data = await res.json();
-          setResults(data);
+        if (result.results) {
+          setResults(result.results);
         }
       } finally {
         setIsLoading(false);
