@@ -4,8 +4,10 @@ import { revalidatePath } from 'next/cache';
 
 import { getAuthUser } from '@/lib/auth';
 import { createGroup, getGroupsByUser, joinGroupByInviteCode } from '@/server/groups';
-import { getSeasonsBySport } from '@/server/seasons';
-import { Group, Season, Sport } from '@/types';
+import { getSeasonsBySport, getTeamLinesBySeason } from '@/server/seasons';
+import { getLatestStandings } from '@/server/standings';
+import { getTeamsBySport } from '@/server/teams';
+import { Conference, Group, Season, Sport, Team, TeamLine, TeamStanding } from '@/types';
 
 export async function getGroupsAction(): Promise<{ error?: string; groups?: Group[] }> {
 	const user = await getAuthUser();
@@ -97,5 +99,104 @@ export async function joinGroupAction(
 	} catch (error) {
 		console.error('Failed to join group:', error);
 		return { error: 'Failed to join group' };
+	}
+}
+
+export interface StandingsTeamRow {
+	abbreviation: string;
+	city: string;
+	conference: Conference;
+	line: number | null;
+	losses: number;
+	name: string;
+	projectedWins: number;
+	overUnder: 'over' | 'under' | 'push' | null;
+	teamId: string;
+	wins: number;
+}
+
+export async function getStandingsAction(): Promise<{
+	error?: string;
+	standings?: StandingsTeamRow[];
+	asOfDate?: string;
+}> {
+	const user = await getAuthUser();
+
+	if (!user) {
+		return { error: 'Unauthorized' };
+	}
+
+	try {
+		// Get the current season year
+		const currentYear = new Date().getFullYear().toString();
+
+		// Fetch standings, teams, and lines in parallel
+		const [latestStandings, teams, teamLines] = await Promise.all([
+			getLatestStandings(currentYear),
+			getTeamsBySport(Sport.MLB),
+			getTeamLinesBySeason(Sport.MLB, currentYear),
+		]);
+
+		if (latestStandings.length === 0) {
+			return { standings: [] };
+		}
+
+		// Build lookup maps
+		const teamsById = new Map<string, Team>(teams.map((t) => [t.id, t]));
+		const linesByTeamId = new Map<string, number>(
+			teamLines.map((tl) => {
+				const teamId = typeof tl.team === 'string' ? tl.team : (tl.team as Team).id;
+				return [teamId, tl.line];
+			}),
+		);
+
+		// Get the date from the first standing
+		const asOfDate = latestStandings[0]?.date
+			? new Date(latestStandings[0].date).toISOString()
+			: undefined;
+
+		const rows: StandingsTeamRow[] = latestStandings
+			.map((standing) => {
+				const teamId =
+					typeof standing.team === 'string' ? standing.team : (standing.team as Team).id;
+				const team =
+					typeof standing.team === 'object' && standing.team !== null
+						? (standing.team as Team)
+						: teamsById.get(teamId);
+
+				if (!team) return null;
+
+				const line = linesByTeamId.get(team.id) ?? null;
+				let overUnder: 'over' | 'under' | 'push' | null = null;
+
+				if (line !== null && standing.projectedWins > 0) {
+					if (standing.projectedWins > line) {
+						overUnder = 'over';
+					} else if (standing.projectedWins < line) {
+						overUnder = 'under';
+					} else {
+						overUnder = 'push';
+					}
+				}
+
+				return {
+					abbreviation: team.abbreviation,
+					city: team.city,
+					conference: team.conference,
+					line,
+					losses: standing.losses,
+					name: team.name,
+					projectedWins: standing.projectedWins,
+					overUnder,
+					teamId: team.id,
+					wins: standing.wins,
+				};
+			})
+			.filter(Boolean) as StandingsTeamRow[];
+
+		return { standings: rows, asOfDate };
+	} catch (error) {
+		console.error('Failed to fetch standings:', error);
+		return { error: 'Failed to fetch standings' };
 	}
 }
