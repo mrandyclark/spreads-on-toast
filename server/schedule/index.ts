@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { dbConnect } from '@/lib/mongoose';
 import { GameModel } from '@/models/game.model';
 import { TeamModel } from '@/models/team.model';
-import { Sport } from '@/types';
+import { GameState, GameType, Sport, UpcomingGame } from '@/types';
 
 import { fetchMlbSchedule, ScheduleGameData } from '../mlb-api';
 
@@ -192,29 +192,68 @@ async function syncGamesToDatabase(
 }
 
 /**
- * Get upcoming games for a team
+ * Get upcoming games for a team with full team data
+ * @param teamId - Team ID
+ * @param fromDate - Date string (YYYY-MM-DD) to get games from, defaults to today
+ * @param limit - Maximum number of games to return
  */
 export async function getUpcomingGames(
 	teamId: string,
+	fromDate?: string,
 	limit = 10,
-): Promise<unknown[]> {
+): Promise<UpcomingGame[]> {
 	await dbConnect();
 
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
+	const startDate = fromDate ? new Date(fromDate) : new Date();
+	startDate.setHours(0, 0, 0, 0);
 
 	const games = await GameModel.find({
 		$or: [
 			{ 'homeTeam.team': teamId },
 			{ 'awayTeam.team': teamId },
 		],
-		gameDate: { $gte: today },
+		gameDate: { $gte: startDate },
 	})
 		.sort({ gameDate: 1 })
 		.limit(limit)
+		.populate('homeTeam.team')
+		.populate('awayTeam.team')
 		.lean();
 
-	return games;
+	return games.map((game) => {
+		// After populate, team is either the populated object or the original string ID
+		const homeTeamData = typeof game.homeTeam.team === 'object' && game.homeTeam.team !== null
+			? game.homeTeam.team as unknown as { _id: string; abbreviation: string; name: string }
+			: null;
+		const awayTeamData = typeof game.awayTeam.team === 'object' && game.awayTeam.team !== null
+			? game.awayTeam.team as unknown as { _id: string; abbreviation: string; name: string }
+			: null;
+		const isHome = homeTeamData?._id === teamId || game.homeTeam.team === teamId;
+		const opponentData = isHome ? awayTeamData : homeTeamData;
+
+		return {
+			awayTeam: {
+				abbreviation: awayTeamData?.abbreviation ?? 'TBD',
+				name: awayTeamData?.name ?? 'TBD',
+				score: game.awayTeam.score,
+			},
+			gameDate: game.gameDate.toISOString(),
+			gameType: game.gameType as GameType,
+			homeTeam: {
+				abbreviation: homeTeamData?.abbreviation ?? 'TBD',
+				name: homeTeamData?.name ?? 'TBD',
+				score: game.homeTeam.score,
+			},
+			isHome,
+			mlbGameId: game.mlbGameId,
+			opponent: {
+				abbreviation: opponentData?.abbreviation ?? 'TBD',
+				name: opponentData?.name ?? 'TBD',
+			},
+			status: game.status.abstractGameState as GameState,
+			venue: game.venue.name,
+		};
+	});
 }
 
 /**

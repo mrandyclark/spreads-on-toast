@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { dbConnect } from '@/lib/mongoose';
 import { TeamModel } from '@/models/team.model';
+import { getUpcomingGames } from '@/server/schedule';
 import { getScheduleDifficultyByTeamId } from '@/server/schedule-difficulty';
 import { getStartedSeasonsWithDates, getTeamDetailData } from '@/server/standings';
 import { Sport } from '@/types';
@@ -60,6 +61,9 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
 	// Get schedule difficulty data
 	const scheduleDifficulty = await getScheduleDifficultyByTeamId(team._id.toString(), season, selectedDate);
 
+	// Get upcoming games from the selected date
+	const upcomingGames = await getUpcomingGames(team._id.toString(), selectedDate, 5);
+
 	// Convert to plain strings to avoid Mongoose document serialization issues
 	const teamCity = String(team.city);
 	const teamName = String(team.name);
@@ -81,6 +85,7 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
 					teamAbbreviation={teamAbbreviation}
 					teamCity={teamCity}
 					teamName={teamName}
+					upcomingGames={upcomingGames}
 				/>
 			</main>
 		</div>

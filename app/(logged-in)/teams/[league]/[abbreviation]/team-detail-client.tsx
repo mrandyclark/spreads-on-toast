@@ -14,6 +14,7 @@ import {
 
 import { ScheduleDifficulty } from '@/components/league/schedule-difficulty';
 import { TeamChips } from '@/components/league/team-chip';
+import { UpcomingSchedule } from '@/components/league/upcoming-schedule';
 import { WinProfile } from '@/components/league/win-profile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -33,7 +34,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { ScheduleDifficultyData, SeasonWithDates, TeamDetailData, TeamHistoryDataPoint } from '@/types';
+import { ScheduleDifficultyData, SeasonWithDates, TeamDetailData, TeamHistoryDataPoint, UpcomingGame } from '@/types';
 
 interface TeamDetailClientProps {
 	availableDates: string[];
@@ -46,6 +47,7 @@ interface TeamDetailClientProps {
 	teamAbbreviation: string;
 	teamCity: string;
 	teamName: string;
+	upcomingGames: UpcomingGame[];
 }
 
 const chartConfig = {
@@ -137,6 +139,7 @@ export function TeamDetailClient({
 	teamAbbreviation,
 	teamCity,
 	teamName,
+	upcomingGames,
 }: TeamDetailClientProps) {
 	const router = useRouter();
 
@@ -379,8 +382,11 @@ export function TeamDetailClient({
 				</CardContent>
 			</Card>
 
-			{/* Schedule Difficulty */}
-			{scheduleDifficulty && <ScheduleDifficulty data={scheduleDifficulty} />}
+			{/* Schedule Difficulty & Upcoming Games */}
+			<div className="grid gap-6 lg:grid-cols-2">
+				{scheduleDifficulty && <ScheduleDifficulty data={scheduleDifficulty} />}
+				<UpcomingSchedule games={upcomingGames} teamAbbreviation={teamAbbreviation} />
+			</div>
 
 			{/* Run Production & Rankings */}
 			<div className="grid gap-6 lg:grid-cols-2">

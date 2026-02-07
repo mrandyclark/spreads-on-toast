@@ -177,3 +177,29 @@ export interface MlbScheduleResponse {
 	totalGamesInProgress: number;
 	totalItems: number;
 }
+
+/**
+ * Simplified game data for upcoming/recent games display
+ */
+export interface UpcomingGame {
+	awayTeam: {
+		abbreviation: string;
+		name: string;
+		score?: number;
+	};
+	gameDate: string;
+	gameType: GameType;
+	homeTeam: {
+		abbreviation: string;
+		name: string;
+		score?: number;
+	};
+	isHome: boolean;
+	mlbGameId: number;
+	opponent: {
+		abbreviation: string;
+		name: string;
+	};
+	status: GameState;
+	venue: string;
+}

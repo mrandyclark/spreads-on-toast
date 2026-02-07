@@ -105,7 +105,7 @@ function SOSCard({
 
 export function ScheduleDifficulty({ data }: ScheduleDifficultyProps) {
 	return (
-		<Card>
+		<Card className="h-full">
 			<CardHeader className="pb-4">
 				<CardTitle>Schedule Difficulty</CardTitle>
 				<CardDescription>
@@ -113,7 +113,7 @@ export function ScheduleDifficulty({ data }: ScheduleDifficultyProps) {
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<div className="grid gap-4 md:grid-cols-2">
+				<div className="grid gap-4">
 					<SOSCard
 						data={data.played}
 						title="Played (to date)"
