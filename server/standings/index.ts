@@ -583,6 +583,149 @@ export async function getStartedSeasonsWithDates(): Promise<SeasonWithDates[]> {
 }
 
 /**
+ * Division standings response format for external API consumers (e.g., Raspberry Pi sign)
+ */
+export interface DivisionStandingsTeam {
+	abbreviation: string;
+	gamesBack: string;
+	losses: number;
+	name: string;
+	rank: number;
+	wins: number;
+}
+
+export interface DivisionStandingsEntry {
+	league: string;
+	name: string;
+	teams: DivisionStandingsTeam[];
+}
+
+export interface DivisionStandingsResponse {
+	asOfDate: string;
+	divisions: DivisionStandingsEntry[];
+	season: string;
+}
+
+/**
+ * Division display names for the API response
+ */
+const DIVISION_DISPLAY_NAMES: Record<string, string> = {
+	AL_Central: 'AL Central',
+	AL_East: 'AL East',
+	AL_West: 'AL West',
+	NL_Central: 'NL Central',
+	NL_East: 'NL East',
+	NL_West: 'NL West',
+};
+
+/**
+ * Conference display names
+ */
+const CONFERENCE_DISPLAY_NAMES: Record<string, string> = {
+	AL: 'American League',
+	NL: 'National League',
+};
+
+/**
+ * Get current MLB standings grouped by division
+ * Returns the latest standings data formatted for external consumers
+ */
+export async function getDivisionStandings(date?: string): Promise<DivisionStandingsResponse | null> {
+	await dbConnect();
+
+	let targetDate: Date;
+	let season: string;
+
+	if (date) {
+		// Parse the provided date (YYYY-MM-DD) and derive season from it
+		const [year, month, day] = date.split('-').map(Number);
+		targetDate = new Date(Date.UTC(year, month - 1, day));
+		season = year.toString();
+	} else {
+		// Use current year and get the most recent date with standings
+		season = new Date().getFullYear().toString();
+		const latestStanding = await TeamStandingModel.findOne({ season }).sort({ date: -1 });
+
+		if (!latestStanding) {
+			return null;
+		}
+
+		targetDate = latestStanding.date;
+	}
+
+	// Get all standings for that date with team info
+	const standings = await TeamStandingModel.find({
+		date: targetDate,
+		season,
+	}).populate('team');
+
+	if (standings.length === 0) {
+		return null;
+	}
+
+	// Group by division
+	const divisionMap = new Map<string, DivisionStandingsTeam[]>();
+
+	for (const standing of standings) {
+		const team = standing.team as unknown as {
+			_id: string;
+			abbreviation: string;
+			conference: string;
+			division: string;
+			name: string;
+		};
+
+		if (!team || typeof team === 'string') {
+			continue;
+		}
+
+		const divisionKey = team.division;
+
+		if (!divisionMap.has(divisionKey)) {
+			divisionMap.set(divisionKey, []);
+		}
+
+		divisionMap.get(divisionKey)!.push({
+			abbreviation: team.abbreviation,
+			gamesBack: standing.divisionGamesBack ?? '-',
+			losses: standing.losses,
+			name: `${team.name}`,
+			rank: standing.divisionRank ?? 0,
+			wins: standing.wins,
+		});
+	}
+
+	// Sort teams within each division by rank
+	for (const teams of divisionMap.values()) {
+		teams.sort((a, b) => a.rank - b.rank);
+	}
+
+	// Build the response with divisions in a consistent order
+	const divisionOrder = ['NL_East', 'NL_Central', 'NL_West', 'AL_East', 'AL_Central', 'AL_West'];
+	const divisions: DivisionStandingsEntry[] = [];
+
+	for (const divisionKey of divisionOrder) {
+		const teams = divisionMap.get(divisionKey);
+
+		if (teams && teams.length > 0) {
+			const conference = divisionKey.startsWith('AL') ? 'AL' : 'NL';
+
+			divisions.push({
+				league: CONFERENCE_DISPLAY_NAMES[conference] ?? conference,
+				name: DIVISION_DISPLAY_NAMES[divisionKey] ?? divisionKey,
+				teams,
+			});
+		}
+	}
+
+	return {
+		asOfDate: targetDate.toISOString().split('T')[0],
+		divisions,
+		season,
+	};
+}
+
+/**
  * Calculate the result of an over/under pick
  */
 export function calculatePickResult(
