@@ -2,12 +2,21 @@ import { BaseDocument, Ref } from './mongo';
 import { Conference, Division, Sport } from './sport';
 
 /**
+ * Team brand colors (hex codes)
+ */
+export interface TeamColors {
+	primary: string; // e.g., '#0C2340'
+	secondary: string; // e.g., '#FFFFFF'
+}
+
+/**
  * A team in a sport (e.g., New York Yankees)
  * This is reference data that rarely changes
  */
 export interface Team extends BaseDocument {
 	abbreviation: string; // e.g., 'NYY'
 	city: string; // e.g., 'New York'
+	colors?: TeamColors;
 	conference: Conference; // e.g., 'AL'
 	division: Division; // e.g., 'AL_East'
 	externalId?: number; // External API ID (e.g., MLB Stats API team ID: 147 for Yankees)

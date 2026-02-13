@@ -7,6 +7,10 @@ const TeamSchema = new Schema<With_id<Team>>({
 	_id: UuidType,
 	abbreviation: { required: true, type: String, unique: true },
 	city: { required: true, trim: true, type: String },
+	colors: {
+		primary: { trim: true, type: String },
+		secondary: { trim: true, type: String },
+	},
 	conference: { enum: enumToValues(Conference), required: true, type: String },
 	division: { enum: enumToValues(Division), required: true, type: String },
 	externalId: { index: true, type: Number },

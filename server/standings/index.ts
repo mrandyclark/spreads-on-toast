@@ -587,6 +587,7 @@ export async function getStartedSeasonsWithDates(): Promise<SeasonWithDates[]> {
  */
 export interface DivisionStandingsTeam {
 	abbreviation: string;
+	colors?: { primary: string; secondary: string };
 	gamesBack: string;
 	losses: number;
 	name: string;
@@ -670,6 +671,7 @@ export async function getDivisionStandings(date?: string): Promise<DivisionStand
 		const team = standing.team as unknown as {
 			_id: string;
 			abbreviation: string;
+			colors?: { primary: string; secondary: string };
 			conference: string;
 			division: string;
 			name: string;
@@ -687,6 +689,7 @@ export async function getDivisionStandings(date?: string): Promise<DivisionStand
 
 		divisionMap.get(divisionKey)!.push({
 			abbreviation: team.abbreviation,
+			colors: team.colors,
 			gamesBack: standing.divisionGamesBack ?? '-',
 			losses: standing.losses,
 			name: `${team.name}`,

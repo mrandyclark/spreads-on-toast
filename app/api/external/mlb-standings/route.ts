@@ -23,6 +23,7 @@ import { getDivisionStandings } from '@/server/standings';
  *         {
  *           "name": "Yankees",
  *           "abbreviation": "NYY",
+ *           "colors": { "primary": "#0C2340", "secondary": "#FFFFFF" },
  *           "rank": 1,
  *           "wins": 55,
  *           "losses": 40,
