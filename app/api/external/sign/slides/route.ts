@@ -1,24 +1,29 @@
 import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
-import { getDivisionStandings } from '@/server/standings';
+import { getSignSlides } from '@/server/slides';
 
 /**
- * External API endpoint for MLB standings
+ * External API endpoint for sign slides
  * Used by external consumers like Raspberry Pi digital signs
  *
  * Security: Requires X-API-Key header matching EXTERNAL_API_KEY env var
  *
- * GET /api/external/mlb-standings
+ * GET /api/external/sign/slides
+ *
+ * Optional headers:
+ *   X-Sign-Id: Identifier for the requesting sign (for future per-sign config)
+ *
+ * Optional query params:
+ *   date: YYYY-MM-DD format, defaults to latest available
  *
  * Response format:
  * {
- *   "season": "2026",
- *   "asOfDate": "2026-07-15",
- *   "divisions": [
+ *   "generatedAt": "2026-07-15T12:00:00.000Z",
+ *   "slides": [
  *     {
- *       "name": "AL East",
- *       "league": "American League",
+ *       "slideType": "standings",
+ *       "title": "NL East",
  *       "teams": [
  *         {
  *           "name": "Yankees",
@@ -58,21 +63,27 @@ export async function GET(request: NextRequest) {
 			return errorResponse('Date must be in YYYY-MM-DD format', 400);
 		}
 
-		const standings = await getDivisionStandings(date);
+		// Log sign ID if provided (for future per-sign tracking)
+		const signId = request.headers.get('x-sign-id');
 
-		if (!standings) {
+		if (signId) {
+			console.log(`[External API] Slides requested by sign: ${signId}`);
+		}
+
+		const slidesResponse = await getSignSlides(date);
+
+		if (slidesResponse.slides.length === 0) {
 			return jsonResponse({
-				divisions: [],
+				...slidesResponse,
 				message: date
-					? `No standings data available for ${date}`
-					: 'No standings data available for current season',
-				season: new Date().getFullYear().toString(),
+					? `No data available for ${date}`
+					: 'No data available for current season',
 			});
 		}
 
-		return jsonResponse(standings);
+		return jsonResponse(slidesResponse);
 	} catch (error) {
-		console.error('[External API] Error fetching standings:', error);
+		console.error('[External API] Error building slides:', error);
 		return errorResponse('Internal server error', 500);
 	}
 }

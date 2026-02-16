@@ -6,6 +6,7 @@ export * from './mongo';
 export * from './schedule-difficulty';
 export * from './season';
 export * from './sheet';
+export * from './slide';
 export * from './sport';
 export * from './standings';
 export * from './team';
