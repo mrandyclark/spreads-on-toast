@@ -74,6 +74,7 @@ export enum ModelName {
 	Invitation = 'Invitation',
 	Season = 'Season',
 	Sheet = 'Sheet',
+	Sign = 'Sign',
 	Team = 'Team',
 	TeamLine = 'TeamLine',
 	TeamStanding = 'TeamStanding',
