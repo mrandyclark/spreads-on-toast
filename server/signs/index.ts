@@ -26,7 +26,7 @@ export async function createSign(input: CreateSignInput): Promise<Sign> {
 	return sign.toJSON() as Sign;
 }
 
-export async function getSignById(id: string): Promise<Sign | null> {
+export async function getSignById(id: string): Promise<null | Sign> {
 	await dbConnect();
 
 	const sign = await SignModel.findById(id);
@@ -42,7 +42,7 @@ export async function getSignsByUser(userId: string): Promise<Sign[]> {
 	return signs.map((sign) => sign.toJSON() as Sign);
 }
 
-export async function updateSign(id: string, input: UpdateSignInput): Promise<Sign | null> {
+export async function updateSign(id: string, input: UpdateSignInput): Promise<null | Sign> {
 	await dbConnect();
 
 	const updateFields: Record<string, unknown> = {};
@@ -107,7 +107,7 @@ export async function addSignMember(
 	signId: string,
 	userId: string,
 	role: SignRole = SignRole.Viewer,
-): Promise<Sign | null> {
+): Promise<null | Sign> {
 	await dbConnect();
 
 	const sign = await SignModel.findById(signId);
@@ -134,7 +134,7 @@ export async function addSignMember(
 	return sign.toJSON() as Sign;
 }
 
-export async function removeSignMember(signId: string, userId: string): Promise<Sign | null> {
+export async function removeSignMember(signId: string, userId: string): Promise<null | Sign> {
 	await dbConnect();
 
 	const sign = await SignModel.findByIdAndUpdate(

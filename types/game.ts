@@ -43,17 +43,113 @@ export interface GameStatus {
  * Team-specific game data (home or away)
  */
 export interface GameTeamData {
+	errors?: number;
+	hits?: number;
 	isWinner?: boolean;
 	leagueRecord: {
 		losses: number;
 		pct: string;
 		wins: number;
 	};
+	leftOnBase?: number;
 	score?: number;
 	seriesNumber: number;
 	splitSquad: boolean;
 	team: string;
 	teamMlbId: number;
+}
+
+/**
+ * Per-inning linescore data for one side (home or away)
+ */
+export interface InningHalfData {
+	errors: number;
+	hits: number;
+	leftOnBase: number;
+	runs?: number;
+}
+
+/**
+ * Per-inning linescore data
+ */
+export interface GameInning {
+	away: InningHalfData;
+	home: InningHalfData;
+	num: number;
+	ordinalNum: string;
+}
+
+/**
+ * Linescore team totals
+ */
+export interface LinescoreTeamTotals {
+	errors: number;
+	hits: number;
+	isWinner?: boolean;
+	leftOnBase: number;
+	runs: number;
+}
+
+/**
+ * Player reference (id + name)
+ */
+export interface GamePlayerRef {
+	fullName: string;
+	mlbId: number;
+}
+
+/**
+ * Defensive lineup for a half-inning
+ */
+export interface GameDefense {
+	batter?: GamePlayerRef;
+	battingOrder?: number;
+	catcher?: GamePlayerRef;
+	center?: GamePlayerRef;
+	first?: GamePlayerRef;
+	inHole?: GamePlayerRef;
+	left?: GamePlayerRef;
+	onDeck?: GamePlayerRef;
+	pitcher?: GamePlayerRef;
+	right?: GamePlayerRef;
+	second?: GamePlayerRef;
+	shortstop?: GamePlayerRef;
+	teamMlbId?: number;
+	third?: GamePlayerRef;
+}
+
+/**
+ * Offensive lineup for a half-inning
+ */
+export interface GameOffense {
+	batter?: GamePlayerRef;
+	battingOrder?: number;
+	inHole?: GamePlayerRef;
+	onDeck?: GamePlayerRef;
+	pitcher?: GamePlayerRef;
+	teamMlbId?: number;
+}
+
+/**
+ * Full linescore for a game
+ */
+export interface GameLinescore {
+	balls?: number;
+	currentInning?: number;
+	currentInningOrdinal?: string;
+	defense?: GameDefense;
+	inningHalf?: string;
+	innings: GameInning[];
+	inningState?: string;
+	isTopInning?: boolean;
+	offense?: GameOffense;
+	outs?: number;
+	scheduledInnings: number;
+	strikes?: number;
+	teams: {
+		away: LinescoreTeamTotals;
+		home: LinescoreTeamTotals;
+	};
 }
 
 /**
@@ -83,6 +179,7 @@ export interface Game extends BaseDocument {
 	ifNecessaryDescription?: string;
 	inningBreakLength: number;
 	isTie?: boolean;
+	linescore?: GameLinescore;
 	mlbGameId: number;
 	officialDate: string;
 	publicFacing: boolean;
@@ -116,6 +213,92 @@ export interface MlbScheduleTeam {
 	};
 }
 
+/**
+ * MLB API linescore player reference
+ */
+export interface MlbLinescorePlayer {
+	fullName: string;
+	id: number;
+	link: string;
+}
+
+/**
+ * MLB API linescore inning half
+ */
+export interface MlbLinescoreInningHalf {
+	errors: number;
+	hits: number;
+	leftOnBase: number;
+	runs?: number;
+}
+
+/**
+ * MLB API linescore inning
+ */
+export interface MlbLinescoreInning {
+	away: MlbLinescoreInningHalf;
+	home: MlbLinescoreInningHalf;
+	num: number;
+	ordinalNum: string;
+}
+
+/**
+ * MLB API linescore team totals
+ */
+export interface MlbLinescoreTeamTotals {
+	errors: number;
+	hits: number;
+	isWinner?: boolean;
+	leftOnBase: number;
+	runs: number;
+}
+
+/**
+ * MLB API linescore defense/offense side
+ */
+export interface MlbLinescoreSide {
+	batter?: MlbLinescorePlayer;
+	battingOrder?: number;
+	catcher?: MlbLinescorePlayer;
+	center?: MlbLinescorePlayer;
+	first?: MlbLinescorePlayer;
+	inHole?: MlbLinescorePlayer;
+	left?: MlbLinescorePlayer;
+	onDeck?: MlbLinescorePlayer;
+	pitcher?: MlbLinescorePlayer;
+	right?: MlbLinescorePlayer;
+	second?: MlbLinescorePlayer;
+	shortstop?: MlbLinescorePlayer;
+	team?: {
+		id: number;
+		link: string;
+		name: string;
+	};
+	third?: MlbLinescorePlayer;
+}
+
+/**
+ * MLB API linescore (hydrated on schedule endpoint)
+ */
+export interface MlbLinescore {
+	balls?: number;
+	currentInning?: number;
+	currentInningOrdinal?: string;
+	defense?: MlbLinescoreSide;
+	inningHalf?: string;
+	innings: MlbLinescoreInning[];
+	inningState?: string;
+	isTopInning?: boolean;
+	offense?: MlbLinescoreSide;
+	outs?: number;
+	scheduledInnings: number;
+	strikes?: number;
+	teams: {
+		away: MlbLinescoreTeamTotals;
+		home: MlbLinescoreTeamTotals;
+	};
+}
+
 export interface MlbScheduleGame {
 	calendarEventID: string;
 	dayNight: string;
@@ -131,6 +314,7 @@ export interface MlbScheduleGame {
 	ifNecessaryDescription: string;
 	inningBreakLength: number;
 	isTie?: boolean;
+	linescore?: MlbLinescore;
 	officialDate: string;
 	publicFacing: boolean;
 	reverseHomeAwayStatus: boolean;

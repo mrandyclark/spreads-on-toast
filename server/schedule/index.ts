@@ -109,8 +109,11 @@ async function syncGamesToDatabase(
 			// Build the game document
 			const gameDoc = {
 				awayTeam: {
+					errors: game.linescore?.teams.away.errors,
+					hits: game.linescore?.teams.away.hits,
 					isWinner: game.awayIsWinner,
 					leagueRecord: game.awayLeagueRecord,
+					leftOnBase: game.linescore?.teams.away.leftOnBase,
 					score: game.awayScore,
 					seriesNumber: game.awaySeriesNumber,
 					splitSquad: game.awaySplitSquad,
@@ -127,8 +130,11 @@ async function syncGamesToDatabase(
 				gamesInSeries: game.gamesInSeries,
 				gameType: game.gameType,
 				homeTeam: {
+					errors: game.linescore?.teams.home.errors,
+					hits: game.linescore?.teams.home.hits,
 					isWinner: game.homeIsWinner,
 					leagueRecord: game.homeLeagueRecord,
+					leftOnBase: game.linescore?.teams.home.leftOnBase,
 					score: game.homeScore,
 					seriesNumber: game.homeSeriesNumber,
 					splitSquad: game.homeSplitSquad,
@@ -139,6 +145,7 @@ async function syncGamesToDatabase(
 				ifNecessaryDescription: game.ifNecessaryDescription,
 				inningBreakLength: game.inningBreakLength,
 				isTie: game.isTie,
+				linescore: game.linescore,
 				mlbGameId: game.mlbGameId,
 				officialDate: game.officialDate,
 				publicFacing: game.publicFacing,
@@ -302,4 +309,176 @@ export async function getTeamSeasonSchedule(
 		.lean();
 
 	return games;
+}
+
+/**
+ * Populated team shape after .populate()
+ */
+interface PopulatedTeam {
+	_id: string;
+	abbreviation: string;
+	colors?: { primary: string; secondary: string };
+	name: string;
+}
+
+/**
+ * Game with populated team references for slide building
+ */
+export interface PopulatedGame {
+	awayTeam: {
+		errors?: number;
+		hits?: number;
+		isWinner?: boolean;
+		score?: number;
+		team: null | PopulatedTeam;
+		teamMlbId: number;
+	};
+	gameDate: Date;
+	homeTeam: {
+		errors?: number;
+		hits?: number;
+		isWinner?: boolean;
+		score?: number;
+		team: null | PopulatedTeam;
+		teamMlbId: number;
+	};
+	mlbGameId: number;
+	venue: { name: string };
+}
+
+/**
+ * Helper to extract populated team data from a lean game document
+ */
+function extractPopulatedTeam(teamField: unknown): null | PopulatedTeam {
+	if (typeof teamField === 'object' && teamField !== null && '_id' in teamField) {
+		return teamField as PopulatedTeam;
+	}
+
+	return null;
+}
+
+/**
+ * Get the last completed game for each team ID.
+ * Deduplicates: if two selected teams played each other, only one game is returned.
+ * @param teamIds - Array of team UUIDs
+ * @returns Array of populated games (deduplicated by mlbGameId)
+ */
+export async function getLastGameForTeams(teamIds: string[]): Promise<PopulatedGame[]> {
+	if (teamIds.length === 0) {
+		return [];
+	}
+
+	await dbConnect();
+
+	const now = new Date();
+	const seenGameIds = new Set<number>();
+	const results: PopulatedGame[] = [];
+
+	for (const teamId of teamIds) {
+		const game = await GameModel.findOne({
+			$or: [
+				{ 'homeTeam.team': teamId },
+				{ 'awayTeam.team': teamId },
+			],
+			gameDate: { $lt: now },
+			'status.abstractGameState': GameState.Final,
+		})
+			.sort({ gameDate: -1 })
+			.populate('homeTeam.team')
+			.populate('awayTeam.team')
+			.lean();
+
+		if (!game || seenGameIds.has(game.mlbGameId)) {
+			continue;
+		}
+
+		seenGameIds.add(game.mlbGameId);
+
+		results.push({
+			awayTeam: {
+				errors: game.awayTeam.errors,
+				hits: game.awayTeam.hits,
+				isWinner: game.awayTeam.isWinner,
+				score: game.awayTeam.score,
+				team: extractPopulatedTeam(game.awayTeam.team),
+				teamMlbId: game.awayTeam.teamMlbId,
+			},
+			gameDate: game.gameDate,
+			homeTeam: {
+				errors: game.homeTeam.errors,
+				hits: game.homeTeam.hits,
+				isWinner: game.homeTeam.isWinner,
+				score: game.homeTeam.score,
+				team: extractPopulatedTeam(game.homeTeam.team),
+				teamMlbId: game.homeTeam.teamMlbId,
+			},
+			mlbGameId: game.mlbGameId,
+			venue: { name: game.venue.name },
+		});
+	}
+
+	return results;
+}
+
+/**
+ * Get the next upcoming game for each team ID.
+ * Deduplicates: if two selected teams play each other next, only one game is returned.
+ * @param teamIds - Array of team UUIDs
+ * @returns Array of populated games (deduplicated by mlbGameId)
+ */
+export async function getNextGameForTeams(teamIds: string[]): Promise<PopulatedGame[]> {
+	if (teamIds.length === 0) {
+		return [];
+	}
+
+	await dbConnect();
+
+	const now = new Date();
+	const seenGameIds = new Set<number>();
+	const results: PopulatedGame[] = [];
+
+	for (const teamId of teamIds) {
+		const game = await GameModel.findOne({
+			$or: [
+				{ 'homeTeam.team': teamId },
+				{ 'awayTeam.team': teamId },
+			],
+			gameDate: { $gte: now },
+			'status.abstractGameState': GameState.Preview,
+		})
+			.sort({ gameDate: 1 })
+			.populate('homeTeam.team')
+			.populate('awayTeam.team')
+			.lean();
+
+		if (!game || seenGameIds.has(game.mlbGameId)) {
+			continue;
+		}
+
+		seenGameIds.add(game.mlbGameId);
+
+		results.push({
+			awayTeam: {
+				errors: game.awayTeam.errors,
+				hits: game.awayTeam.hits,
+				isWinner: game.awayTeam.isWinner,
+				score: game.awayTeam.score,
+				team: extractPopulatedTeam(game.awayTeam.team),
+				teamMlbId: game.awayTeam.teamMlbId,
+			},
+			gameDate: game.gameDate,
+			homeTeam: {
+				errors: game.homeTeam.errors,
+				hits: game.homeTeam.hits,
+				isWinner: game.homeTeam.isWinner,
+				score: game.homeTeam.score,
+				team: extractPopulatedTeam(game.homeTeam.team),
+				teamMlbId: game.homeTeam.teamMlbId,
+			},
+			mlbGameId: game.mlbGameId,
+			venue: { name: game.venue.name },
+		});
+	}
+
+	return results;
 }

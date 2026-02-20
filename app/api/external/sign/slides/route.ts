@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
+import { getSignById } from '@/server/signs';
 import { getSignSlides } from '@/server/slides';
 
 /**
@@ -11,33 +12,18 @@ import { getSignSlides } from '@/server/slides';
  *
  * GET /api/external/sign/slides
  *
- * Optional headers:
- *   X-Sign-Id: Identifier for the requesting sign (for future per-sign config)
+ * Required headers:
+ *   X-Sign-Id: UUID of the sign requesting its slides
  *
  * Optional query params:
  *   date: YYYY-MM-DD format, defaults to latest available
  *
- * Response format:
- * {
- *   "generatedAt": "2026-07-15T12:00:00.000Z",
- *   "slides": [
- *     {
- *       "slideType": "standings",
- *       "title": "NL East",
- *       "teams": [
- *         {
- *           "name": "Yankees",
- *           "abbreviation": "NYY",
- *           "colors": { "primary": "#0C2340", "secondary": "#FFFFFF" },
- *           "rank": 1,
- *           "wins": 55,
- *           "losses": 40,
- *           "gamesBack": "-"
- *         }
- *       ]
- *     }
- *   ]
- * }
+ * Slides are generated based on the sign's content configuration:
+ * - standingsDivisions: which divisions to show standings for
+ * - lastGameTeamIds: teams to show last game box scores for
+ * - nextGameTeamIds: teams to show next game previews for
+ *
+ * Slide order: standings → last game box scores → next game previews
  */
 export async function GET(request: NextRequest) {
 	// Validate API key
@@ -53,7 +39,21 @@ export async function GET(request: NextRequest) {
 		return errorResponse('Unauthorized', 401);
 	}
 
+	// Require sign ID
+	const signId = request.headers.get('x-sign-id');
+
+	if (!signId) {
+		return errorResponse('X-Sign-Id header is required', 400);
+	}
+
 	try {
+		// Look up the sign to get its content config
+		const sign = await getSignById(signId);
+
+		if (!sign) {
+			return errorResponse('Sign not found', 404);
+		}
+
 		// Optional date parameter (YYYY-MM-DD format)
 		const { searchParams } = new URL(request.url);
 		const date = searchParams.get('date') ?? undefined;
@@ -63,14 +63,9 @@ export async function GET(request: NextRequest) {
 			return errorResponse('Date must be in YYYY-MM-DD format', 400);
 		}
 
-		// Log sign ID if provided (for future per-sign tracking)
-		const signId = request.headers.get('x-sign-id');
+		console.log(`[External API] Slides requested by sign: ${signId}`);
 
-		if (signId) {
-			console.log(`[External API] Slides requested by sign: ${signId}`);
-		}
-
-		const slidesResponse = await getSignSlides(date);
+		const slidesResponse = await getSignSlides(sign.config.content, date);
 
 		if (slidesResponse.slides.length === 0) {
 			return jsonResponse({

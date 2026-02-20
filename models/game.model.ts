@@ -27,13 +27,109 @@ const LeagueRecordSchema = new Schema(
 
 const GameTeamDataSchema = new Schema(
 	{
+		errors: { type: Number },
+		hits: { type: Number },
 		isWinner: { type: Boolean },
 		leagueRecord: { type: LeagueRecordSchema },
+		leftOnBase: { type: Number },
 		score: { type: Number },
 		seriesNumber: { type: Number },
 		splitSquad: { type: Boolean },
 		team: { ...UuidRefType, ref: ModelName.Team },
 		teamMlbId: { required: true, type: Number },
+	},
+	{ _id: false },
+);
+
+const GamePlayerRefSchema = new Schema(
+	{
+		fullName: { type: String },
+		mlbId: { type: Number },
+	},
+	{ _id: false },
+);
+
+const InningHalfDataSchema = new Schema(
+	{
+		errors: { type: Number },
+		hits: { type: Number },
+		leftOnBase: { type: Number },
+		runs: { type: Number },
+	},
+	{ _id: false },
+);
+
+const GameInningSchema = new Schema(
+	{
+		away: { type: InningHalfDataSchema },
+		home: { type: InningHalfDataSchema },
+		num: { type: Number },
+		ordinalNum: { type: String },
+	},
+	{ _id: false },
+);
+
+const LinescoreTeamTotalsSchema = new Schema(
+	{
+		errors: { type: Number },
+		hits: { type: Number },
+		isWinner: { type: Boolean },
+		leftOnBase: { type: Number },
+		runs: { type: Number },
+	},
+	{ _id: false },
+);
+
+const GameDefenseSchema = new Schema(
+	{
+		batter: { type: GamePlayerRefSchema },
+		battingOrder: { type: Number },
+		catcher: { type: GamePlayerRefSchema },
+		center: { type: GamePlayerRefSchema },
+		first: { type: GamePlayerRefSchema },
+		inHole: { type: GamePlayerRefSchema },
+		left: { type: GamePlayerRefSchema },
+		onDeck: { type: GamePlayerRefSchema },
+		pitcher: { type: GamePlayerRefSchema },
+		right: { type: GamePlayerRefSchema },
+		second: { type: GamePlayerRefSchema },
+		shortstop: { type: GamePlayerRefSchema },
+		teamMlbId: { type: Number },
+		third: { type: GamePlayerRefSchema },
+	},
+	{ _id: false },
+);
+
+const GameOffenseSchema = new Schema(
+	{
+		batter: { type: GamePlayerRefSchema },
+		battingOrder: { type: Number },
+		inHole: { type: GamePlayerRefSchema },
+		onDeck: { type: GamePlayerRefSchema },
+		pitcher: { type: GamePlayerRefSchema },
+		teamMlbId: { type: Number },
+	},
+	{ _id: false },
+);
+
+const GameLinescoreSchema = new Schema(
+	{
+		balls: { type: Number },
+		currentInning: { type: Number },
+		currentInningOrdinal: { type: String },
+		defense: { type: GameDefenseSchema },
+		inningHalf: { type: String },
+		innings: { default: [], type: [GameInningSchema] },
+		inningState: { type: String },
+		isTopInning: { type: Boolean },
+		offense: { type: GameOffenseSchema },
+		outs: { type: Number },
+		scheduledInnings: { type: Number },
+		strikes: { type: Number },
+		teams: {
+			away: { type: LinescoreTeamTotalsSchema },
+			home: { type: LinescoreTeamTotalsSchema },
+		},
 	},
 	{ _id: false },
 );
@@ -86,6 +182,9 @@ const GameSchema = new Schema<With_id<Game>>({
 	isTie: { type: Boolean },
 	publicFacing: { default: true, type: Boolean },
 	reverseHomeAwayStatus: { default: false, type: Boolean },
+
+	// Linescore
+	linescore: { type: GameLinescoreSchema },
 
 	// Other
 	gamedayType: { type: String },

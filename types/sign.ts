@@ -1,5 +1,12 @@
 import { BaseDocument, Ref } from './mongo';
+import { Division } from './sport';
 import { User } from './user';
+
+/**
+ * Bump this version when the sign payload format changes.
+ * Signs compare this against their installed version and restart/reinstall when it differs.
+ */
+export const SIGN_PAYLOAD_VERSION = 2;
 
 /**
  * A member's role on a sign
@@ -37,9 +44,19 @@ export interface SignScheduleConfig {
 }
 
 /**
+ * Content settings for what a sign displays
+ */
+export interface SignContentConfig {
+	lastGameTeamIds: string[]; // Team IDs to show last game box scores for
+	nextGameTeamIds: string[]; // Team IDs to show next game info for
+	standingsDivisions: Division[]; // Which divisions to show standings for
+}
+
+/**
  * Full configuration for a sign
  */
 export interface SignConfig {
+	content: SignContentConfig;
 	display: SignDisplayConfig;
 	schedule: SignScheduleConfig;
 }
@@ -53,4 +70,13 @@ export interface Sign extends BaseDocument {
 	members: SignMember[];
 	owner: Ref<User>;
 	title: string;
+}
+
+/**
+ * Response shape returned by the external sign config endpoint.
+ * Signs use payloadVersion to determine if they need to restart/reinstall.
+ */
+export interface SignExternalConfigResponse {
+	config: SignConfig;
+	payloadVersion: number;
 }

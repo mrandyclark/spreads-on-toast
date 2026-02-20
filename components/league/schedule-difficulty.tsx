@@ -3,7 +3,7 @@
 import { HelpCircle } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { PopoverContent, PopoverTrigger, ScrollDismissPopover } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { DifficultyLabel, ScheduleDifficultyData, SOSData } from '@/types';
 
@@ -64,7 +64,7 @@ function SOSCard({
 			<div className="mb-3 flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					<span className="text-muted-foreground text-sm font-medium">{title}</span>
-					<Popover>
+					<ScrollDismissPopover>
 						<PopoverTrigger asChild>
 							<button className="focus:outline-none" type="button">
 								<HelpCircle className="text-muted-foreground h-4 w-4 cursor-help" />
@@ -76,7 +76,7 @@ function SOSCard({
 								Ranked {getOrdinal(data.rank)} hardest based on opponent win percentage.
 							</p>
 						</PopoverContent>
-					</Popover>
+					</ScrollDismissPopover>
 				</div>
 				<span className={cn('text-sm font-semibold', LABEL_COLORS[data.label])}>
 					{LABEL_DISPLAY[data.label]}

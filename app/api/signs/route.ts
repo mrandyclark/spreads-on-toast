@@ -1,5 +1,5 @@
-import { createSign, getSignsByUser } from '@/server/signs';
 import { errorResponse, jsonResponse, withAuth } from '@/server/http/responses';
+import { createSign, getSignsByUser } from '@/server/signs';
 
 export const GET = withAuth(async (_request, { user }) => {
 	const signs = await getSignsByUser(user.id);

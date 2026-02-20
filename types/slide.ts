@@ -2,6 +2,8 @@
  * Slide types that can be displayed on a sign
  */
 export enum SlideType {
+	LAST_GAME = 'lastGame',
+	NEXT_GAME = 'nextGame',
 	STANDINGS = 'standings',
 }
 
@@ -28,10 +30,53 @@ export interface StandingsSlide {
 }
 
 /**
+ * Team line in a box score (R/H/E)
+ */
+export interface BoxScoreTeam {
+	abbreviation: string;
+	colors?: { primary: string; secondary: string };
+	errors: number;
+	hits: number;
+	name: string;
+	runs: number;
+}
+
+/**
+ * A last game slide showing a box score result
+ * Away team is always listed first
+ */
+export interface LastGameSlide {
+	awayTeam: BoxScoreTeam;
+	gameDate: string;
+	homeTeam: BoxScoreTeam;
+	slideType: SlideType.LAST_GAME;
+}
+
+/**
+ * A next game slide showing upcoming game info
+ */
+export interface NextGameSlide {
+	gameDate: string; // ISO string, sign converts to local timezone
+	isHome: boolean;
+	opponent: {
+		abbreviation: string;
+		colors?: { primary: string; secondary: string };
+		name: string;
+	};
+	slideType: SlideType.NEXT_GAME;
+	team: {
+		abbreviation: string;
+		colors?: { primary: string; secondary: string };
+		name: string;
+	};
+	venue: string;
+}
+
+/**
  * Union of all possible slide types
  * Add new slide interfaces here as they are created
  */
-export type Slide = StandingsSlide;
+export type Slide = LastGameSlide | NextGameSlide | StandingsSlide;
 
 /**
  * Response from the /api/external/sign/slides endpoint

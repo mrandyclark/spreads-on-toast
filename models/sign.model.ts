@@ -1,7 +1,7 @@
 import mongoose, { Model, Schema } from 'mongoose';
 
 import { configureSchema, enumToValues, UuidRefType, UuidType } from '@/lib/mongo-utils';
-import { ModelName, Sign, SignConfig, SignDisplayConfig, SignMember, SignRole, SignScheduleConfig, With_id } from '@/types';
+import { Division, ModelName, Sign, SignConfig, SignContentConfig, SignDisplayConfig, SignMember, SignRole, SignScheduleConfig, With_id } from '@/types';
 
 const SignMemberSchema = new Schema<SignMember>(
 	{
@@ -30,8 +30,18 @@ const SignScheduleConfigSchema = new Schema<SignScheduleConfig>(
 	{ _id: false },
 );
 
+const SignContentConfigSchema = new Schema<SignContentConfig>(
+	{
+		lastGameTeamIds: { default: [], type: [String] },
+		nextGameTeamIds: { default: [], type: [String] },
+		standingsDivisions: { default: [], enum: enumToValues(Division), type: [String] },
+	},
+	{ _id: false },
+);
+
 const SignConfigSchema = new Schema<SignConfig>(
 	{
+		content: { default: () => ({}), type: SignContentConfigSchema },
 		display: { default: () => ({}), type: SignDisplayConfigSchema },
 		schedule: { default: () => ({}), type: SignScheduleConfigSchema },
 	},

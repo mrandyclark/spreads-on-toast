@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { PopoverContent, PopoverTrigger, ScrollDismissPopover } from '@/components/ui/popover';
 import { TeamChip as TeamChipType } from '@/types';
 
 interface TeamChipProps {
@@ -10,7 +10,7 @@ interface TeamChipProps {
 
 export function TeamChipBadge({ chip }: TeamChipProps) {
 	return (
-		<Popover>
+		<ScrollDismissPopover>
 			<PopoverTrigger asChild>
 				<button className="focus:outline-none" type="button">
 					<Badge className="cursor-pointer border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:hover:bg-amber-900/30">
@@ -24,7 +24,7 @@ export function TeamChipBadge({ chip }: TeamChipProps) {
 					<p className="text-muted-foreground text-xs">{chip.detail}</p>
 				</div>
 			</PopoverContent>
-		</Popover>
+		</ScrollDismissPopover>
 	);
 }
 

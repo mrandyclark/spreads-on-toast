@@ -6,9 +6,12 @@
 
 import {
 	ExpectedRecord,
+	GameLinescore,
 	GameState,
 	GameType,
 	LeagueRecord,
+	MlbLinescore,
+	MlbLinescorePlayer,
 	MlbScheduleGame,
 	MlbScheduleResponse,
 	Streak,
@@ -408,6 +411,7 @@ export interface ScheduleGameData {
 	ifNecessaryDescription?: string;
 	inningBreakLength: number;
 	isTie?: boolean;
+	linescore?: GameLinescore;
 	mlbGameId: number;
 	officialDate: string;
 	publicFacing: boolean;
@@ -472,6 +476,97 @@ function mapGameState(state: string): GameState {
 }
 
 /**
+ * Transform MLB API player reference to our format
+ */
+function transformPlayerRef(player?: MlbLinescorePlayer): undefined | { fullName: string; mlbId: number } {
+	if (!player) {
+		return undefined;
+	}
+
+	return {
+		fullName: player.fullName,
+		mlbId: player.id,
+	};
+}
+
+/**
+ * Transform MLB API linescore to our normalized format
+ */
+function transformLinescore(linescore?: MlbLinescore): GameLinescore | undefined {
+	if (!linescore) {
+		return undefined;
+	}
+
+	return {
+		balls: linescore.balls,
+		currentInning: linescore.currentInning,
+		currentInningOrdinal: linescore.currentInningOrdinal,
+		defense: linescore.defense ? {
+			batter: transformPlayerRef(linescore.defense.batter),
+			battingOrder: linescore.defense.battingOrder,
+			catcher: transformPlayerRef(linescore.defense.catcher),
+			center: transformPlayerRef(linescore.defense.center),
+			first: transformPlayerRef(linescore.defense.first),
+			inHole: transformPlayerRef(linescore.defense.inHole),
+			left: transformPlayerRef(linescore.defense.left),
+			onDeck: transformPlayerRef(linescore.defense.onDeck),
+			pitcher: transformPlayerRef(linescore.defense.pitcher),
+			right: transformPlayerRef(linescore.defense.right),
+			second: transformPlayerRef(linescore.defense.second),
+			shortstop: transformPlayerRef(linescore.defense.shortstop),
+			teamMlbId: linescore.defense.team?.id,
+			third: transformPlayerRef(linescore.defense.third),
+		} : undefined,
+		inningHalf: linescore.inningHalf,
+		innings: linescore.innings.map((inning) => ({
+			away: {
+				errors: inning.away.errors,
+				hits: inning.away.hits,
+				leftOnBase: inning.away.leftOnBase,
+				runs: inning.away.runs,
+			},
+			home: {
+				errors: inning.home.errors,
+				hits: inning.home.hits,
+				leftOnBase: inning.home.leftOnBase,
+				runs: inning.home.runs,
+			},
+			num: inning.num,
+			ordinalNum: inning.ordinalNum,
+		})),
+		inningState: linescore.inningState,
+		isTopInning: linescore.isTopInning,
+		offense: linescore.offense ? {
+			batter: transformPlayerRef(linescore.offense.batter),
+			battingOrder: linescore.offense.battingOrder,
+			inHole: transformPlayerRef(linescore.offense.inHole),
+			onDeck: transformPlayerRef(linescore.offense.onDeck),
+			pitcher: transformPlayerRef(linescore.offense.pitcher),
+			teamMlbId: linescore.offense.team?.id,
+		} : undefined,
+		outs: linescore.outs,
+		scheduledInnings: linescore.scheduledInnings,
+		strikes: linescore.strikes,
+		teams: {
+			away: {
+				errors: linescore.teams.away.errors,
+				hits: linescore.teams.away.hits,
+				isWinner: linescore.teams.away.isWinner,
+				leftOnBase: linescore.teams.away.leftOnBase,
+				runs: linescore.teams.away.runs,
+			},
+			home: {
+				errors: linescore.teams.home.errors,
+				hits: linescore.teams.home.hits,
+				isWinner: linescore.teams.home.isWinner,
+				leftOnBase: linescore.teams.home.leftOnBase,
+				runs: linescore.teams.home.runs,
+			},
+		},
+	};
+}
+
+/**
  * Transform MLB API game to normalized format
  */
 function transformGame(game: MlbScheduleGame): ScheduleGameData {
@@ -511,6 +606,7 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 		ifNecessaryDescription: game.ifNecessaryDescription,
 		inningBreakLength: game.inningBreakLength,
 		isTie: game.isTie,
+		linescore: transformLinescore(game.linescore),
 		mlbGameId: game.gamePk,
 		officialDate: game.officialDate,
 		publicFacing: game.publicFacing,
@@ -544,7 +640,7 @@ export async function fetchMlbSchedule(
 	teamMlbId: number,
 	season: string,
 ): Promise<ScheduleGameData[]> {
-	const url = `${MLB_API_BASE}/schedule?sportId=1&teamId=${teamMlbId}&season=${season}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R,F,D,L,W`;
+	const url = `${MLB_API_BASE}/schedule?sportId=1&teamId=${teamMlbId}&season=${season}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R,F,D,L,W&hydrate=linescore`;
 
 	console.log(`[MLB API] Fetching schedule for team ${teamMlbId}, season ${season}`);
 

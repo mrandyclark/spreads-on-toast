@@ -1,5 +1,5 @@
-import { deleteSign, getSignById, isSignMember, isSignOwner, updateSign } from '@/server/signs';
 import { errorResponse, jsonResponse, withAuth } from '@/server/http/responses';
+import { deleteSign, getSignById, isSignMember, isSignOwner, updateSign } from '@/server/signs';
 
 export const GET = withAuth(async (_request, { params, user }) => {
 	const { id } = await params;

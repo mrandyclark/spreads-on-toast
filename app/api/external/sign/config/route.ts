@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
 import { getSignById } from '@/server/signs';
+import { SIGN_PAYLOAD_VERSION, SignExternalConfigResponse } from '@/types';
 
 /**
  * External API endpoint for sign configuration
@@ -16,15 +17,18 @@ import { getSignById } from '@/server/signs';
  *
  * Response format:
  * {
- *   "display": {
- *     "brightness": 35,
- *     "rotationIntervalSeconds": 10
- *   },
- *   "schedule": {
- *     "enabled": true,
- *     "onTime": "09:00",
- *     "offTime": "21:00",
- *     "timezone": "America/Denver"
+ *   "payloadVersion": 1,
+ *   "config": {
+ *     "display": {
+ *       "brightness": 35,
+ *       "rotationIntervalSeconds": 10
+ *     },
+ *     "schedule": {
+ *       "enabled": true,
+ *       "onTime": "09:00",
+ *       "offTime": "21:00",
+ *       "timezone": "America/Denver"
+ *     }
  *   }
  * }
  */
@@ -56,7 +60,12 @@ export async function GET(request: NextRequest) {
 			return errorResponse('Sign not found', 404);
 		}
 
-		return jsonResponse(sign.config);
+		const response: SignExternalConfigResponse = {
+			config: sign.config,
+			payloadVersion: SIGN_PAYLOAD_VERSION,
+		};
+
+		return jsonResponse(response);
 	} catch (error) {
 		console.error('[External API] Error fetching sign config:', error);
 		return errorResponse('Internal server error', 500);
