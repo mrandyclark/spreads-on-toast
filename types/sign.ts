@@ -6,7 +6,7 @@ import { User } from './user';
  * Bump this version when the sign payload format changes.
  * Signs compare this against their installed version and restart/reinstall when it differs.
  */
-export const SIGN_PAYLOAD_VERSION = 2;
+export const SIGN_PAYLOAD_VERSION = 3;
 
 /**
  * A member's role on a sign
@@ -49,6 +49,7 @@ export interface SignScheduleConfig {
 export interface SignContentConfig {
 	lastGameTeamIds: string[]; // Team IDs to show last game box scores for
 	nextGameTeamIds: string[]; // Team IDs to show next game info for
+	openerCountdownTeamIds: string[]; // Team IDs to show opening day countdown for
 	standingsDivisions: Division[]; // Which divisions to show standings for
 }
 

@@ -34,6 +34,7 @@ const SignContentConfigSchema = new Schema<SignContentConfig>(
 	{
 		lastGameTeamIds: { default: [], type: [String] },
 		nextGameTeamIds: { default: [], type: [String] },
+		openerCountdownTeamIds: { default: [], type: [String] },
 		standingsDivisions: { default: [], enum: enumToValues(Division), type: [String] },
 	},
 	{ _id: false },

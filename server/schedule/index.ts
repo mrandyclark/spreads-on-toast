@@ -491,3 +491,66 @@ export async function getNextGameForTeams(teamIds: string[], asOfDate?: string):
 
 	return results;
 }
+
+/**
+ * Get the first regular season game for each team ID (opening day).
+ * Only returns games in the future — during the season this returns nothing.
+ * @param teamIds - Array of team UUIDs
+ * @returns Array of populated games (one per team, deduplicated by mlbGameId)
+ */
+export async function getOpenerForTeams(teamIds: string[]): Promise<PopulatedGame[]> {
+	if (teamIds.length === 0) {
+		return [];
+	}
+
+	await dbConnect();
+
+	const now = new Date();
+	const seenGameIds = new Set<number>();
+	const results: PopulatedGame[] = [];
+
+	for (const teamId of teamIds) {
+		const game = await GameModel.findOne({
+			$or: [
+				{ 'homeTeam.team': teamId },
+				{ 'awayTeam.team': teamId },
+			],
+			gameDate: { $gte: now },
+			gameType: GameType.RegularSeason,
+		})
+			.sort({ gameDate: 1 })
+			.populate('homeTeam.team')
+			.populate('awayTeam.team')
+			.lean();
+
+		if (!game || seenGameIds.has(game.mlbGameId)) {
+			continue;
+		}
+
+		seenGameIds.add(game.mlbGameId);
+
+		results.push({
+			awayTeam: {
+				errors: game.awayTeam.errors,
+				hits: game.awayTeam.hits,
+				isWinner: game.awayTeam.isWinner,
+				score: game.awayTeam.score,
+				team: extractPopulatedTeam(game.awayTeam.team),
+				teamMlbId: game.awayTeam.teamMlbId,
+			},
+			gameDate: game.gameDate,
+			homeTeam: {
+				errors: game.homeTeam.errors,
+				hits: game.homeTeam.hits,
+				isWinner: game.homeTeam.isWinner,
+				score: game.homeTeam.score,
+				team: extractPopulatedTeam(game.homeTeam.team),
+				teamMlbId: game.homeTeam.teamMlbId,
+			},
+			mlbGameId: game.mlbGameId,
+			venue: { name: game.venue.name },
+		});
+	}
+
+	return results;
+}

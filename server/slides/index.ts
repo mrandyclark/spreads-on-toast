@@ -1,8 +1,9 @@
-import { getLastGameForTeams, getNextGameForTeams, PopulatedGame } from '@/server/schedule';
+import { getLastGameForTeams, getNextGameForTeams, getOpenerForTeams, PopulatedGame } from '@/server/schedule';
 import { getDivisionStandings } from '@/server/standings';
 import {
 	LastGameSlide,
 	NextGameSlide,
+	OpenerCountdownSlide,
 	SignContentConfig,
 	Slide,
 	SlidesResponse,
@@ -15,7 +16,8 @@ import {
  *
  * Slide order:
  *   1. Standings (one per selected division)
- *   2. Per-team game slides, grouped by team in config order:
+ *   2. Opener countdowns (days until opening day, one per selected team)
+ *   3. Per-team game slides, grouped by team in config order:
  *      - Team's last game (box score)
  *      - Team's next game (preview)
  *
@@ -37,6 +39,10 @@ export async function getSignSlides(
 	// Build standings slides (filtered to selected divisions)
 	const standingsSlides = await buildStandingsSlides(contentConfig?.standingsDivisions, date);
 	slides.push(...standingsSlides);
+
+	// Build opener countdown slides (only produces slides when opener is in the future)
+	const openerSlides = await buildOpenerCountdownSlides(contentConfig?.openerCountdownTeamIds);
+	slides.push(...openerSlides);
 
 	// Build per-team game slides (last game → next game, grouped by team)
 	const gameSlides = await buildTeamGameSlides(contentConfig, date);
@@ -228,4 +234,51 @@ function gameToNextGameSlide(
 		},
 		venue: game.venue.name,
 	};
+}
+
+/**
+ * Build opener countdown slides for each configured team.
+ * Only produces slides when the team's first regular season game is in the future.
+ */
+async function buildOpenerCountdownSlides(
+	teamIds?: string[],
+): Promise<OpenerCountdownSlide[]> {
+	if (!teamIds || teamIds.length === 0) {
+		return [];
+	}
+
+	const openerGames = await getOpenerForTeams(teamIds);
+	const now = new Date();
+
+	return openerGames.map((game) => {
+		const teamId = teamIds.find((id) => {
+			const homeId = game.homeTeam.team?.id;
+			const awayId = game.awayTeam.team?.id;
+			return id === homeId || id === awayId;
+		});
+
+		const isHome = game.homeTeam.team?.id === teamId;
+		const team = isHome ? game.homeTeam : game.awayTeam;
+		const opponent = isHome ? game.awayTeam : game.homeTeam;
+
+		const msPerDay = 1000 * 60 * 60 * 24;
+		const daysUntil = Math.ceil((game.gameDate.getTime() - now.getTime()) / msPerDay);
+
+		return {
+			daysUntil: Math.max(0, daysUntil),
+			gameDate: game.gameDate.toISOString(),
+			opponent: {
+				abbreviation: opponent.team?.abbreviation ?? 'TBD',
+				colors: opponent.team?.colors,
+				name: opponent.team?.name ?? 'TBD',
+			},
+			slideType: SlideType.OPENER_COUNTDOWN,
+			team: {
+				abbreviation: team.team?.abbreviation ?? 'TBD',
+				colors: team.team?.colors,
+				name: team.team?.name ?? 'TBD',
+			},
+			venue: game.venue.name,
+		};
+	});
 }
