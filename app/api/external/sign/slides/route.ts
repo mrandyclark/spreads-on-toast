@@ -8,8 +8,6 @@ import { getSignSlides } from '@/server/slides';
  * External API endpoint for sign slides
  * Used by external consumers like Raspberry Pi digital signs
  *
- * Security: Requires X-API-Key header matching EXTERNAL_API_KEY env var
- *
  * GET /api/external/sign/slides
  *
  * Required headers:
@@ -23,7 +21,7 @@ import { getSignSlides } from '@/server/slides';
  * - lastGameTeamIds: teams to show last game box scores for
  * - nextGameTeamIds: teams to show next game previews for
  *
- * Slide order: standings → last game box scores → next game previews
+ * Slide order: standings → per-team (last game → next game)
  */
 export async function GET(request: NextRequest) {
 	// Validate API key

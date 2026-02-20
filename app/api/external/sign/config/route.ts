@@ -8,8 +8,6 @@ import { SIGN_PAYLOAD_VERSION, SignExternalConfigResponse } from '@/types';
  * External API endpoint for sign configuration
  * Used by signs to fetch their display/schedule config
  *
- * Security: Requires X-API-Key header matching EXTERNAL_API_KEY env var
- *
  * GET /api/external/sign/config
  *
  * Required headers:
@@ -17,7 +15,7 @@ import { SIGN_PAYLOAD_VERSION, SignExternalConfigResponse } from '@/types';
  *
  * Response format:
  * {
- *   "payloadVersion": 1,
+ *   "payloadVersion": 2,
  *   "config": {
  *     "display": {
  *       "brightness": 35,

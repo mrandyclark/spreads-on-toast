@@ -77,8 +77,8 @@ async function buildTeamGameSlides(
 	const lastGameByTeamId = new Map<string, PopulatedGame>();
 
 	for (const game of lastGames) {
-		const homeId = game.homeTeam.team?._id;
-		const awayId = game.awayTeam.team?._id;
+		const homeId = game.homeTeam.team?.id;
+		const awayId = game.awayTeam.team?.id;
 
 		if (homeId) {
 			lastGameByTeamId.set(homeId, game);
@@ -93,8 +93,8 @@ async function buildTeamGameSlides(
 	const nextGameByTeamId = new Map<string, PopulatedGame>();
 
 	for (const game of nextGames) {
-		const homeId = game.homeTeam.team?._id;
-		const awayId = game.awayTeam.team?._id;
+		const homeId = game.homeTeam.team?.id;
+		const awayId = game.awayTeam.team?.id;
 
 		if (homeId) {
 			nextGameByTeamId.set(homeId, game);
@@ -127,7 +127,7 @@ async function buildTeamGameSlides(
 
 			if (nextGame && !emittedNextGameIds.has(nextGame.mlbGameId)) {
 				emittedNextGameIds.add(nextGame.mlbGameId);
-				slides.push(gameToNextGameSlide(nextGame, teamId, nextGameTeamIds));
+				slides.push(gameToNextGameSlide(nextGame, teamId));
 			}
 		}
 	}
@@ -203,13 +203,12 @@ function gameToLastGameSlide(game: PopulatedGame): LastGameSlide {
 function gameToNextGameSlide(
 	game: PopulatedGame,
 	teamId: string,
-	allSelectedTeamIds: string[],
 ): NextGameSlide {
-	const homeTeamSelected = allSelectedTeamIds.includes(game.homeTeam.team?._id ?? '');
-	const isHomeForTeam = game.homeTeam.team?._id === teamId;
+	const homeId = game.homeTeam.team?.id ?? '';
+	const isHomeForTeam = homeId === teamId;
 
 	// If this team is the home team, use home perspective; otherwise away
-	const isHome = isHomeForTeam || (homeTeamSelected && game.homeTeam.team?._id === teamId);
+	const isHome = isHomeForTeam;
 	const team = isHome ? game.homeTeam : game.awayTeam;
 	const opponent = isHome ? game.awayTeam : game.homeTeam;
 

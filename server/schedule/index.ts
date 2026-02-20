@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 
+import { cleanMongoDoc } from '@/lib/mongo-utils';
 import { dbConnect } from '@/lib/mongoose';
 import { GameModel } from '@/models/game.model';
 import { TeamModel } from '@/models/team.model';
@@ -315,9 +316,9 @@ export async function getTeamSeasonSchedule(
  * Populated team shape after .populate()
  */
 interface PopulatedTeam {
-	_id: string;
 	abbreviation: string;
 	colors?: { primary: string; secondary: string };
+	id: string;
 	name: string;
 }
 
@@ -351,7 +352,7 @@ export interface PopulatedGame {
  */
 function extractPopulatedTeam(teamField: unknown): null | PopulatedTeam {
 	if (typeof teamField === 'object' && teamField !== null && '_id' in teamField) {
-		return teamField as PopulatedTeam;
+		return cleanMongoDoc<PopulatedTeam>(teamField);
 	}
 
 	return null;
@@ -435,7 +436,14 @@ export async function getNextGameForTeams(teamIds: string[], asOfDate?: string):
 
 	await dbConnect();
 
+	// Use start of the next day so we don't pick up games from the requested date
+	// (game dates are stored in UTC, so an evening game on 8/22 MDT is 8/23 UTC)
 	const now = asOfDate ? new Date(asOfDate + 'T00:00:00Z') : new Date();
+
+	if (asOfDate) {
+		now.setUTCDate(now.getUTCDate() + 1);
+	}
+
 	const seenGameIds = new Set<number>();
 	const results: PopulatedGame[] = [];
 
@@ -446,7 +454,6 @@ export async function getNextGameForTeams(teamIds: string[], asOfDate?: string):
 				{ 'awayTeam.team': teamId },
 			],
 			gameDate: { $gte: now },
-			'status.abstractGameState': GameState.Preview,
 		})
 			.sort({ gameDate: 1 })
 			.populate('homeTeam.team')
