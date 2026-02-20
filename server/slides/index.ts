@@ -12,7 +12,21 @@ import {
 
 /**
  * Build all slides for a sign based on its content configuration.
- * Slide order: standings (by division) → last game box scores → next game previews
+ *
+ * Slide order:
+ *   1. Standings (one per selected division)
+ *   2. Per-team game slides, grouped by team in config order:
+ *      - Team's last game (box score)
+ *      - Team's next game (preview)
+ *
+ * If two teams played each other in their last game, the shared box score
+ * appears once under the first team, and the second team skips to its next game.
+ *
+ * Example (Reds & Dodgers, different last games):
+ *   NL East → NL Central → NL West → Reds last → Reds next → Dodgers last → Dodgers next
+ *
+ * Example (Reds & Dodgers played each other):
+ *   NL East → NL Central → NL West → CIN/LAD box score → Reds next → Dodgers next
  */
 export async function getSignSlides(
 	contentConfig?: SignContentConfig,
@@ -24,18 +38,101 @@ export async function getSignSlides(
 	const standingsSlides = await buildStandingsSlides(contentConfig?.standingsDivisions, date);
 	slides.push(...standingsSlides);
 
-	// Build last game box score slides
-	const lastGameSlides = await buildLastGameSlides(contentConfig?.lastGameTeamIds ?? []);
-	slides.push(...lastGameSlides);
-
-	// Build next game slides
-	const nextGameSlides = await buildNextGameSlides(contentConfig?.nextGameTeamIds ?? []);
-	slides.push(...nextGameSlides);
+	// Build per-team game slides (last game → next game, grouped by team)
+	const gameSlides = await buildTeamGameSlides(contentConfig, date);
+	slides.push(...gameSlides);
 
 	return {
 		generatedAt: new Date().toISOString(),
 		slides,
 	};
+}
+
+/**
+ * Build game slides grouped by team.
+ * For each team: last game box score, then next game preview.
+ * Deduplicates shared last games across teams.
+ */
+async function buildTeamGameSlides(
+	contentConfig?: SignContentConfig,
+	date?: string,
+): Promise<Slide[]> {
+	const lastGameTeamIds = contentConfig?.lastGameTeamIds ?? [];
+	const nextGameTeamIds = contentConfig?.nextGameTeamIds ?? [];
+
+	// Get the union of all team IDs we need data for
+	const allTeamIds = [...new Set([...lastGameTeamIds, ...nextGameTeamIds])];
+
+	if (allTeamIds.length === 0) {
+		return [];
+	}
+
+	// Fetch all last games and next games upfront (these already deduplicate by mlbGameId)
+	const [lastGames, nextGames] = await Promise.all([
+		getLastGameForTeams(lastGameTeamIds, date),
+		getNextGameForTeams(nextGameTeamIds, date),
+	]);
+
+	// Index last games by team ID for quick lookup
+	const lastGameByTeamId = new Map<string, PopulatedGame>();
+
+	for (const game of lastGames) {
+		const homeId = game.homeTeam.team?._id;
+		const awayId = game.awayTeam.team?._id;
+
+		if (homeId) {
+			lastGameByTeamId.set(homeId, game);
+		}
+
+		if (awayId) {
+			lastGameByTeamId.set(awayId, game);
+		}
+	}
+
+	// Index next games by team ID for quick lookup
+	const nextGameByTeamId = new Map<string, PopulatedGame>();
+
+	for (const game of nextGames) {
+		const homeId = game.homeTeam.team?._id;
+		const awayId = game.awayTeam.team?._id;
+
+		if (homeId) {
+			nextGameByTeamId.set(homeId, game);
+		}
+
+		if (awayId) {
+			nextGameByTeamId.set(awayId, game);
+		}
+	}
+
+	// Build slides grouped by team, deduplicating shared last games
+	const slides: Slide[] = [];
+	const emittedLastGameIds = new Set<number>();
+	const emittedNextGameIds = new Set<number>();
+
+	for (const teamId of allTeamIds) {
+		// Last game for this team (skip if already emitted as a shared game)
+		if (lastGameTeamIds.includes(teamId)) {
+			const lastGame = lastGameByTeamId.get(teamId);
+
+			if (lastGame && !emittedLastGameIds.has(lastGame.mlbGameId)) {
+				emittedLastGameIds.add(lastGame.mlbGameId);
+				slides.push(gameToLastGameSlide(lastGame));
+			}
+		}
+
+		// Next game for this team (skip if already emitted as a shared game)
+		if (nextGameTeamIds.includes(teamId)) {
+			const nextGame = nextGameByTeamId.get(teamId);
+
+			if (nextGame && !emittedNextGameIds.has(nextGame.mlbGameId)) {
+				emittedNextGameIds.add(nextGame.mlbGameId);
+				slides.push(gameToNextGameSlide(nextGame, teamId, nextGameTeamIds));
+			}
+		}
+	}
+
+	return slides;
 }
 
 /**
@@ -75,20 +172,6 @@ async function buildStandingsSlides(
 }
 
 /**
- * Build box score slides for the last completed game of each selected team.
- * Away team is always listed first. Deduplication is handled by getLastGameForTeams.
- */
-async function buildLastGameSlides(teamIds: string[]): Promise<LastGameSlide[]> {
-	if (teamIds.length === 0) {
-		return [];
-	}
-
-	const games = await getLastGameForTeams(teamIds);
-
-	return games.map((game) => gameToLastGameSlide(game));
-}
-
-/**
  * Convert a populated game to a LastGameSlide
  */
 function gameToLastGameSlide(game: PopulatedGame): LastGameSlide {
@@ -115,43 +198,35 @@ function gameToLastGameSlide(game: PopulatedGame): LastGameSlide {
 }
 
 /**
- * Build next game slides for each selected team.
- * Deduplication is handled by getNextGameForTeams.
+ * Convert a populated game to a NextGameSlide for a specific team
  */
-async function buildNextGameSlides(teamIds: string[]): Promise<NextGameSlide[]> {
-	if (teamIds.length === 0) {
-		return [];
-	}
+function gameToNextGameSlide(
+	game: PopulatedGame,
+	teamId: string,
+	allSelectedTeamIds: string[],
+): NextGameSlide {
+	const homeTeamSelected = allSelectedTeamIds.includes(game.homeTeam.team?._id ?? '');
+	const isHomeForTeam = game.homeTeam.team?._id === teamId;
 
-	const games = await getNextGameForTeams(teamIds);
-	const slides: NextGameSlide[] = [];
+	// If this team is the home team, use home perspective; otherwise away
+	const isHome = isHomeForTeam || (homeTeamSelected && game.homeTeam.team?._id === teamId);
+	const team = isHome ? game.homeTeam : game.awayTeam;
+	const opponent = isHome ? game.awayTeam : game.homeTeam;
 
-	for (const game of games) {
-		// Determine which selected team this slide is "for"
-		// If both teams are selected, create a slide for the first one found
-		const homeTeamSelected = teamIds.includes(game.homeTeam.team?._id ?? '');
-		const isHome = homeTeamSelected;
-
-		const team = isHome ? game.homeTeam : game.awayTeam;
-		const opponent = isHome ? game.awayTeam : game.homeTeam;
-
-		slides.push({
-			gameDate: game.gameDate.toISOString(),
-			isHome,
-			opponent: {
-				abbreviation: opponent.team?.abbreviation ?? 'TBD',
-				colors: opponent.team?.colors,
-				name: opponent.team?.name ?? 'TBD',
-			},
-			slideType: SlideType.NEXT_GAME,
-			team: {
-				abbreviation: team.team?.abbreviation ?? 'TBD',
-				colors: team.team?.colors,
-				name: team.team?.name ?? 'TBD',
-			},
-			venue: game.venue.name,
-		});
-	}
-
-	return slides;
+	return {
+		gameDate: game.gameDate.toISOString(),
+		isHome,
+		opponent: {
+			abbreviation: opponent.team?.abbreviation ?? 'TBD',
+			colors: opponent.team?.colors,
+			name: opponent.team?.name ?? 'TBD',
+		},
+		slideType: SlideType.NEXT_GAME,
+		team: {
+			abbreviation: team.team?.abbreviation ?? 'TBD',
+			colors: team.team?.colors,
+			name: team.team?.name ?? 'TBD',
+		},
+		venue: game.venue.name,
+	};
 }

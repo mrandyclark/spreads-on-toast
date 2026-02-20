@@ -361,16 +361,17 @@ function extractPopulatedTeam(teamField: unknown): null | PopulatedTeam {
  * Get the last completed game for each team ID.
  * Deduplicates: if two selected teams played each other, only one game is returned.
  * @param teamIds - Array of team UUIDs
+ * @param asOfDate - Optional date string (YYYY-MM-DD) to use as "now", defaults to current date
  * @returns Array of populated games (deduplicated by mlbGameId)
  */
-export async function getLastGameForTeams(teamIds: string[]): Promise<PopulatedGame[]> {
+export async function getLastGameForTeams(teamIds: string[], asOfDate?: string): Promise<PopulatedGame[]> {
 	if (teamIds.length === 0) {
 		return [];
 	}
 
 	await dbConnect();
 
-	const now = new Date();
+	const now = asOfDate ? new Date(asOfDate + 'T23:59:59Z') : new Date();
 	const seenGameIds = new Set<number>();
 	const results: PopulatedGame[] = [];
 
@@ -424,16 +425,17 @@ export async function getLastGameForTeams(teamIds: string[]): Promise<PopulatedG
  * Get the next upcoming game for each team ID.
  * Deduplicates: if two selected teams play each other next, only one game is returned.
  * @param teamIds - Array of team UUIDs
+ * @param asOfDate - Optional date string (YYYY-MM-DD) to use as "now", defaults to current date
  * @returns Array of populated games (deduplicated by mlbGameId)
  */
-export async function getNextGameForTeams(teamIds: string[]): Promise<PopulatedGame[]> {
+export async function getNextGameForTeams(teamIds: string[], asOfDate?: string): Promise<PopulatedGame[]> {
 	if (teamIds.length === 0) {
 		return [];
 	}
 
 	await dbConnect();
 
-	const now = new Date();
+	const now = asOfDate ? new Date(asOfDate + 'T00:00:00Z') : new Date();
 	const seenGameIds = new Set<number>();
 	const results: PopulatedGame[] = [];
 
