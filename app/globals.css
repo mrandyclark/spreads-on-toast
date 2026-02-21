@@ -45,6 +45,10 @@
 	--color-chart-4: hsl(43 74% 66%);
 	--color-chart-5: hsl(27 87% 67%);
 
+	/* League colors */
+	--color-al: hsl(12 83% 45%);
+	--color-nl: hsl(225 65% 38%);
+
 	--radius: 0.75rem;
 
 	/* Font families */

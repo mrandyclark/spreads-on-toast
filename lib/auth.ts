@@ -2,7 +2,7 @@ import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { headers } from 'next/headers';
 
-import { createUser, getUserByKindeId } from '@/server/users';
+import { userService } from '@/server/users/user.service';
 
 export interface AuthUser {
 	email?: string;
@@ -72,7 +72,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
 	}
 
 	// Look up user in our database by kindeId
-	let dbUser = await getUserByKindeId(kindeId);
+	let dbUser = await userService.findByKindeId(kindeId);
 
 	// Auto-create user if they don't exist (webhook may have failed)
 	if (!dbUser) {
@@ -95,7 +95,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
 		}
 
 		// Create the user with whatever info we have
-		dbUser = await createUser({
+		dbUser = await userService.create({
 			email: email || `${kindeId}@unknown.com`,
 			kindeId,
 			nameFirst,

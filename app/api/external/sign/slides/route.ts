@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
-import { getSignById } from '@/server/signs';
+import { getSign } from '@/server/signs/sign.actions';
 import { getSignSlides } from '@/server/slides';
 
 /**
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
 	try {
 		// Look up the sign to get its content config
-		const sign = await getSignById(signId);
+		const sign = await getSign(signId);
 
 		if (!sign) {
 			return errorResponse('Sign not found', 404);

@@ -119,11 +119,20 @@ const TeamStandingSchema = new Schema<With_id<TeamStanding>>({
 	leagueRecord: { type: LeagueRecordSchema },
 });
 
-// Unique constraint + index for querying standings by team and season (for trend charts)
+// Unique constraint: one standing per team per date per season
+ 
 TeamStandingSchema.index({ date: 1, season: 1, team: 1 }, { unique: true });
 
-// Index for querying all standings on a specific date (for CRON upserts)
+// Index for querying all standings on a specific date (standings board, CRON upserts)
 TeamStandingSchema.index({ date: 1, season: 1 });
+
+// Index for team detail page: all standings for a team in a season, sorted by date
+// eslint-disable-next-line perfectionist/sort-objects
+TeamStandingSchema.index({ season: 1, team: 1, date: 1 });
+
+// Index for findLatestDate / findDateRange: season-only queries sorted by date
+// eslint-disable-next-line perfectionist/sort-objects
+TeamStandingSchema.index({ season: 1, date: -1 });
 
 configureSchema(TeamStandingSchema);
 

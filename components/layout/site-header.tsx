@@ -1,7 +1,7 @@
 'use client';
 
 import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
-import { Menu } from 'lucide-react';
+import { Menu, Monitor } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -46,7 +46,9 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 		<header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur">
 			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
 				{/* Logo */}
-				<Link className="flex items-center gap-2 transition-opacity hover:opacity-80" href={isMarketing ? '/' : '/dashboard'}>
+				<Link
+					className="flex items-center gap-2 transition-opacity hover:opacity-80"
+					href={isMarketing ? '/' : '/dashboard'}>
 					<Image alt="spreadsontoast" height={32} src="/toast-icon.svg" width={32} />
 					<span className="text-foreground font-serif text-xl font-medium">spreads on toast.</span>
 				</Link>
@@ -88,6 +90,12 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 								<span className="text-muted-foreground text-sm">{userName}</span>
 							)}
 							<Button asChild size="sm" variant="ghost">
+								<Link href="/signs">
+									<Monitor className="mr-1 h-4 w-4" />
+									Signs
+								</Link>
+							</Button>
+							<Button asChild size="sm" variant="ghost">
 								{/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Intentionally using <a> to prevent prefetch on logout */}
 								<a href="/api/auth/logout">Sign Out</a>
 							</Button>
@@ -98,7 +106,7 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 				{/* Mobile Menu */}
 				<Sheet onOpenChange={setMobileMenuOpen} open={mobileMenuOpen}>
 					<SheetTrigger asChild className="md:hidden">
-						<Button aria-label="Open menu" size="icon" variant="ghost">
+						<Button aria-label="Open menu" size="icon" suppressHydrationWarning variant="ghost">
 							<Menu className="h-5 w-5" />
 						</Button>
 					</SheetTrigger>
@@ -139,6 +147,13 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 										href="/dashboard"
 										onClick={() => setMobileMenuOpen(false)}>
 										My Leagues
+									</Link>
+
+									<Link
+										className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
+										href="/signs"
+										onClick={() => setMobileMenuOpen(false)}>
+										My Signs
 									</Link>
 
 									<div className="border-border my-2 border-t" />

@@ -28,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { toDateString } from '@/lib/date-utils';
+import { populatedToId } from '@/lib/mongo-utils';
 import { Group, GroupRole, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 import {
@@ -431,7 +432,7 @@ export default function LeagueDetailPage() {
 											return (
 												<div
 													className="bg-muted flex items-center gap-2 rounded-full px-3 py-1.5"
-													key={typeof member.user === 'string' ? member.user : member.user.id}>
+													key={populatedToId(member.user)}>
 													<Avatar className="h-6 w-6">
 														<AvatarFallback className="bg-primary text-primary-foreground text-xs">
 															{initials}

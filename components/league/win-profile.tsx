@@ -9,8 +9,8 @@ interface WinProfileProps {
 	data: WinProfileData;
 }
 
-const AL_BAR_CLASS = 'bg-red-600';
-const NL_BAR_CLASS = 'bg-blue-600';
+const AL_BAR_CLASS = 'bg-al';
+const NL_BAR_CLASS = 'bg-nl';
 
 function SituationalBar({
 	isNationalLeague,
@@ -54,22 +54,22 @@ function ContributionBar({ offense, pitching }: { offense: number; pitching: num
 			<div className="h-4 w-full overflow-hidden rounded-full">
 				<div className="flex h-full">
 					<div
-						className="flex items-center justify-center bg-red-600 text-xs font-medium text-white transition-all duration-300"
+						className="flex items-center justify-center bg-al text-xs font-medium text-white transition-all duration-300"
 						style={{ width: `${offensePct}%` }}>
 						{offensePct > 15 && `${offensePct}%`}
 					</div>
 					<div
-						className="flex items-center justify-center bg-blue-600 text-xs font-medium text-white transition-all duration-300"
+						className="flex items-center justify-center bg-nl text-xs font-medium text-white transition-all duration-300"
 						style={{ width: `${pitchingPct}%` }}>
 						{pitchingPct > 15 && `${pitchingPct}%`}
 					</div>
 				</div>
 			</div>
 			<div className="flex justify-between text-xs">
-				<span className="text-red-600 dark:text-red-400">
+				<span className="text-al">
 					Offense {offensePct}%
 				</span>
-				<span className="text-blue-600 dark:text-blue-400">
+				<span className="text-nl">
 					Pitching {pitchingPct}%
 				</span>
 			</div>

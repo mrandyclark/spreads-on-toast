@@ -191,9 +191,17 @@ const GameSchema = new Schema<With_id<Game>>({
 	inningBreakLength: { type: Number },
 });
 
-// Index for querying games by team
+// Index for querying games by team + season (schedule pages)
 GameSchema.index({ 'homeTeam.team': 1, season: 1 });
 GameSchema.index({ 'awayTeam.team': 1, season: 1 });
+
+// Index for querying games by team + gameDate (upcoming/recent games, $or uses both)
+// eslint-disable-next-line perfectionist/sort-objects
+GameSchema.index({ 'homeTeam.team': 1, gameDate: 1 });
+ 
+GameSchema.index({ 'awayTeam.team': 1, gameDate: 1 });
+
+// Index for CRON sync upserts by MLB game ID
 GameSchema.index({ 'homeTeam.teamMlbId': 1, season: 1 });
 GameSchema.index({ 'awayTeam.teamMlbId': 1, season: 1 });
 

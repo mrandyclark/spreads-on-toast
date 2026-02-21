@@ -1,14 +1,14 @@
 import { errorResponse, jsonResponse, withAuth } from '@/server/http/responses';
-import { deleteSign, getSignById, isSignMember, isSignOwner, updateSign } from '@/server/signs';
+import { deleteSign, getSign, isMember, isOwner, updateSign } from '@/server/signs/sign.actions';
 
 export const GET = withAuth(async (_request, { params, user }) => {
 	const { id } = await params;
 
-	if (!(await isSignMember(id, user.id))) {
+	if (!(await isMember(id, user.id))) {
 		return errorResponse('Forbidden', 403);
 	}
 
-	const sign = await getSignById(id);
+	const sign = await getSign(id);
 
 	if (!sign) {
 		return errorResponse('Sign not found', 404);
@@ -20,7 +20,7 @@ export const GET = withAuth(async (_request, { params, user }) => {
 export const PATCH = withAuth(async (request, { params, user }) => {
 	const { id } = await params;
 
-	if (!(await isSignOwner(id, user.id))) {
+	if (!(await isOwner(id, user.id))) {
 		return errorResponse('Forbidden', 403);
 	}
 
@@ -40,7 +40,7 @@ export const PATCH = withAuth(async (request, { params, user }) => {
 export const DELETE = withAuth(async (_request, { params, user }) => {
 	const { id } = await params;
 
-	if (!(await isSignOwner(id, user.id))) {
+	if (!(await isOwner(id, user.id))) {
 		return errorResponse('Forbidden', 403);
 	}
 

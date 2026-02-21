@@ -1,14 +1,14 @@
 import { NextRequest } from 'next/server';
 
-import { dbConnect } from '@/lib/mongoose';
-import { GroupModel } from '@/models/group.model';
-import { SheetModel } from '@/models/sheet.model';
+import { populatedToId } from '@/lib/mongo-utils';
+import { groupService } from '@/server/groups/group.service';
 import { calculateProjectedWins } from '@/server/mlb-api';
+import { sheetService } from '@/server/sheets/sheet.service';
 import {
 	calculatePickResult,
 	getFinalStandings,
 	getStandingsForDate,
-} from '@/server/standings';
+} from '@/server/standings/standings.actions';
 import { PickResult, TeamPick, User } from '@/types';
 
 export interface LeaderboardEntry {
@@ -39,21 +39,25 @@ export interface LeaderboardResponse {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
 
-	await dbConnect();
+	// findForMemberPopulated requires a userId, but this is a public-ish API route
+	// Use findById + check lock, then get populated group for member iteration
+	const groupBasic = await groupService.findById(id);
 
-	// Get the group with populated members
-	const group = await GroupModel.findById(id).populate('members.user');
+	if (!groupBasic) {
+		return Response.json({ error: 'Group not found' }, { status: 404 });
+	}
+
+	if (new Date(groupBasic.lockDate) > new Date()) {
+		return Response.json({ error: 'Season not yet locked' }, { status: 400 });
+	}
+
+	// Need populated members for user names — use owner as the member check
+	const group = await groupService.findForMemberPopulated(id, String(groupBasic.owner));
 
 	if (!group) {
 		return Response.json({ error: 'Group not found' }, { status: 404 });
 	}
 
-	// Check if locked
-	if (new Date(group.lockDate) > new Date()) {
-		return Response.json({ error: 'Season not yet locked' }, { status: 400 });
-	}
-
-	// Get optional date parameter for historical lookup
 	const dateParam = request.nextUrl.searchParams.get('date');
 	const isHistorical = !!dateParam;
 
@@ -78,15 +82,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		}
 	}
 
-	// Get all sheets for this group
-	const sheets = await SheetModel.find({ group: id }).populate('teamPicks.team');
+	const sheets = await sheetService.findByGroupPopulated(id);
 
 	// Calculate results for each member
 	const entries: LeaderboardEntry[] = [];
 
 	for (const member of group.members) {
 		const user = member.user as User;
-		const userId = typeof member.user === 'string' ? member.user : user.id;
+		const userId = populatedToId(member.user)!;
 
 		// Find the sheet for this user
 		const sheet = sheets.find((s) => s.user.toString() === userId);
@@ -101,8 +104,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 					continue;
 				}
 
-				const teamId =
-					typeof teamPick.team === 'string' ? teamPick.team : (teamPick.team as { id: string }).id;
+				const teamId = populatedToId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
 
 				// Recalculate projected wins with full precision to avoid false pushes

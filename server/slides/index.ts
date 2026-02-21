@@ -1,6 +1,8 @@
-import { getLastGameForTeams, getNextGameForTeams, getOpenerForTeams, PopulatedGame } from '@/server/schedule';
-import { getDivisionStandings } from '@/server/standings';
+import { populatedToId } from '@/lib/mongo-utils';
+import { gameService } from '@/server/schedule/game.service';
+import { getDivisionStandings } from '@/server/standings/standings.actions';
 import {
+	Game,
 	LastGameSlide,
 	NextGameSlide,
 	OpenerCountdownSlide,
@@ -9,6 +11,7 @@ import {
 	SlidesResponse,
 	SlideType,
 	StandingsSlide,
+	Team,
 } from '@/types';
 
 /**
@@ -75,16 +78,15 @@ async function buildTeamGameSlides(
 
 	// Fetch all last games and next games upfront (these already deduplicate by mlbGameId)
 	const [lastGames, nextGames] = await Promise.all([
-		getLastGameForTeams(lastGameTeamIds, date),
-		getNextGameForTeams(nextGameTeamIds, date),
+		gameService.getLastGameForTeams(lastGameTeamIds, date),
+		gameService.getNextGameForTeams(nextGameTeamIds, date),
 	]);
 
-	// Index last games by team ID for quick lookup
-	const lastGameByTeamId = new Map<string, PopulatedGame>();
+	const lastGameByTeamId = new Map<string, Game>();
 
 	for (const game of lastGames) {
-		const homeId = game.homeTeam.team?.id;
-		const awayId = game.awayTeam.team?.id;
+		const homeId = populatedToId(game.homeTeam.team);
+		const awayId = populatedToId(game.awayTeam.team);
 
 		if (homeId) {
 			lastGameByTeamId.set(homeId, game);
@@ -95,12 +97,11 @@ async function buildTeamGameSlides(
 		}
 	}
 
-	// Index next games by team ID for quick lookup
-	const nextGameByTeamId = new Map<string, PopulatedGame>();
+	const nextGameByTeamId = new Map<string, Game>();
 
 	for (const game of nextGames) {
-		const homeId = game.homeTeam.team?.id;
-		const awayId = game.awayTeam.team?.id;
+		const homeId = populatedToId(game.homeTeam.team);
+		const awayId = populatedToId(game.awayTeam.team);
 
 		if (homeId) {
 			nextGameByTeamId.set(homeId, game);
@@ -180,23 +181,30 @@ async function buildStandingsSlides(
 /**
  * Convert a populated game to a LastGameSlide
  */
-function gameToLastGameSlide(game: PopulatedGame): LastGameSlide {
+function teamFromRef(ref: Game['homeTeam']['team']): null | Team {
+	return typeof ref === 'object' ? ref as Team : null;
+}
+
+function gameToLastGameSlide(game: Game): LastGameSlide {
+	const homeTeam = teamFromRef(game.homeTeam.team);
+	const awayTeam = teamFromRef(game.awayTeam.team);
+
 	return {
 		awayTeam: {
-			abbreviation: game.awayTeam.team?.abbreviation ?? 'TBD',
-			colors: game.awayTeam.team?.colors,
+			abbreviation: awayTeam?.abbreviation ?? 'TBD',
+			colors: awayTeam?.colors,
 			errors: game.awayTeam.errors ?? 0,
 			hits: game.awayTeam.hits ?? 0,
-			name: game.awayTeam.team?.name ?? 'TBD',
+			name: awayTeam?.name ?? 'TBD',
 			runs: game.awayTeam.score ?? 0,
 		},
 		gameDate: game.gameDate.toISOString(),
 		homeTeam: {
-			abbreviation: game.homeTeam.team?.abbreviation ?? 'TBD',
-			colors: game.homeTeam.team?.colors,
+			abbreviation: homeTeam?.abbreviation ?? 'TBD',
+			colors: homeTeam?.colors,
 			errors: game.homeTeam.errors ?? 0,
 			hits: game.homeTeam.hits ?? 0,
-			name: game.homeTeam.team?.name ?? 'TBD',
+			name: homeTeam?.name ?? 'TBD',
 			runs: game.homeTeam.score ?? 0,
 		},
 		slideType: SlideType.LAST_GAME,
@@ -207,30 +215,28 @@ function gameToLastGameSlide(game: PopulatedGame): LastGameSlide {
  * Convert a populated game to a NextGameSlide for a specific team
  */
 function gameToNextGameSlide(
-	game: PopulatedGame,
+	game: Game,
 	teamId: string,
 ): NextGameSlide {
-	const homeId = game.homeTeam.team?.id ?? '';
-	const isHomeForTeam = homeId === teamId;
-
-	// If this team is the home team, use home perspective; otherwise away
-	const isHome = isHomeForTeam;
-	const team = isHome ? game.homeTeam : game.awayTeam;
-	const opponent = isHome ? game.awayTeam : game.homeTeam;
+	const isHome = populatedToId(game.homeTeam.team) === teamId;
+	const teamSide = isHome ? game.homeTeam : game.awayTeam;
+	const opponentSide = isHome ? game.awayTeam : game.homeTeam;
+	const team = teamFromRef(teamSide.team);
+	const opponent = teamFromRef(opponentSide.team);
 
 	return {
 		gameDate: game.gameDate.toISOString(),
 		isHome,
 		opponent: {
-			abbreviation: opponent.team?.abbreviation ?? 'TBD',
-			colors: opponent.team?.colors,
-			name: opponent.team?.name ?? 'TBD',
+			abbreviation: opponent?.abbreviation ?? 'TBD',
+			colors: opponent?.colors,
+			name: opponent?.name ?? 'TBD',
 		},
 		slideType: SlideType.NEXT_GAME,
 		team: {
-			abbreviation: team.team?.abbreviation ?? 'TBD',
-			colors: team.team?.colors,
-			name: team.team?.name ?? 'TBD',
+			abbreviation: team?.abbreviation ?? 'TBD',
+			colors: team?.colors,
+			name: team?.name ?? 'TBD',
 		},
 		venue: game.venue.name,
 	};
@@ -247,19 +253,19 @@ async function buildOpenerCountdownSlides(
 		return [];
 	}
 
-	const openerGames = await getOpenerForTeams(teamIds);
+	const openerGames = await gameService.getOpenerForTeams(teamIds);
 	const now = new Date();
 
 	return openerGames.map((game) => {
 		const teamId = teamIds.find((id) => {
-			const homeId = game.homeTeam.team?.id;
-			const awayId = game.awayTeam.team?.id;
-			return id === homeId || id === awayId;
+			return id === populatedToId(game.homeTeam.team) || id === populatedToId(game.awayTeam.team);
 		});
 
-		const isHome = game.homeTeam.team?.id === teamId;
-		const team = isHome ? game.homeTeam : game.awayTeam;
-		const opponent = isHome ? game.awayTeam : game.homeTeam;
+		const isHome = populatedToId(game.homeTeam.team) === teamId;
+		const teamSide = isHome ? game.homeTeam : game.awayTeam;
+		const opponentSide = isHome ? game.awayTeam : game.homeTeam;
+		const team = teamFromRef(teamSide.team);
+		const opponent = teamFromRef(opponentSide.team);
 
 		const msPerDay = 1000 * 60 * 60 * 24;
 		const daysUntil = Math.ceil((game.gameDate.getTime() - now.getTime()) / msPerDay);
@@ -268,15 +274,15 @@ async function buildOpenerCountdownSlides(
 			daysUntil: Math.max(0, daysUntil),
 			gameDate: game.gameDate.toISOString(),
 			opponent: {
-				abbreviation: opponent.team?.abbreviation ?? 'TBD',
-				colors: opponent.team?.colors,
-				name: opponent.team?.name ?? 'TBD',
+				abbreviation: opponent?.abbreviation ?? 'TBD',
+				colors: opponent?.colors,
+				name: opponent?.name ?? 'TBD',
 			},
 			slideType: SlideType.OPENER_COUNTDOWN,
 			team: {
-				abbreviation: team.team?.abbreviation ?? 'TBD',
-				colors: team.team?.colors,
-				name: team.team?.name ?? 'TBD',
+				abbreviation: team?.abbreviation ?? 'TBD',
+				colors: team?.colors,
+				name: team?.name ?? 'TBD',
 			},
 			venue: game.venue.name,
 		};

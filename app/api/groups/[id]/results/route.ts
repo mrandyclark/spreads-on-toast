@@ -1,14 +1,14 @@
 import { NextRequest } from 'next/server';
 
-import { dbConnect } from '@/lib/mongoose';
-import { GroupModel } from '@/models/group.model';
-import { SheetModel } from '@/models/sheet.model';
+import { populatedToId } from '@/lib/mongo-utils';
+import { groupService } from '@/server/groups/group.service';
 import { calculateProjectedWins } from '@/server/mlb-api';
+import { sheetService } from '@/server/sheets/sheet.service';
 import {
 	calculatePickResult,
 	getFinalStandings,
 	getStandingsForDate,
-} from '@/server/standings';
+} from '@/server/standings/standings.actions';
 import { PickResult, Team, TeamPick } from '@/types';
 
 export interface TeamPickResult {
@@ -43,33 +43,26 @@ export interface GroupResults {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
 
-	await dbConnect();
-
-	// Get the group
-	const group = await GroupModel.findById(id);
+	const group = await groupService.findById(id);
 
 	if (!group) {
 		return Response.json({ error: 'Group not found' }, { status: 404 });
 	}
 
-	// Check if locked
 	if (new Date(group.lockDate) > new Date()) {
 		return Response.json({ error: 'Season not yet locked' }, { status: 400 });
 	}
 
-	// Get user ID from query param or session (for now, use query param)
 	const userId = request.nextUrl.searchParams.get('userId');
 
 	if (!userId) {
 		return Response.json({ error: 'userId required' }, { status: 400 });
 	}
 
-	// Get optional date parameter for historical lookup
 	const dateParam = request.nextUrl.searchParams.get('date');
 	const isHistorical = !!dateParam;
 
-	// Get the user's sheet
-	const sheet = await SheetModel.findOne({ group: id, user: userId }).populate('teamPicks.team');
+	const sheet = await sheetService.findByUserAndGroupPopulated(userId, id);
 
 	if (!sheet) {
 		return Response.json({ error: 'Sheet not found' }, { status: 404 });
@@ -116,7 +109,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		}
 
 		const team = teamPick.team as Team;
-		const teamId = typeof teamPick.team === 'string' ? teamPick.team : team.id;
+		const teamId = populatedToId(teamPick.team)!;
 		const standing = standingsData.get(teamId);
 
 		// Recalculate projected wins with full precision for accurate comparison

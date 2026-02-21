@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
-import { createUser, getUserByKindeId, updateUserByKindeId } from '@/server/users';
+import { userService } from '@/server/users/user.service';
 
 const client = jwksClient({
 	jwksUri: `${process.env.KINDE_ISSUER_URL}/.well-known/jwks.json`,
@@ -56,10 +56,10 @@ export async function POST(request: Request) {
 		switch (event.type) {
 			case 'user.created': {
 				const { user } = event.data;
-				const existingUser = await getUserByKindeId(user.id);
+				const existingUser = await userService.findByKindeId(user.id);
 
 				if (!existingUser) {
-					await createUser({
+					await userService.create({
 						email: user.email,
 						kindeId: user.id,
 						nameFirst: user.first_name || undefined,
@@ -73,17 +73,17 @@ export async function POST(request: Request) {
 
 			case 'user.updated': {
 				const { user } = event.data;
-				const existingUser = await getUserByKindeId(user.id);
+				const existingUser = await userService.findByKindeId(user.id);
 
 				if (existingUser) {
-					await updateUserByKindeId(user.id, {
+					await userService.updateByKindeId(user.id, {
 						email: user.email,
 						nameFirst: user.first_name || undefined,
 						nameLast: user.last_name || undefined,
 					});
 					console.log('[webhook] Updated user with kindeId:', user.id);
 				} else {
-					await createUser({
+					await userService.create({
 						email: user.email,
 						kindeId: user.id,
 						nameFirst: user.first_name || undefined,

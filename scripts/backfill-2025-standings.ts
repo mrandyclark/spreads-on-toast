@@ -4,7 +4,7 @@
 // Season ran from March 27, 2025 to September 28, 2025 (regular season end)
 
 import { dbConnect } from '@/lib/mongoose';
-import { syncMlbStandings } from '@/server/standings';
+import { syncMlbStandings } from '@/server/standings/sync';
 
 const SEASON = '2025';
 const START_DATE = new Date('2025-03-27'); // Opening Day 2025

@@ -1,6 +1,7 @@
 'use client';
 
 import { Calendar } from 'lucide-react';
+import Link from 'next/link';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,9 @@ function GameRow({ game }: { game: UpcomingGame; teamAbbreviation: string }) {
 	const gameTypeLabel = GAME_TYPE_LABELS[game.gameType];
 
 	return (
-		<div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0">
+		<Link
+			className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0 transition-colors hover:bg-muted/50 -mx-2 px-2 rounded-md"
+			href={`/games/${game.id}`}>
 			<div className="flex-1 min-w-0">
 				<div className="flex items-center gap-2">
 					<span className="text-muted-foreground text-xs">
@@ -95,7 +98,7 @@ function GameRow({ game }: { game: UpcomingGame; teamAbbreviation: string }) {
 					</span>
 				)}
 			</div>
-		</div>
+		</Link>
 	);
 }
 

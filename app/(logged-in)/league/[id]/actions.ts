@@ -2,18 +2,16 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { dbConnect } from '@/lib/mongoose';
+import { populatedToId } from '@/lib/mongo-utils';
 import { withAuth } from '@/lib/with-auth-action';
-import { GroupModel } from '@/models/group.model';
-import { SheetModel } from '@/models/sheet.model';
-import { getGroupForMember } from '@/server/groups';
+import { getGroupForMember, groupService } from '@/server/groups/group.actions';
 import { calculateProjectedWins } from '@/server/mlb-api';
-import { getSheetByGroupAndUserPopulated, updateSheet } from '@/server/sheets';
+import { sheetService } from '@/server/sheets/sheet.service';
 import {
 	calculatePickResult,
 	getFinalStandings,
 	getStandingsForDate,
-} from '@/server/standings';
+} from '@/server/standings/standings.actions';
 import {
 	Group,
 	GroupRole,
@@ -39,55 +37,43 @@ export const getGroupAction = withAuth(async (user, groupId: string) => {
 });
 
 export const updateGroupNameAction = withAuth(async (user, groupId: string, name: string) => {
-	await dbConnect();
-
-	const group = await GroupModel.findById(groupId);
+	const group = await groupService.findById(groupId);
 
 	if (!group) {
 		return { error: 'Group not found' };
 	}
 
-	// Check if user is owner or admin
-	const member = group.members.find(
-		(m) => m.user.toString() === user.id,
-	);
+	const member = group.members.find((m) => populatedToId(m.user) === user.id);
 
 	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
 		return { error: 'Not authorized to edit group' };
 	}
 
-	group.name = name.trim();
-	await group.save();
+	await groupService.findByIdAndUpdate(groupId, { $set: { name: name.trim() } });
 
 	return { success: true };
 });
 
 export const updateGroupVisibilityAction = withAuth(async (user, groupId: string, visibility: GroupVisibility) => {
-	await dbConnect();
-
-	const group = await GroupModel.findById(groupId);
+	const group = await groupService.findById(groupId);
 
 	if (!group) {
 		return { error: 'Group not found' };
 	}
 
-	// Check if user is owner or admin
-	const member = group.members.find(
-		(m) => m.user.toString() === user.id,
-	);
+	const member = group.members.find((m) => populatedToId(m.user) === user.id);
 
 	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
 		return { error: 'Not authorized to edit group' };
 	}
 
-	group.visibility = visibility;
-	await group.save();
+	await groupService.findByIdAndUpdate(groupId, { $set: { visibility } });
 
 	return { success: true };
 });
 
 export const getSheetAction = withAuth(async (user, groupId: string) => {
-	const sheet = await getSheetByGroupAndUserPopulated(groupId, user.id);
+	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, user.id);
 
 	if (!sheet) {
 		return {};
@@ -103,41 +89,27 @@ export interface CopyableSheet {
 }
 
 export const getCopyableSheetsAction = withAuth(async (user, groupId: string) => {
-	await dbConnect();
-
-	// Get the current group to know the sport/season
-	const currentGroup = await GroupModel.findById(groupId);
+	const currentGroup = await groupService.findById(groupId);
 
 	if (!currentGroup) {
 		return { sheets: [] };
 	}
 
-	// Find all groups the user is a member of with the same sport/season
-	const groups = await GroupModel.find({
-		'members.user': user.id,
-		season: currentGroup.season,
-		sport: currentGroup.sport,
-	});
-
-	// Filter out the current group
+	const groups = await groupService.findByUserSportSeason(user.id, currentGroup.sport, currentGroup.season);
 	const otherGroups = groups.filter((g) => g.id !== groupId);
 
 	if (otherGroups.length === 0) {
 		return { sheets: [] };
 	}
 
-	// Get sheets for these groups
-	const sheets = await SheetModel.find({
-		group: { $in: otherGroups.map((g) => g.id) },
-		user: user.id,
-	});
+	const otherGroupIds = otherGroups.map((g) => g.id);
+	const sheets = await sheetService.find({ group: { $in: otherGroupIds }, user: user.id });
 
-	// Build the result with group names
 	const result: CopyableSheet[] = sheets.map((s) => {
-		const group = otherGroups.find((g) => g.id === s.group.toString());
+		const group = otherGroups.find((g) => g.id === populatedToId(s.group));
 
 		return {
-			groupId: s.group.toString(),
+			groupId: populatedToId(s.group)!,
 			groupName: group?.name ?? 'Unknown',
 			sheetId: s.id,
 		};
@@ -147,24 +119,19 @@ export const getCopyableSheetsAction = withAuth(async (user, groupId: string) =>
 });
 
 export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: string, sourceSheetId: string) => {
-	await dbConnect();
+	const sourceSheet = await sheetService.findById(sourceSheetId);
 
-	// Get the source sheet
-	const sourceSheet = await SheetModel.findById(sourceSheetId);
-
-	if (!sourceSheet || sourceSheet.user.toString() !== user.id) {
+	if (!sourceSheet || populatedToId(sourceSheet.user) !== user.id) {
 		return { error: 'Source sheet not found' };
 	}
 
-	// Get the target sheet
-	const targetSheet = await SheetModel.findOne({ group: targetGroupId, user: user.id });
+	const targetSheet = await sheetService.findByGroupAndUser(targetGroupId, user.id);
 
 	if (!targetSheet) {
 		return { error: 'Target sheet not found' };
 	}
 
-	// Get the target group to check lock status
-	const targetGroup = await GroupModel.findById(targetGroupId);
+	const targetGroup = await groupService.findById(targetGroupId);
 
 	if (!targetGroup) {
 		return { error: 'Group not found' };
@@ -174,13 +141,12 @@ export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: str
 		return { error: 'Picks are locked' };
 	}
 
-	// Copy picks - match by team ID
 	const sourcePicksMap = new Map(
-		sourceSheet.teamPicks.map((tp: { pick?: PickDirection; team: { toString: () => string } }) => [tp.team.toString(), tp.pick]),
+		sourceSheet.teamPicks.map((tp: TeamPick) => [populatedToId(tp.team), tp.pick]),
 	);
 
-	targetSheet.teamPicks = targetSheet.teamPicks.map((tp: { line: number; pick?: PickDirection; team: { toString: () => string } }) => {
-		const teamId = tp.team.toString();
+	const updatedTeamPicks = targetSheet.teamPicks.map((tp: TeamPick) => {
+		const teamId = populatedToId(tp.team)!;
 		const sourcePick = sourcePicksMap.get(teamId);
 
 		return {
@@ -190,17 +156,18 @@ export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: str
 		};
 	});
 
-	// Copy postseason picks if they exist
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const updateData: Record<string, any> = { teamPicks: updatedTeamPicks };
+
 	if (sourceSheet.postseasonPicks) {
-		targetSheet.postseasonPicks = sourceSheet.postseasonPicks;
+		updateData.postseasonPicks = sourceSheet.postseasonPicks;
 	}
 
-	// Copy world series picks if they exist
 	if (sourceSheet.worldSeriesPicks) {
-		targetSheet.worldSeriesPicks = sourceSheet.worldSeriesPicks;
+		updateData.worldSeriesPicks = sourceSheet.worldSeriesPicks;
 	}
 
-	await targetSheet.save();
+	await sheetService.findByIdAndUpdate(targetSheet.id, { $set: updateData });
 
 	return { success: true };
 });
@@ -210,7 +177,7 @@ export const getSheetForMemberAction = withAuth(async (user, groupId: string, me
 
 	if (!group) {return {};}
 
-	const sheet = await getSheetByGroupAndUserPopulated(groupId, memberId);
+	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, memberId);
 
 	if (!sheet) {return {};}
 	return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
@@ -223,7 +190,7 @@ export interface SavePicksInput {
 }
 
 export const savePicksAction = withAuth(async (user, groupId: string, input: SavePicksInput) => {
-	const sheet = await getSheetByGroupAndUserPopulated(groupId, user.id);
+	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, user.id);
 
 	if (!sheet) {return { error: 'Sheet not found' };}
 
@@ -236,7 +203,7 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 	}
 
 	const updatedTeamPicks: TeamPick[] = sheet.teamPicks.map((tp: TeamPick) => {
-		const teamId = typeof tp.team === 'string' ? tp.team : tp.team.id;
+		const teamId = populatedToId(tp.team)!;
 		const pick = input.teamPicks[teamId];
 		return {
 			line: tp.line,
@@ -246,10 +213,12 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 	});
 
 	try {
-		const updatedSheet = await updateSheet(sheet.id, {
-			postseasonPicks: input.postseasonPicks,
-			teamPicks: updatedTeamPicks,
-			worldSeriesPicks: input.worldSeriesPicks,
+		const updatedSheet = await sheetService.findByIdAndUpdate(sheet.id, {
+			$set: {
+				postseasonPicks: input.postseasonPicks,
+				teamPicks: updatedTeamPicks,
+				worldSeriesPicks: input.worldSeriesPicks,
+			},
 		});
 		revalidatePath(`/league/${groupId}`);
 		return { sheet: updatedSheet ?? undefined };
@@ -284,16 +253,16 @@ export interface GroupResults {
 
 export const getResultsAction = withAuth(
 	async (user, groupId: string, userId?: string, date?: string) => {
-		await dbConnect();
+		const isMember = await groupService.isMember(groupId, user.id);
 
-		const group = await GroupModel.findOne({ _id: groupId, 'members.user': user.id });
+		if (!isMember) {return {};}
+
+		const group = await groupService.findById(groupId);
 
 		if (!group) {return {};}
 
 		const targetUserId = userId || user.id;
-		const sheet = await SheetModel.findOne({ group: groupId, user: targetUserId }).populate(
-			'teamPicks.team',
-		);
+		const sheet = await sheetService.findByUserAndGroupPopulated(targetUserId, groupId);
 
 		if (!sheet) {return {};}
 
@@ -331,7 +300,7 @@ export const getResultsAction = withAuth(
 			if (!teamPick.pick) {continue;}
 
 			const team = teamPick.team as Team;
-			const teamId = typeof teamPick.team === 'string' ? teamPick.team : team.id;
+			const teamId = populatedToId(teamPick.team)!;
 			const standing = standingsData.get(teamId);
 
 			const actualWins = standing?.wins ?? 0;
@@ -407,11 +376,7 @@ export interface LeaderboardData {
 }
 
 export const getLeaderboardAction = withAuth(async (user, groupId: string, date?: string) => {
-	await dbConnect();
-
-	const group = await GroupModel.findOne({ _id: groupId, 'members.user': user.id }).populate(
-		'members.user',
-	);
+	const group = await groupService.findForMemberPopulated(groupId, user.id);
 
 	if (!group) {return {};}
 
@@ -435,12 +400,12 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 		}
 	}
 
-	const sheets = await SheetModel.find({ group: groupId }).populate('teamPicks.team');
+	const sheets = await sheetService.findByGroupPopulated(groupId);
 	const entries: LeaderboardEntry[] = [];
 
 	for (const member of group.members) {
 		const memberUser = member.user as User;
-		const memberId = typeof member.user === 'string' ? member.user : memberUser.id;
+		const memberId = populatedToId(member.user)!;
 		const sheet = sheets.find((s) => s.user.toString() === memberId);
 
 		let wins = 0;
@@ -451,8 +416,7 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 			for (const teamPick of sheet.teamPicks as TeamPick[]) {
 				if (!teamPick.pick) {continue;}
 
-				const teamId =
-					typeof teamPick.team === 'string' ? teamPick.team : (teamPick.team as { id: string }).id;
+				const teamId = populatedToId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
 
 				const projectedWins =

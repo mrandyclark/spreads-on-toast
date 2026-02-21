@@ -1,4 +1,5 @@
-import { BaseDocument } from './mongo';
+import { BaseDocument, Ref } from './mongo';
+import { Team } from './team';
 
 /**
  * Game type codes from MLB API
@@ -55,7 +56,7 @@ export interface GameTeamData {
 	score?: number;
 	seriesNumber: number;
 	splitSquad: boolean;
-	team: string;
+	team: Ref<Team>;
 	teamMlbId: number;
 }
 
@@ -378,6 +379,7 @@ export interface UpcomingGame {
 		name: string;
 		score?: number;
 	};
+	id: string;
 	isHome: boolean;
 	mlbGameId: number;
 	opponent: {

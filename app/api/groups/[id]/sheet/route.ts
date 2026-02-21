@@ -1,10 +1,6 @@
-import { getGroupForMember } from '@/server/groups';
+import { getGroupForMember } from '@/server/groups/group.actions';
 import { errorResponse, jsonResponse, withAuth } from '@/server/http/responses';
-import {
-	getSheetByGroupAndUser,
-	getSheetByGroupAndUserPopulated,
-	updateSheet,
-} from '@/server/sheets';
+import { sheetService } from '@/server/sheets/sheet.service';
 import { Conference, PickDirection } from '@/types';
 
 export const GET = withAuth(async (_request, { params, user }) => {
@@ -16,7 +12,7 @@ export const GET = withAuth(async (_request, { params, user }) => {
 		return errorResponse('Forbidden', 403);
 	}
 
-	const sheet = await getSheetByGroupAndUserPopulated(id, user.id);
+	const sheet = await sheetService.findByGroupAndUserPopulated(id, user.id);
 
 	if (!sheet) {
 		return errorResponse('Sheet not found', 404);
@@ -47,7 +43,7 @@ export const PATCH = withAuth(async (request, { params, user }) => {
 		return errorResponse('Picks are locked', 400);
 	}
 
-	const sheet = await getSheetByGroupAndUser(id, user.id);
+	const sheet = await sheetService.findByGroupAndUser(id, user.id);
 
 	if (!sheet) {
 		return errorResponse('Sheet not found', 404);
@@ -65,24 +61,26 @@ export const PATCH = withAuth(async (request, { params, user }) => {
 			return newPick ? { ...tp, pick: newPick, team: teamId } : { ...tp, team: teamId };
 		});
 
-		await updateSheet(sheet.id, { teamPicks: updatedTeamPicks });
+		await sheetService.findByIdAndUpdate(sheet.id, { $set: { teamPicks: updatedTeamPicks } });
 	}
 
 	if (body.postseasonPicks) {
-		await updateSheet(sheet.id, { postseasonPicks: body.postseasonPicks });
+		await sheetService.findByIdAndUpdate(sheet.id, { $set: { postseasonPicks: body.postseasonPicks } });
 	}
 
 	if (body.worldSeriesPicks) {
-		await updateSheet(sheet.id, {
-			worldSeriesPicks: {
-				alChampion: body.worldSeriesPicks.alChampion,
-				nlChampion: body.worldSeriesPicks.nlChampion,
-				...(body.worldSeriesPicks.winner && { winner: body.worldSeriesPicks.winner as Conference }),
+		await sheetService.findByIdAndUpdate(sheet.id, {
+			$set: {
+				worldSeriesPicks: {
+					alChampion: body.worldSeriesPicks.alChampion,
+					nlChampion: body.worldSeriesPicks.nlChampion,
+					...(body.worldSeriesPicks.winner && { winner: body.worldSeriesPicks.winner as Conference }),
+				},
 			},
 		});
 	}
 
-	const updatedSheet = await getSheetByGroupAndUserPopulated(id, user.id);
+	const updatedSheet = await sheetService.findByGroupAndUserPopulated(id, user.id);
 
 	return jsonResponse(updatedSheet);
 });

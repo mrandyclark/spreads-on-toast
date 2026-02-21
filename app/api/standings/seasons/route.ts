@@ -1,5 +1,5 @@
 import { jsonResponse } from '@/server/http/responses';
-import { getStartedSeasonsWithDates } from '@/server/standings';
+import { getStartedSeasonsWithDates } from '@/server/standings/standings.actions';
 
 /**
  * GET /api/standings/seasons

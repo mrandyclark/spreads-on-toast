@@ -12,9 +12,7 @@ import {
 	YAxis,
 } from 'recharts';
 
-import { ScheduleDifficulty } from '@/components/league/schedule-difficulty';
 import { TeamChips } from '@/components/league/team-chip';
-import { UpcomingSchedule } from '@/components/league/upcoming-schedule';
 import { WinProfile } from '@/components/league/win-profile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -34,20 +32,24 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { ScheduleDifficultyData, SeasonWithDates, TeamDetailData, TeamHistoryDataPoint, UpcomingGame } from '@/types';
+import { SeasonWithDates, TeamDetailData, TeamHistoryDataPoint } from '@/types';
 
-interface TeamDetailClientProps {
+interface TeamHeaderProps {
 	availableDates: string[];
-	current: null | TeamDetailData;
-	history: TeamHistoryDataPoint[];
-	scheduleDifficulty: null | ScheduleDifficultyData;
+	children: React.ReactNode;
 	season: string;
 	seasons: SeasonWithDates[];
 	selectedDate: string;
 	teamAbbreviation: string;
 	teamCity: string;
 	teamName: string;
-	upcomingGames: UpcomingGame[];
+}
+
+interface TeamStatsClientProps {
+	current: null | TeamDetailData;
+	history: TeamHistoryDataPoint[];
+	season: string;
+	selectedDate: string;
 }
 
 const chartConfig = {
@@ -128,22 +130,18 @@ function OverUnderBadge({ line, projected }: { line: number; projected: number }
 	);
 }
 
-export function TeamDetailClient({
+export function TeamHeader({
 	availableDates,
-	current,
-	history,
-	scheduleDifficulty,
+	children,
 	season,
 	seasons,
 	selectedDate,
 	teamAbbreviation,
 	teamCity,
 	teamName,
-	upcomingGames,
-}: TeamDetailClientProps) {
+}: TeamHeaderProps) {
 	const router = useRouter();
 
-	// Get date range for date picker
 	const minDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : undefined;
 	const maxDate = availableDates.length > 0 ? availableDates[0] : undefined;
 
@@ -156,52 +154,6 @@ export function TeamDetailClient({
 			router.push(`/teams/mlb/${teamAbbreviation}?season=${season}&date=${newDate}`);
 		}
 	};
-
-	if (!current) {
-		return (
-			<div>
-				<Link
-					className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 text-sm transition-colors"
-					href="/dashboard">
-					<ArrowLeft className="h-4 w-4" />
-					Dashboard
-				</Link>
-
-				<h1 className="text-foreground mt-4 text-2xl font-bold sm:text-3xl">
-					{teamCity} {teamName}
-				</h1>
-
-				<p className="text-muted-foreground mt-4">
-					No standings data available for the {season} season yet.
-				</p>
-			</div>
-		);
-	}
-
-	// Calculate win percentage
-	const winPct = current.gamesPlayed > 0 ? current.wins / current.gamesPlayed : 0;
-
-	// Calculate runs per game
-	const runsPerGame = current.gamesPlayed > 0 && current.runsScored
-		? (current.runsScored / current.gamesPlayed).toFixed(2)
-		: null;
-	const runsAllowedPerGame = current.gamesPlayed > 0 && current.runsAllowed
-		? (current.runsAllowed / current.gamesPlayed).toFixed(2)
-		: null;
-
-	// Filter history to only show data up to the selected date
-	const filteredHistory = selectedDate
-		? history.filter((point) => point.date <= selectedDate)
-		: history;
-
-	// Prepare chart data - add the line value to each point
-	const chartData = filteredHistory.map((point) => ({
-		...point,
-		line: current.line,
-	}));
-
-	// Get division display name
-	const divisionDisplay = current.division.replace('_', ' ');
 
 	return (
 		<div className="space-y-6">
@@ -220,7 +172,7 @@ export function TeamDetailClient({
 						{teamCity} {teamName}
 					</h1>
 					<p className="text-muted-foreground mt-1">
-						{divisionDisplay} • {season} Season
+						{season} Season
 					</p>
 				</div>
 
@@ -248,6 +200,49 @@ export function TeamDetailClient({
 				</div>
 			</div>
 
+			{children}
+		</div>
+	);
+}
+
+export function TeamStatsClient({
+	current,
+	history,
+	season,
+	selectedDate,
+}: TeamStatsClientProps) {
+	if (!current) {
+		return (
+			<p className="text-muted-foreground mt-4">
+				No standings data available for the {season} season yet.
+			</p>
+		);
+	}
+
+	// Calculate win percentage
+	const winPct = current.gamesPlayed > 0 ? current.wins / current.gamesPlayed : 0;
+
+	// Calculate runs per game
+	const runsPerGame = current.gamesPlayed > 0 && current.runsScored
+		? (current.runsScored / current.gamesPlayed).toFixed(2)
+		: null;
+	const runsAllowedPerGame = current.gamesPlayed > 0 && current.runsAllowed
+		? (current.runsAllowed / current.gamesPlayed).toFixed(2)
+		: null;
+
+	// Filter history to only show data up to the selected date
+	const filteredHistory = selectedDate
+		? history.filter((point) => point.date <= selectedDate)
+		: history;
+
+	// Prepare chart data - add the line value to each point
+	const chartData = filteredHistory.map((point) => ({
+		...point,
+		line: current.line,
+	}));
+
+	return (
+		<>
 			{/* Badges */}
 			<div className="flex flex-wrap items-center gap-3">
 				{current.streak && (
@@ -381,12 +376,6 @@ export function TeamDetailClient({
 					</div>
 				</CardContent>
 			</Card>
-
-			{/* Schedule Difficulty & Upcoming Games */}
-			<div className="grid gap-6 lg:grid-cols-2">
-				{scheduleDifficulty && <ScheduleDifficulty data={scheduleDifficulty} />}
-				<UpcomingSchedule games={upcomingGames} teamAbbreviation={teamAbbreviation} />
-			</div>
 
 			{/* Run Production & Rankings */}
 			<div className="grid gap-6 lg:grid-cols-2">
@@ -536,7 +525,7 @@ export function TeamDetailClient({
 					</div>
 				</CardContent>
 			</Card>
-		</div>
+		</>
 	);
 }
 

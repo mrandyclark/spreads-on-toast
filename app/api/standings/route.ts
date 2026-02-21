@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
-import { getStandingsBoardData } from '@/server/standings';
+import { getStandingsBoardData } from '@/server/standings/standings.actions';
 
 /**
  * GET /api/standings?season=2025&date=2025-07-03

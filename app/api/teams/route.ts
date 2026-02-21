@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
-import { getTeamsBySport } from '@/server/teams';
+import { teamService } from '@/server/teams/team.service';
 import { Sport } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 		return errorResponse('Invalid sport', 400);
 	}
 
-	const teams = await getTeamsBySport(sport);
+	const teams = await teamService.findBySport(sport);
 
 	return jsonResponse(teams);
 }

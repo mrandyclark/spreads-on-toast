@@ -87,7 +87,7 @@ function DivisionRows({ division, standings }: DivisionRowsProps) {
 			</tr>
 			{sortedStandings.map((team) => (
 				<tr className="border-border border-b" key={team.abbreviation}>
-					<td className="text-muted-foreground sticky left-0 z-10 w-[50px] bg-white px-2 py-2 text-center text-xs dark:bg-neutral-950">{team.abbreviation}</td>
+					<td className="text-muted-foreground bg-card sticky left-0 z-10 w-[50px] px-2 py-2 text-center text-xs">{team.abbreviation}</td>
 					<td className="px-2 py-2 font-medium">
 						<Link
 							className="hover:text-primary hover:underline"
@@ -132,7 +132,7 @@ function LeagueStandings({ divisions, standings, title }: LeagueStandingsProps) 
 					<table className="w-full text-sm">
 						<thead>
 							<tr className="border-border border-b">
-								<th className="text-muted-foreground sticky left-0 z-10 w-[50px] bg-white px-2 py-3 text-center font-medium dark:bg-neutral-950"></th>
+								<th className="text-muted-foreground bg-card sticky left-0 z-10 w-[50px] px-2 py-3 text-center font-medium"></th>
 								<th className="text-muted-foreground px-2 py-3 text-left font-medium">Team</th>
 								<th className="text-muted-foreground w-[50px] px-2 py-3 text-center font-medium">W</th>
 								<th className="text-muted-foreground w-[50px] px-2 py-3 text-center font-medium">L</th>

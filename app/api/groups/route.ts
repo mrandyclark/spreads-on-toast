@@ -1,8 +1,8 @@
-import { createGroup, getGroupsByUser } from '@/server/groups';
+import { groupService } from '@/server/groups/group.service';
 import { errorResponse, jsonResponse, withAuth } from '@/server/http/responses';
 
 export const GET = withAuth(async (_request, { user }) => {
-	const groups = await getGroupsByUser(user.id);
+	const groups = await groupService.findByUser(user.id);
 
 	return jsonResponse(groups);
 });
@@ -26,7 +26,7 @@ export const POST = withAuth(async (request, { user }) => {
 		return errorResponse('Lock date is required', 400);
 	}
 
-	const group = await createGroup({
+	const group = await groupService.createGroup({
 		lockDate: new Date(body.lockDate),
 		name: body.name,
 		owner: user.id,

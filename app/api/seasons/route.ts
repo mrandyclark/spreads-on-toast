@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { errorResponse, jsonResponse } from '@/server/http/responses';
-import { getAvailableSeasons } from '@/server/seasons';
+import { seasonService } from '@/server/seasons/season.service';
 import { Sport } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 		return errorResponse('Invalid sport', 400);
 	}
 
-	const seasons = await getAvailableSeasons(sport);
+	const seasons = await seasonService.findAvailable(sport);
 
 	return jsonResponse(seasons);
 }

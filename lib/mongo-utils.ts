@@ -8,6 +8,7 @@ import {
 	type MongoOperator,
 	type PaginatedResult,
 	type PopulateOption,
+	type Ref,
 	type SearchOptions,
 } from '@/types';
 
@@ -477,4 +478,12 @@ export function enumToValues<T extends object>(enumObj: T): [string, ...string[]
 		.map((key) => enumObj[key as keyof T] as string);
 
 	return values as unknown as [string, ...string[]];
+}
+
+export function populatedToId<T extends { id: string }>(ref?: Ref<T>): string | undefined {
+	return ref ? (typeof ref === 'string' ? ref : ref.id) : undefined;
+}
+
+export function populatedArrayToId<T extends { id: string }>(refs?: Ref<T>[]): string[] {
+	return refs?.map(populatedToId).filter((id) => id !== undefined) ?? [];
 }

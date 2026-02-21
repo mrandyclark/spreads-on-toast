@@ -1,15 +1,14 @@
-import { dbConnect } from '@/lib/mongoose';
-import { GameModel } from '@/models/game.model';
-import { TeamModel } from '@/models/team.model';
 import {
 	DifficultyLabel,
 	Game,
 	GameState,
-	GameType,
 	ScheduleDifficultyData,
 	SOSData,
 	Sport,
 } from '@/types';
+
+import { teamService } from '../teams/team.service';
+import { gameService } from './game.service';
 
 // =============================================================================
 // CONSTANTS
@@ -143,57 +142,6 @@ function calculateSOS(games: Game[], teamMlbId: number): null | TeamSOS {
 	};
 }
 
-/**
- * Get all regular season games for a team in a season
- */
-async function getTeamGames(
-	teamMlbId: number,
-	season: string,
-): Promise<Game[]> {
-	const games = await GameModel.find({
-		$or: [
-			{ 'homeTeam.teamMlbId': teamMlbId },
-			{ 'awayTeam.teamMlbId': teamMlbId },
-		],
-		gameType: GameType.RegularSeason,
-		publicFacing: true,
-		season,
-		tiebreaker: { $ne: true },
-	}).lean();
-
-	return games as Game[];
-}
-
-/**
- * Calculate played and remaining SOS for a single team
- */
-async function calculateTeamScheduleDifficulty(
-	teamMlbId: number,
-	season: string,
-	asOfDate: string,
-): Promise<{ played: null | TeamSOS; remaining: null | TeamSOS }> {
-	const games = await getTeamGames(teamMlbId, season);
-
-	// Split into played and remaining
-	// Played: Final games with officialDate <= asOfDate
-	// Remaining: Games with officialDate > asOfDate OR not Final (handles postponements)
-	const playedGames: Game[] = [];
-	const remainingGames: Game[] = [];
-
-	for (const game of games) {
-		if (isGameFinal(game) && game.officialDate <= asOfDate) {
-			playedGames.push(game);
-		} else if (game.officialDate > asOfDate || !isGameFinal(game)) {
-			remainingGames.push(game);
-		}
-	}
-
-	const played = calculateSOS(playedGames, teamMlbId);
-	const remaining = calculateSOS(remainingGames, teamMlbId);
-
-	return { played, remaining };
-}
-
 // =============================================================================
 // PUBLIC API
 // =============================================================================
@@ -206,15 +154,27 @@ export async function getScheduleDifficulty(
 	season: string,
 	asOfDate: string,
 ): Promise<ScheduleDifficultyData> {
-	await dbConnect();
-
-	// Get all MLB teams
-	const teams = await TeamModel.find({
-		externalId: { $exists: true },
-		sport: Sport.MLB,
-	});
+	const [teams, allGames] = await Promise.all([
+		teamService.findWithExternalIds(Sport.MLB),
+		gameService.findRegularSeasonForSOS(season),
+	]);
 
 	const teamMlbIds = teams.map((t) => t.externalId).filter((id): id is number => id !== undefined);
+
+	// Index games by team MLB ID for fast lookup
+	const gamesByTeam = new Map<number, Game[]>();
+
+	for (const mlbId of teamMlbIds) {
+		gamesByTeam.set(mlbId, []);
+	}
+
+	for (const game of allGames) {
+		const homeId = game.homeTeam.teamMlbId;
+		const awayId = game.awayTeam.teamMlbId;
+
+		gamesByTeam.get(homeId)?.push(game);
+		gamesByTeam.get(awayId)?.push(game);
+	}
 
 	// Calculate SOS for all teams (for percentile calculation)
 	const allPlayedSOS: number[] = [];
@@ -223,7 +183,22 @@ export async function getScheduleDifficulty(
 	let targetRemaining: null | TeamSOS = null;
 
 	for (const mlbId of teamMlbIds) {
-		const { played, remaining } = await calculateTeamScheduleDifficulty(mlbId, season, asOfDate);
+		const teamGames = gamesByTeam.get(mlbId) ?? [];
+
+		// Split into played and remaining
+		const playedGames: Game[] = [];
+		const remainingGames: Game[] = [];
+
+		for (const game of teamGames) {
+			if (isGameFinal(game) && game.officialDate <= asOfDate) {
+				playedGames.push(game);
+			} else if (game.officialDate > asOfDate || !isGameFinal(game)) {
+				remainingGames.push(game);
+			}
+		}
+
+		const played = calculateSOS(playedGames, mlbId);
+		const remaining = calculateSOS(remainingGames, mlbId);
 
 		if (played && played.gameCount >= MIN_GAMES_FOR_CONFIDENCE) {
 			allPlayedSOS.push(played.avgOpponentWinPct);
@@ -298,9 +273,7 @@ export async function getScheduleDifficultyByTeamId(
 	season: string,
 	asOfDate: string,
 ): Promise<null | ScheduleDifficultyData> {
-	await dbConnect();
-
-	const team = await TeamModel.findById(teamId);
+	const team = await teamService.findById(teamId);
 
 	if (!team || !team.externalId) {
 		return null;

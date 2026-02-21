@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server';
 
-import { dbConnect } from '@/lib/mongoose';
-import { SeasonModel } from '@/models/season.model';
-import { syncAllSchedules } from '@/server/schedule';
+import { syncAllSchedules } from '@/server/schedule/sync';
+import { seasonService } from '@/server/seasons/season.service';
 import { Sport } from '@/types';
 
 /**
@@ -21,13 +20,10 @@ export async function GET(request: NextRequest) {
 	}
 
 	try {
-		await dbConnect();
-
 		const currentYear = new Date().getFullYear().toString();
 		const today = new Date();
 
-		// Check if we're within the season dates
-		const season = await SeasonModel.findOne({ season: currentYear, sport: Sport.MLB });
+		const season = await seasonService.findBySportAndYear(Sport.MLB, currentYear);
 
 		if (!season) {
 			return Response.json({

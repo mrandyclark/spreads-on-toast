@@ -55,6 +55,7 @@ export type SchemaTree<T> = {
 } & Schema<T>;
 
 export interface SearchResults<T extends BaseDocument> {
+	count?: number;
 	data: T[];
 	endCursor?: null | string;
 	hasMore?: boolean;

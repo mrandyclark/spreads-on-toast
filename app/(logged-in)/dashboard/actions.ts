@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAuthUser } from '@/lib/auth';
-import { createGroup, getGroupsByUser, joinGroupByInviteCode } from '@/server/groups';
-import { getSeasonsBySport } from '@/server/seasons';
+import { joinGroupByInviteCode } from '@/server/groups/group.actions';
+import { groupService } from '@/server/groups/group.service';
+import { seasonService } from '@/server/seasons/season.service';
 import { Group, Season, Sport } from '@/types';
 
 export async function getGroupsAction(): Promise<{ error?: string; groups?: Group[] }> {
@@ -14,7 +15,7 @@ export async function getGroupsAction(): Promise<{ error?: string; groups?: Grou
 		return { error: 'Unauthorized' };
 	}
 
-	const groups = await getGroupsByUser(user.id);
+	const groups = await groupService.findByUser(user.id);
 
 	return { groups };
 }
@@ -28,7 +29,7 @@ export async function getSeasonsAction(
 		return { error: 'Unauthorized' };
 	}
 
-	const seasons = await getSeasonsBySport(sport);
+	const seasons = await seasonService.findBySport(sport);
 
 	return { seasons };
 }
@@ -54,7 +55,7 @@ export async function createGroupAction(
 	}
 
 	try {
-		const group = await createGroup({
+		const group = await groupService.createGroup({
 			lockDate: new Date(input.lockDate),
 			name: input.name.trim(),
 			owner: user.id,

@@ -4,7 +4,7 @@
 // This fetches the full season schedule for all 30 MLB teams
 
 import { dbConnect } from '@/lib/mongoose';
-import { syncAllSchedules } from '@/server/schedule';
+import { syncAllSchedules } from '@/server/schedule/sync';
 
 const SEASON = '2025';
 

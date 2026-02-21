@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { SiteHeader } from '@/components/layout/site-header';
-import { dbConnect } from '@/lib/mongoose';
-import { TeamModel } from '@/models/team.model';
-import { getUpcomingGames } from '@/server/schedule';
-import { getScheduleDifficultyByTeamId } from '@/server/schedule-difficulty';
-import { getStartedSeasonsWithDates, getTeamDetailData } from '@/server/standings';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { getStartedSeasonsWithDates, getTeamDetailData } from '@/server/standings/standings.actions';
+import { teamService } from '@/server/teams/team.service';
 import { Sport } from '@/types';
 
-import { TeamDetailClient } from './team-detail-client';
+import { TeamHeader, TeamStatsClient } from './team-detail-client';
+import { TeamScheduleSection } from './team-schedule-section';
 
 interface TeamPageProps {
 	params: Promise<{
@@ -19,6 +19,28 @@ interface TeamPageProps {
 		date?: string;
 		season?: string;
 	}>;
+}
+
+function SectionSkeleton({ height = 'h-48' }: { height?: string }) {
+	return (
+		<Card>
+			<CardHeader>
+				<div className="bg-muted h-5 w-40 animate-pulse rounded" />
+			</CardHeader>
+			<CardContent>
+				<div className={`bg-muted ${height} w-full animate-pulse rounded`} />
+			</CardContent>
+		</Card>
+	);
+}
+
+function ScheduleSkeleton() {
+	return (
+		<div className="grid gap-6 lg:grid-cols-2">
+			<SectionSkeleton />
+			<SectionSkeleton />
+		</div>
+	);
 }
 
 export default async function TeamPage({ params, searchParams }: TeamPageProps) {
@@ -32,61 +54,57 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
 		notFound();
 	}
 
-	await dbConnect();
-
-	// Find team by abbreviation (case-insensitive)
-	const team = await TeamModel.findOne({
-		abbreviation: abbreviation.toUpperCase(),
-		sport,
-	});
+	const [team, seasons] = await Promise.all([
+		teamService.findByAbbreviation(abbreviation, sport),
+		getStartedSeasonsWithDates(),
+	]);
 
 	if (!team) {
 		notFound();
 	}
 
-	// Get available seasons and dates
-	const seasons = await getStartedSeasonsWithDates();
-
-	// Default to first season (most recent) if not specified
 	const season = seasonParam ?? seasons[0]?.season ?? '2025';
 	const currentSeasonData = seasons.find((s) => s.season === season);
 	const availableDates = currentSeasonData?.dates ?? [];
-
-	// Default to latest date if not specified
 	const selectedDate = dateParam ?? currentSeasonData?.latestDate ?? '';
 
-	// Get team detail data for the selected date
-	const { current, history } = await getTeamDetailData(team._id.toString(), season, selectedDate);
+	const teamId = team.id;
+	const teamCity = team.city;
+	const teamName = team.name;
+	const teamAbbreviation = team.abbreviation.toLowerCase();
 
-	// Get schedule difficulty data
-	const scheduleDifficulty = await getScheduleDifficultyByTeamId(team._id.toString(), season, selectedDate);
-
-	// Get upcoming games from the selected date
-	const upcomingGames = await getUpcomingGames(team._id.toString(), selectedDate, 5);
-
-	// Convert to plain strings to avoid Mongoose document serialization issues
-	const teamCity = String(team.city);
-	const teamName = String(team.name);
-	const teamAbbreviation = String(team.abbreviation).toLowerCase();
+	// Fetch team stats at page level so date changes are fast (parallelized internally)
+	const { current, history } = await getTeamDetailData(teamId, season, selectedDate);
 
 	return (
 		<div className="bg-background min-h-screen">
 			<SiteHeader />
 
 			<main className="mx-auto max-w-5xl px-4 py-8">
-				<TeamDetailClient
+				<TeamHeader
 					availableDates={availableDates}
-					current={current}
-					history={history}
-					scheduleDifficulty={scheduleDifficulty}
 					season={season}
 					seasons={seasons}
 					selectedDate={selectedDate}
 					teamAbbreviation={teamAbbreviation}
 					teamCity={teamCity}
-					teamName={teamName}
-					upcomingGames={upcomingGames}
-				/>
+					teamName={teamName}>
+					<TeamStatsClient
+						current={current}
+						history={history}
+						season={season}
+						selectedDate={selectedDate}
+					/>
+
+					<Suspense fallback={<ScheduleSkeleton />}>
+						<TeamScheduleSection
+							season={season}
+							selectedDate={selectedDate}
+							teamAbbreviation={teamAbbreviation}
+							teamId={teamId}
+						/>
+					</Suspense>
+				</TeamHeader>
 			</main>
 		</div>
 	);
