@@ -123,7 +123,7 @@ interface LeagueStandingsProps {
 
 function LeagueStandings({ divisions, standings, title }: LeagueStandingsProps) {
 	return (
-		<Card>
+		<Card className="min-w-0 overflow-hidden">
 			<CardHeader className="pb-3">
 				<CardTitle className="text-lg">{title}</CardTitle>
 			</CardHeader>
@@ -288,7 +288,7 @@ export function MlbStandingsBoard() {
 			) : standings.length === 0 ? (
 				<div className="text-muted-foreground">No standings data for this date.</div>
 			) : (
-				<div className="grid gap-6 lg:grid-cols-2">
+				<div className="grid min-w-0 gap-6 lg:grid-cols-2">
 					<LeagueStandings divisions={AL_DIVISIONS} standings={alStandings} title="American League" />
 					<LeagueStandings divisions={NL_DIVISIONS} standings={nlStandings} title="National League" />
 				</div>
