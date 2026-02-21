@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { populatedToId } from '@/lib/mongo-utils';
+import { populatedToId } from '@/lib/ref-utils';
 import { groupService } from '@/server/groups/group.service';
 import { calculateProjectedWins } from '@/server/mlb-api';
 import { sheetService } from '@/server/sheets/sheet.service';

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { populatedToId } from '@/lib/mongo-utils';
+import { populatedToId } from '@/lib/ref-utils';
 import { withAuth } from '@/lib/with-auth-action';
 import { getGroupForMember, groupService } from '@/server/groups/group.actions';
 import { calculateProjectedWins } from '@/server/mlb-api';

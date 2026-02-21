@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { toDateString } from '@/lib/date-utils';
-import { populatedToId } from '@/lib/mongo-utils';
+import { populatedToId } from '@/lib/ref-utils';
 import { Group, GroupRole, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
 
 import {
