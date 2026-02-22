@@ -13,6 +13,7 @@ Spreads on Toast — Next.js app for MLB over/under betting with digital sign di
 - Never add comments or documentation unless asked
 - Prefer minimal edits — single-line fixes over refactors when possible
 - **Always use curly braces** for `if`/`else`/`for`/`while` — no braceless single-line bodies (enforced by `curly: ['error', 'all']`)
+- **Multi-line blocks** — opening brace on same line, body on next line (enforced by `brace-style: ['error', '1tbs']`). No single-line `if (x) {return y;}`.
 
 ## Architecture
 
@@ -131,3 +132,21 @@ Populate accepts `string | string[]` for multiple paths. **Never call `model.fin
 - `lib/auth.ts` → `getAuthUser()` — checks Bearer token first, falls back to Kinde session cookie
 - `lib/with-auth-action.ts` → `withAuth()` wrapper for server actions
 - `server/http/responses.ts` → `withAuth()` wrapper for API routes
+
+### Server action error handling
+
+All server actions use structured errors from `lib/action-errors.ts`. Every error has three fields:
+- **`error`** — machine-readable code (`'not-found'`, `'unauthorized'`, `'validation'`, `'forbidden'`, `'locked'`, `'server-error'`)
+- **`errorCode`** — HTTP-style status code (404, 401, 400, 403, 423, 500)
+- **`errorMessage`** — human-readable string for UI display
+
+Use the factory helpers — never inline `{ error: '...' }`:
+```ts
+return notFound('Group');      // { error: 'not-found', errorCode: 404, errorMessage: 'Group not found' }
+return forbidden('edit group'); // { error: 'forbidden', errorCode: 403, errorMessage: 'Not authorized to edit group' }
+return validation('Name is required');
+return locked('Picks');
+return serverError('save picks');
+```
+
+Clients check `result.error` for error presence and display `result.errorMessage` to users.

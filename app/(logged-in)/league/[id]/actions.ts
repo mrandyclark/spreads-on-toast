@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { forbidden, locked, notFound, serverError } from '@/lib/action-errors';
 import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { withAuth } from '@/lib/with-auth-action';
 import { getGroupForMember, groupService } from '@/server/groups/group.actions';
@@ -31,13 +32,13 @@ export const updateGroupNameAction = withAuth(async (user, groupId: string, name
 	const group = await groupService.findById(groupId);
 
 	if (!group) {
-		return { error: 'Group not found' };
+		return notFound('Group');
 	}
 
 	const member = group.members.find((m) => resolveRefId(m.user) === user.id);
 
 	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
-		return { error: 'Not authorized to edit group' };
+		return forbidden('edit group');
 	}
 
 	await groupService.findByIdAndUpdate(groupId, { $set: { name: name.trim() } });
@@ -49,13 +50,13 @@ export const updateGroupVisibilityAction = withAuth(async (user, groupId: string
 	const group = await groupService.findById(groupId);
 
 	if (!group) {
-		return { error: 'Group not found' };
+		return notFound('Group');
 	}
 
 	const member = group.members.find((m) => resolveRefId(m.user) === user.id);
 
 	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
-		return { error: 'Not authorized to edit group' };
+		return forbidden('edit group');
 	}
 
 	await groupService.findByIdAndUpdate(groupId, { $set: { visibility } });
@@ -67,23 +68,23 @@ export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: str
 	const sourceSheet = await sheetService.findById(sourceSheetId);
 
 	if (!sourceSheet || resolveRefId(sourceSheet.user) !== user.id) {
-		return { error: 'Source sheet not found' };
+		return notFound('Source sheet');
 	}
 
 	const targetSheet = await sheetService.findByGroupAndUser(targetGroupId, user.id);
 
 	if (!targetSheet) {
-		return { error: 'Target sheet not found' };
+		return notFound('Target sheet');
 	}
 
 	const targetGroup = await groupService.findById(targetGroupId);
 
 	if (!targetGroup) {
-		return { error: 'Group not found' };
+		return notFound('Group');
 	}
 
 	if (new Date(targetGroup.lockDate) < new Date()) {
-		return { error: 'Picks are locked' };
+		return locked('Picks');
 	}
 
 	const sourcePicksMap = new Map(
@@ -121,13 +122,13 @@ export const getSheetForMemberAction = withAuth(async (user, groupId: string, me
 	const group = await getGroupForMember(groupId, user.id);
 
 	if (!group) {
-		return {};
+		return notFound('Group');
 	}
 
 	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, memberId);
 
 	if (!sheet) {
-		return {};
+		return notFound('Sheet');
 	}
 
 	return { sheet };
@@ -137,17 +138,17 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, user.id);
 
 	if (!sheet) {
-		return { error: 'Sheet not found' };
+		return notFound('Sheet');
 	}
 
 	const group = await getGroupForMember(groupId, user.id);
 
 	if (!group) {
-		return { error: 'Group not found' };
+		return notFound('Group');
 	}
 
 	if (new Date(group.lockDate) < new Date()) {
-		return { error: 'Picks are locked' };
+		return locked('Picks');
 	}
 
 	const updatedTeamPicks: TeamPick[] = sheet.teamPicks.map((tp: TeamPick) => {
@@ -172,7 +173,7 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 		return { sheet: updatedSheet ?? undefined };
 	} catch (error) {
 		console.error('Failed to save picks:', error);
-		return { error: 'Failed to save picks' };
+		return serverError('save picks');
 	}
 });
 
@@ -181,20 +182,20 @@ export const getResultsAction = withAuth(
 		const isMember = await groupService.isMember(groupId, user.id);
 
 		if (!isMember) {
-			return {};
+			return forbidden('view results');
 		}
 
 		const group = await groupService.findById(groupId);
 
 		if (!group) {
-			return {};
+			return notFound('Group');
 		}
 
 		const targetUserId = userId || user.id;
 		const sheet = await sheetService.findByUserAndGroupPopulated(targetUserId, groupId);
 
 		if (!sheet) {
-			return {};
+			return notFound('Sheet');
 		}
 
 		// Get standings data
@@ -294,7 +295,7 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 	const group = await groupService.findForMemberPopulated(groupId, user.id);
 
 	if (!group) {
-		return {};
+		return notFound('Group');
 	}
 
 	// Get standings data

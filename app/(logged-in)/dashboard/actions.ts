@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { serverError, validation } from '@/lib/action-errors';
 import { withAuth } from '@/lib/with-auth-action';
 import { joinGroupByInviteCode } from '@/server/groups/group.actions';
 import { groupService } from '@/server/groups/group.service';
@@ -17,7 +18,7 @@ export const getSeasonsAction = withAuth(async (_user, sport: Sport) => {
 
 export const createGroupAction = withAuth(async (user, input: CreateGroupInput) => {
 	if (!input.name.trim()) {
-		return { error: 'Group name is required' };
+		return validation('Group name is required');
 	}
 
 	try {
@@ -34,20 +35,20 @@ export const createGroupAction = withAuth(async (user, input: CreateGroupInput) 
 		return { group };
 	} catch (error) {
 		console.error('Failed to create group:', error);
-		return { error: 'Failed to create group' };
+		return serverError('create group');
 	}
 });
 
 export const joinGroupAction = withAuth(async (user, inviteCode: string) => {
 	if (!inviteCode.trim()) {
-		return { error: 'Invite code is required' };
+		return validation('Invite code is required');
 	}
 
 	try {
 		const result = await joinGroupByInviteCode(inviteCode, user.id);
 
 		if (result.error) {
-			return { error: result.error };
+			return validation(result.error);
 		}
 
 		revalidatePath('/dashboard');
@@ -55,13 +56,13 @@ export const joinGroupAction = withAuth(async (user, inviteCode: string) => {
 		return { group: result.group };
 	} catch (error) {
 		console.error('Failed to join group:', error);
-		return { error: 'Failed to join group' };
+		return serverError('join group');
 	}
 });
 
 export const getStandingsAction = withAuth(async (_user, season: string, date: string) => {
 	if (!season || !date) {
-		return { error: 'Season and date are required' };
+		return validation('Season and date are required');
 	}
 
 	const standings = await getStandingsBoardData(season, date);

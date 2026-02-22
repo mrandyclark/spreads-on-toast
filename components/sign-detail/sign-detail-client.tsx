@@ -82,7 +82,7 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 			setSaveSuccess(true);
 			setTimeout(() => setSaveSuccess(false), 2000);
 		} else {
-			setError(result.error || 'Failed to save');
+			setError(result.errorMessage || 'Failed to save');
 		}
 
 		setIsSaving(false);

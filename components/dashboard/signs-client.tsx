@@ -46,7 +46,7 @@ const SignsClient = ({ initialSigns }: SignsClientProps) => {
 				setSignName('');
 				setIsCreateOpen(false);
 			} else {
-				setCreateError(result.error || 'Failed to create sign');
+				setCreateError(result.errorMessage || 'Failed to create sign');
 			}
 
 			setIsCreating(false);

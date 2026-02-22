@@ -1,6 +1,10 @@
+import { ActionError, unauthorized } from './action-errors';
 import { AuthUser, getAuthUser } from './auth';
 
-type ActionResult<T> = { error?: string } & T;
+// Distributes Partial across union members, then merges into a single flat type
+type DistributePartial<T> = T extends unknown ? Partial<T> : never;
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+export type ActionResult<T> = UnionToIntersection<DistributePartial<ActionError | T>>;
 
 /**
  * Higher-order function that wraps a server action with authentication.
@@ -19,9 +23,9 @@ export function withAuth<TArgs extends unknown[], TResult extends object>(
 		const user = await getAuthUser();
 
 		if (!user) {
-			return { error: 'Unauthorized' } as ActionResult<TResult>;
+			return unauthorized() as ActionResult<TResult>;
 		}
 
-		return action(user, ...args);
+		return action(user, ...args) as ActionResult<TResult>;
 	};
 }

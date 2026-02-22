@@ -86,7 +86,7 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 				setGroupSeason(seasons[0]?.season ?? '');
 				setIsCreateOpen(false);
 			} else {
-				setCreateError(result.error || 'Failed to create group');
+				setCreateError(result.errorMessage || 'Failed to create group');
 			}
 
 			setIsCreating(false);
@@ -105,7 +105,7 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 				setInviteCode('');
 				setIsJoinOpen(false);
 			} else {
-				setJoinError(result.error || 'Failed to join group');
+				setJoinError(result.errorMessage || 'Failed to join group');
 			}
 
 			setIsJoining(false);

@@ -2,13 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { serverError, validation } from '@/lib/action-errors';
 import { withAuth } from '@/lib/with-auth-action';
 import { createSign, updateSignConfig } from '@/server/signs/sign.actions';
 import { SignConfig } from '@/types';
 
 export const createSignAction = withAuth(async (user, title: string) => {
 	if (!title.trim()) {
-		return { error: 'Sign name is required' };
+		return validation('Sign name is required');
 	}
 
 	try {
@@ -17,7 +18,7 @@ export const createSignAction = withAuth(async (user, title: string) => {
 		return { sign };
 	} catch (error) {
 		console.error('Failed to create sign:', error);
-		return { error: 'Failed to create sign' };
+		return serverError('create sign');
 	}
 });
 
@@ -32,6 +33,6 @@ export const updateSignConfigAction = withAuth(async (user, signId: string, conf
 		return result;
 	} catch (error) {
 		console.error('Failed to update sign:', error);
-		return { error: 'Failed to update sign settings' };
+		return serverError('update sign settings');
 	}
 });
