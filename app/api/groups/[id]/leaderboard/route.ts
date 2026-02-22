@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { populatedToId } from '@/lib/ref-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { groupService } from '@/server/groups/group.service';
 import { calculateProjectedWins } from '@/server/mlb-api';
 import { sheetService } from '@/server/sheets/sheet.service';
@@ -9,25 +9,7 @@ import {
 	getFinalStandings,
 	getStandingsForDate,
 } from '@/server/standings/standings.actions';
-import { PickResult, TeamPick, User } from '@/types';
-
-export interface LeaderboardEntry {
-	losses: number;
-	pushes: number;
-	rank: number;
-	total: number;
-	userId: string;
-	userInitials: string;
-	userName: string;
-	winPct: number;
-	wins: number;
-}
-
-export interface LeaderboardResponse {
-	date?: string;
-	entries: LeaderboardEntry[];
-	season: string;
-}
+import { LeaderboardEntry, LeaderboardResponse, PickResult, TeamPick, User } from '@/types';
 
 /**
  * GET /api/groups/[id]/leaderboard
@@ -89,7 +71,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 	for (const member of group.members) {
 		const user = member.user as User;
-		const userId = populatedToId(member.user)!;
+		const userId = resolveRefId(member.user)!;
 
 		// Find the sheet for this user
 		const sheet = sheets.find((s) => s.user.toString() === userId);
@@ -104,7 +86,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 					continue;
 				}
 
-				const teamId = populatedToId(teamPick.team)!;
+				const teamId = resolveRefId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
 
 				// Recalculate projected wins with full precision to avoid false pushes

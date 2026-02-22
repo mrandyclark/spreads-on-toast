@@ -21,7 +21,7 @@ interface SiteHeaderProps {
 	variant?: 'app' | 'marketing';
 }
 
-export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
+const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
 	const [userName, setUserName] = useState<string | undefined>();
 	const [isLoading, setIsLoading] = useState(variant === 'app');
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -171,3 +171,5 @@ export function SiteHeader({ variant = 'app' }: SiteHeaderProps) {
 		</header>
 	);
 }
+
+export default SiteHeader;

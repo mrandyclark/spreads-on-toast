@@ -8,16 +8,16 @@ const leagues = [
 	// { name: 'CFB', emoji: '🎓' },
 ];
 
-export function SupportedLeagues() {
+const SupportedLeagues = () => {
 	return (
 		<section className="py-16 sm:py-24" id="leagues">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 				<div className="mx-auto max-w-2xl text-center">
 					<h2 className="text-foreground font-serif text-3xl font-medium tracking-tight sm:text-4xl">
-						Pick your sport
+						Starting with baseball
 					</h2>
 					<p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-						Run leagues for any major sport with preseason win totals.
+						MLB is live with real-time standings and scores updated daily. More sports coming soon.
 					</p>
 
 					{/* League badges */}
@@ -46,3 +46,5 @@ export function SupportedLeagues() {
 		</section>
 	);
 }
+
+export default SupportedLeagues;

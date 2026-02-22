@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { populatedToId } from '@/lib/ref-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { groupService } from '@/server/groups/group.service';
 import { calculateProjectedWins } from '@/server/mlb-api';
 import { sheetService } from '@/server/sheets/sheet.service';
@@ -9,28 +9,7 @@ import {
 	getFinalStandings,
 	getStandingsForDate,
 } from '@/server/standings/standings.actions';
-import { PickResult, Team, TeamPick } from '@/types';
-
-export interface TeamPickResult {
-	actualWins?: number; // Actual wins at that point (for historical)
-	gamesPlayed?: number;
-	line: number;
-	pick: 'over' | 'under';
-	projectedWins: number; // Projected wins (for historical) or final wins
-	result: PickResult;
-	team: Team;
-}
-
-export interface GroupResults {
-	date?: string; // The date these results are for (if historical)
-	picks: TeamPickResult[];
-	summary: {
-		losses: number;
-		pushes: number;
-		total: number;
-		wins: number;
-	};
-}
+import { GroupResults, PickResult, Team, TeamPick, TeamPickResult } from '@/types';
 
 /**
  * GET /api/groups/[id]/results
@@ -109,7 +88,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		}
 
 		const team = teamPick.team as Team;
-		const teamId = populatedToId(teamPick.team)!;
+		const teamId = resolveRefId(teamPick.team)!;
 		const standing = standingsData.get(teamId);
 
 		// Recalculate projected wins with full precision for accurate comparison

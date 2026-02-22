@@ -1,4 +1,5 @@
-import { Conference, Sheet, Team, TeamPick } from '@/types';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
+import { Conference, Sheet, Team, TeamPick, TeamWithLine } from '@/types';
 
 /**
  * Extract postseason team picks from a sheet
@@ -48,14 +49,14 @@ export function getWorldSeriesChampions(sheet: null | Sheet): {
  * Get team ID from a TeamPick (handles both populated and unpopulated)
  */
 export function getTeamId(teamPick: TeamPick): string {
-	return typeof teamPick.team === 'object' ? teamPick.team.id : teamPick.team;
+	return resolveRefId(teamPick.team);
 }
 
 /**
  * Get Team object from a TeamPick (returns null if not populated)
  */
 export function getTeamFromPick(teamPick: TeamPick): null | Team {
-	return typeof teamPick.team === 'object' ? teamPick.team : null;
+	return resolveRef(teamPick.team);
 }
 
 /**
@@ -75,7 +76,7 @@ export function filterTeamsByConference(teams: Team[], conference: Conference): 
 /**
  * Get full team name (city + name)
  */
-export function getFullTeamName(team: Team): string {
+export function getFullTeamName(team: Pick<Team, 'city' | 'name'>): string {
 	return `${team.city} ${team.name}`;
 }
 
@@ -92,6 +93,29 @@ export function getTeamsByConference(teamPicks: TeamPick[]): { al: Team[]; nl: T
 			.filter((t) => t.conference === Conference.NL)
 			.sort((a, b) => a.abbreviation.localeCompare(b.abbreviation)),
 	};
+}
+
+/**
+ * Convert populated TeamPick[] to TeamWithLine[], sorted by full name
+ */
+export function toTeamsWithLines(teamPicks: TeamPick[]): TeamWithLine[] {
+	return teamPicks
+		.map((tp) => {
+			const team = getTeamFromPick(tp);
+
+			if (!team) {return null;}
+			return {
+				abbreviation: team.abbreviation,
+				city: team.city,
+				conference: team.conference,
+				division: team.division,
+				id: team.id,
+				line: tp.line,
+				name: team.name,
+			};
+		})
+		.filter((t): t is TeamWithLine => t !== null)
+		.sort((a, b) => `${a.city} ${a.name}`.localeCompare(`${b.city} ${b.name}`));
 }
 
 /**

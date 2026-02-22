@@ -2,7 +2,7 @@ interface ToastIconProps {
 	className?: string;
 }
 
-export function ToastIcon({ className }: ToastIconProps) {
+const ToastIcon = ({ className }: ToastIconProps) => {
 	return (
 		<svg
 			aria-hidden="true"
@@ -31,3 +31,5 @@ export function ToastIcon({ className }: ToastIconProps) {
 		</svg>
 	);
 }
+
+export default ToastIcon;

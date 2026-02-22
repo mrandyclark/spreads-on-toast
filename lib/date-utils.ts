@@ -75,3 +75,33 @@ export function formatDateDisplay(dateStr: string): string {
 
 	return `${monthNames[month - 1]} ${day}${suffix}, ${year}`;
 }
+
+/**
+ * Format a Date for long display: "Monday, June 2, 2025"
+ */
+export function formatGameDate(date: Date): string {
+	return date.toLocaleDateString('en-US', {
+		day: 'numeric',
+		month: 'long',
+		weekday: 'long',
+		year: 'numeric',
+	});
+}
+
+/**
+ * Format a Date for time display: "7:10 PM EDT"
+ */
+export function formatGameTime(date: Date): string {
+	return date.toLocaleTimeString('en-US', {
+		hour: 'numeric',
+		minute: '2-digit',
+		timeZoneName: 'short',
+	});
+}
+
+/**
+ * Format a Date for short display: "6/2"
+ */
+export function formatShortDate(date: Date): string {
+	return `${date.getMonth() + 1}/${date.getDate()}`;
+}

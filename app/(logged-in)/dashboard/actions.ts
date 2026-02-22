@@ -6,7 +6,7 @@ import { getAuthUser } from '@/lib/auth';
 import { joinGroupByInviteCode } from '@/server/groups/group.actions';
 import { groupService } from '@/server/groups/group.service';
 import { seasonService } from '@/server/seasons/season.service';
-import { Group, Season, Sport } from '@/types';
+import { CreateGroupInput, Group, Season, Sport } from '@/types';
 
 export async function getGroupsAction(): Promise<{ error?: string; groups?: Group[] }> {
 	const user = await getAuthUser();
@@ -32,13 +32,6 @@ export async function getSeasonsAction(
 	const seasons = await seasonService.findBySport(sport);
 
 	return { seasons };
-}
-
-export interface CreateGroupInput {
-	lockDate: string;
-	name: string;
-	season: string;
-	sport: Sport;
 }
 
 export async function createGroupAction(

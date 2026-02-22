@@ -1,5 +1,10 @@
-import { SiteHeader } from '@/components/layout/site-header';
-import { FAQ, Features, Footer, Hero, HowItWorks, SupportedLeagues } from '@/components/marketing';
+import SiteHeader from '@/components/layout/site-header';
+import FAQ from '@/components/marketing/faq';
+import Features from '@/components/marketing/features';
+import Footer from '@/components/marketing/footer';
+import Hero from '@/components/marketing/hero';
+import HowItWorks from '@/components/marketing/how-it-works';
+import SupportedLeagues from '@/components/marketing/supported-leagues';
 
 export default function Home() {
 	return (

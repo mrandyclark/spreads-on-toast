@@ -1,3 +1,4 @@
+import { getTeamId } from '@/lib/sheet-utils';
 import { getGroupForMember } from '@/server/groups/group.actions';
 import { errorResponse, jsonResponse, withAuth } from '@/server/http/responses';
 import { sheetService } from '@/server/sheets/sheet.service';
@@ -56,7 +57,7 @@ export const PATCH = withAuth(async (request, { params, user }) => {
 		const pickMap = new Map(body.teamPicks.map((p) => [p.team, p.pick]));
 
 		const updatedTeamPicks = sheet.teamPicks.map((tp) => {
-			const teamId = typeof tp.team === 'object' ? tp.team.id : tp.team;
+			const teamId = getTeamId(tp);
 			const newPick = pickMap.get(teamId);
 			return newPick ? { ...tp, pick: newPick, team: teamId } : { ...tp, team: teamId };
 		});

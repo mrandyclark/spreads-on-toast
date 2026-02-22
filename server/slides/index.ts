@@ -1,4 +1,4 @@
-import { populatedToId } from '@/lib/mongo-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { gameService } from '@/server/schedule/game.service';
 import { getDivisionStandings } from '@/server/standings/standings.actions';
 import {
@@ -85,8 +85,8 @@ async function buildTeamGameSlides(
 	const lastGameByTeamId = new Map<string, Game>();
 
 	for (const game of lastGames) {
-		const homeId = populatedToId(game.homeTeam.team);
-		const awayId = populatedToId(game.awayTeam.team);
+		const homeId = resolveRefId(game.homeTeam.team);
+		const awayId = resolveRefId(game.awayTeam.team);
 
 		if (homeId) {
 			lastGameByTeamId.set(homeId, game);
@@ -100,8 +100,8 @@ async function buildTeamGameSlides(
 	const nextGameByTeamId = new Map<string, Game>();
 
 	for (const game of nextGames) {
-		const homeId = populatedToId(game.homeTeam.team);
-		const awayId = populatedToId(game.awayTeam.team);
+		const homeId = resolveRefId(game.homeTeam.team);
+		const awayId = resolveRefId(game.awayTeam.team);
 
 		if (homeId) {
 			nextGameByTeamId.set(homeId, game);
@@ -218,7 +218,7 @@ function gameToNextGameSlide(
 	game: Game,
 	teamId: string,
 ): NextGameSlide {
-	const isHome = populatedToId(game.homeTeam.team) === teamId;
+	const isHome = resolveRefId(game.homeTeam.team) === teamId;
 	const teamSide = isHome ? game.homeTeam : game.awayTeam;
 	const opponentSide = isHome ? game.awayTeam : game.homeTeam;
 	const team = teamFromRef(teamSide.team);
@@ -258,10 +258,10 @@ async function buildOpenerCountdownSlides(
 
 	return openerGames.map((game) => {
 		const teamId = teamIds.find((id) => {
-			return id === populatedToId(game.homeTeam.team) || id === populatedToId(game.awayTeam.team);
+			return id === resolveRefId(game.homeTeam.team) || id === resolveRefId(game.awayTeam.team);
 		});
 
-		const isHome = populatedToId(game.homeTeam.team) === teamId;
+		const isHome = resolveRefId(game.homeTeam.team) === teamId;
 		const teamSide = isHome ? game.homeTeam : game.awayTeam;
 		const opponentSide = isHome ? game.awayTeam : game.homeTeam;
 		const team = teamFromRef(teamSide.team);

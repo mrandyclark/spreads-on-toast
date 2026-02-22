@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { ToastIcon } from '@/components/toast-icon';
+import ToastIcon from '@/components/toast-icon';
 
 const footerLinks = [
 	{ href: '/privacy', label: 'Privacy' },
@@ -8,7 +8,7 @@ const footerLinks = [
 	{ href: '/contact', label: 'Contact' },
 ];
 
-export function Footer() {
+const Footer = () => {
 	return (
 		<footer className="border-border/50 bg-muted/20 border-t">
 			<div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
@@ -46,3 +46,5 @@ export function Footer() {
 		</footer>
 	);
 }
+
+export default Footer;

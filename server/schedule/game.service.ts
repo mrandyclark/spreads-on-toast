@@ -1,4 +1,4 @@
-import { populatedToId } from '@/lib/mongo-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { GameModel } from '@/models/game.model';
 import { Game, GameState, GameType, Team, UpcomingGame } from '@/types';
 
@@ -30,7 +30,7 @@ class GameService extends BaseService<Game> {
 		return games.map((game) => {
 			const homeTeam = typeof game.homeTeam.team === 'object' ? game.homeTeam.team as Team : null;
 			const awayTeam = typeof game.awayTeam.team === 'object' ? game.awayTeam.team as Team : null;
-			const isHome = populatedToId(game.homeTeam.team) === teamId;
+			const isHome = resolveRefId(game.homeTeam.team) === teamId;
 			const opponentData = isHome ? awayTeam : homeTeam;
 
 			return {

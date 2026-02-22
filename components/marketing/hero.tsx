@@ -1,9 +1,9 @@
 import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
 
-import { LeaderboardMockup } from '@/components/leaderboard-mockup';
+import LeaderboardMockup from '@/components/leaderboard-mockup';
 import { Button } from '@/components/ui/button';
 
-export function Hero() {
+const Hero = () => {
 	return (
 		<section className="relative overflow-hidden py-16 sm:py-24 lg:py-32">
 			{/* Subtle background pattern */}
@@ -48,3 +48,5 @@ export function Hero() {
 		</section>
 	);
 }
+
+export default Hero;

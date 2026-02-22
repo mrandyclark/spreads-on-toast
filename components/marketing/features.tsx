@@ -1,4 +1,4 @@
-import { Calculator, Lock, Users } from 'lucide-react';
+import { BarChart3, Calculator, Lock, Users } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -17,13 +17,19 @@ const features = [
 	},
 	{
 		description:
+			'Live standings, scores, and win totals updated daily throughout the season. Watch your picks play out in real time.',
+		icon: BarChart3,
+		title: 'Live tracking',
+	},
+	{
+		description:
 			'Built for bragging rights, not bankrolls. Trash talk encouraged, real money not involved.',
 		icon: Users,
 		title: 'Friends-first',
 	},
 ];
 
-export function Features() {
+const Features = () => {
 	return (
 		<section className="bg-muted/30 py-16 sm:py-24">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -38,7 +44,7 @@ export function Features() {
 				</div>
 
 				{/* Feature cards */}
-				<div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 					{features.map((feature) => (
 						<Card
 							className="group border-border/50 bg-card hover:border-primary/20 transition-all hover:shadow-lg"
@@ -59,3 +65,5 @@ export function Features() {
 		</section>
 	);
 }
+
+export default Features;

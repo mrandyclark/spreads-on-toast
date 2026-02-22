@@ -1,23 +1,20 @@
 'use client';
 
-import { ArrowLeft, Calendar, Check, Copy, Lock, Pencil, Users, X } from 'lucide-react';
-import Link from 'next/link';
+import { Calendar, Check, Copy, Lock, Pencil, Users, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { SiteHeader } from '@/components/layout/site-header';
-import {
-	MlbLeaderboard,
-	MlbLockedResults,
-	MlbMemberSheet,
-	MlbPicksForm,
-	SelectedMember,
-} from '@/components/league/mlb';
+import BackLink from '@/components/layout/back-link';
+import PageShell from '@/components/layout/page-shell';
+import Leaderboard from '@/components/league-detail/leaderboard';
+import LockedResults from '@/components/league-detail/locked-results';
+import MemberSheet from '@/components/league-detail/member-sheet';
+import PicksForm from '@/components/league-detail/picks-form';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DatePicker } from '@/components/ui/date-picker';
+import DatePicker from '@/components/ui/date-picker';
 import {
 	Dialog,
 	DialogContent,
@@ -28,11 +25,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
 import { toDateString } from '@/lib/date-utils';
-import { populatedToId } from '@/lib/ref-utils';
-import { Group, GroupRole, PostseasonPicks, Sheet, WorldSeriesPicks } from '@/types';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
+import { getTeamId } from '@/lib/sheet-utils';
+import { cn } from '@/lib/utils';
+import { CopyableSheet, Group, GroupRole, PostseasonPicks, SelectedMember, Sheet, WorldSeriesPicks } from '@/types';
 
 import {
-	CopyableSheet,
 	copyPicksFromSheetAction,
 	getCopyableSheetsAction,
 	getGroupAction,
@@ -41,7 +39,7 @@ import {
 	updateGroupNameAction,
 } from './actions';
 
-export default function LeagueDetailPage() {
+const LeagueDetailPage = () => {
 	const params = useParams();
 	const groupId = params.id as string;
 
@@ -84,10 +82,8 @@ export default function LeagueDetailPage() {
 					const initialPicks: Record<string, 'over' | 'under' | null> = {};
 
 					sheetResult.sheet.teamPicks.forEach((tp) => {
-						const teamId = typeof tp.team === 'object' ? tp.team.id : tp.team;
-
 						if (tp.pick) {
-							initialPicks[teamId] = tp.pick as 'over' | 'under';
+							initialPicks[getTeamId(tp)] = tp.pick as 'over' | 'under';
 						}
 					});
 
@@ -130,7 +126,7 @@ export default function LeagueDetailPage() {
 
 	// Check if current user is owner or admin
 	const currentUserMember = group.members.find(
-		(m) => typeof m.user === 'object' && m.user.id === sheet?.user,
+		(m) => resolveRefId(m.user) === sheet?.user,
 	);
 	const canEditGroup =
 		currentUserMember?.role === GroupRole.Owner || currentUserMember?.role === GroupRole.Admin;
@@ -224,235 +220,238 @@ export default function LeagueDetailPage() {
 	};
 
 	return (
-		<div className="bg-background min-h-screen">
-			<SiteHeader />
+		<PageShell>
+			{/* Back link */}
+			<BackLink href="/dashboard" label="Dashboard" />
 
-			<main className="mx-auto max-w-5xl px-4 py-8">
-				{/* Back link */}
-				<Link
-					className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 text-sm transition-colors"
-					href="/dashboard">
-					<ArrowLeft className="h-4 w-4" />
-					Dashboard
-				</Link>
+			{/* League title and info */}
+			<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div className="flex items-center gap-2">
+					<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{group.name}</h1>
+					{canEditGroup && (
+						<Button
+							aria-label="Edit group name"
+							className="h-8 w-8"
+							onClick={handleOpenEditName}
+							size="icon"
+							variant="ghost">
+							<Pencil className="h-4 w-4" />
+						</Button>
+					)}
+				</div>
+				<div className="flex flex-wrap items-center gap-3">
+					<Badge variant="secondary">
+						{group.sport} {group.season}
+					</Badge>
+					<div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+						<Users className="h-4 w-4" />
+						<span>{group.members.length}</span>
+					</div>
+					<Button
+						className="h-8 gap-1.5 text-xs"
+						onClick={handleCopyInviteCode}
+						size="sm"
+						variant="outline">
+						{copiedInvite && (
+							<>
+								<Check className="h-3 w-3" />
+								Copied!
+							</>
+						)}
+						{!copiedInvite && (
+							<>
+								<Copy className="h-3 w-3" />
+								Invite: {group.inviteCode}
+							</>
+						)}
+					</Button>
+				</div>
+			</div>
 
-				{/* League title and info */}
-				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex items-center gap-2">
-						<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{group.name}</h1>
-						{canEditGroup && (
-							<Button
-								aria-label="Edit group name"
-								className="h-8 w-8"
-								onClick={handleOpenEditName}
-								size="icon"
-								variant="ghost">
-								<Pencil className="h-4 w-4" />
-							</Button>
+			{/* Lock status card */}
+			<Card
+				className={cn(
+					'mb-8',
+					isLocked ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/20',
+				)}>
+				<CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex items-center gap-3">
+						{isLocked && (
+							<>
+								<div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+									<Lock className="text-primary h-5 w-5" />
+								</div>
+								<div>
+									<p className="font-medium">Picks are locked</p>
+									<p className="text-muted-foreground text-sm">
+										Season is in progress. Track your standings below.
+									</p>
+								</div>
+							</>
+						)}
+						{!isLocked && (
+							<>
+								<div className="bg-accent flex h-10 w-10 items-center justify-center rounded-full">
+									<Calendar className="text-foreground h-5 w-5" />
+								</div>
+								<div>
+									<p className="font-medium">{daysUntilLock} days until picks lock</p>
+									<p className="text-muted-foreground text-sm">
+										Locks on{' '}
+										{lockDate.toLocaleDateString('en-US', {
+											day: 'numeric',
+											month: 'long',
+											weekday: 'long',
+										})}
+									</p>
+								</div>
+							</>
 						)}
 					</div>
-					<div className="flex flex-wrap items-center gap-3">
-						<Badge variant="secondary">
-							{group.sport} {group.season}
-						</Badge>
-						<div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-							<Users className="h-4 w-4" />
-							<span>{group.members.length}</span>
-						</div>
-						<Button
-							className="h-8 gap-1.5 text-xs"
-							onClick={handleCopyInviteCode}
-							size="sm"
-							variant="outline">
-							{copiedInvite ? (
-								<>
-									<Check className="h-3 w-3" />
-									Copied!
-								</>
-							) : (
-								<>
-									<Copy className="h-3 w-3" />
-									Invite: {group.inviteCode}
-								</>
+				</CardContent>
+			</Card>
+
+			{isLocked && (
+				<div className="space-y-8">
+					{/* Date picker for historical view */}
+					{group.seasonStartDate && group.seasonEndDate && (
+						<div className="flex flex-col items-end gap-1">
+							<div className="flex items-center gap-2">
+								<span className="text-muted-foreground text-sm">View as of:</span>
+								<DatePicker
+									maxDate={toDateString(group.seasonEndDate)}
+									minDate={toDateString(group.seasonStartDate)}
+									onChange={setSelectedDate}
+									value={selectedDate ?? toDateString(group.seasonEndDate)}
+								/>
+							</div>
+							{selectedDate && (
+								<Button
+									className="h-auto p-0"
+									onClick={() => setSelectedDate(undefined)}
+									size="sm"
+									variant="link">
+									Show Final Results
+								</Button>
 							)}
-						</Button>
-					</div>
+						</div>
+					)}
+
+					<Leaderboard
+						currentUserId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
+						groupId={groupId}
+						onMemberSelect={(member) => {
+							setSelectedMember(member);
+							setSheetOpen(true);
+						}}
+						selectedDate={selectedDate}
+					/>
+
+					{sheet && (
+						<LockedResults
+							groupId={groupId}
+							selectedDate={selectedDate}
+							sheet={sheet}
+							userId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
+						/>
+					)}
 				</div>
+			)}
 
-				{/* Lock status card */}
-				<Card
-					className={`mb-8 ${isLocked ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/20'}`}>
-					<CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-						<div className="flex items-center gap-3">
-							{isLocked ? (
-								<>
-									<div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-										<Lock className="text-primary h-5 w-5" />
-									</div>
-									<div>
-										<p className="font-medium">Picks are locked</p>
-										<p className="text-muted-foreground text-sm">
-											Season is in progress. Track your standings below.
-										</p>
-									</div>
-								</>
-							) : (
-								<>
-									<div className="bg-accent flex h-10 w-10 items-center justify-center rounded-full">
-										<Calendar className="text-foreground h-5 w-5" />
-									</div>
-									<div>
-										<p className="font-medium">{daysUntilLock} days until picks lock</p>
-										<p className="text-muted-foreground text-sm">
-											Locks on{' '}
-											{lockDate.toLocaleDateString('en-US', {
-												day: 'numeric',
-												month: 'long',
-												weekday: 'long',
-											})}
-										</p>
-									</div>
-								</>
-							)}
-						</div>
-					</CardContent>
-				</Card>
-
-				{isLocked ? (
-					<div className="space-y-8">
-						{/* Date picker for historical view */}
-						{group.seasonStartDate && group.seasonEndDate && (
-							<div className="flex flex-col items-end gap-1">
-								<div className="flex items-center gap-2">
-									<span className="text-muted-foreground text-sm">View as of:</span>
-									<DatePicker
-										maxDate={toDateString(group.seasonEndDate)}
-										minDate={toDateString(group.seasonStartDate)}
-										onChange={setSelectedDate}
-										value={selectedDate ?? toDateString(group.seasonEndDate)}
-									/>
-								</div>
-								{selectedDate && (
+			{!isLocked && (
+				<div className="space-y-8">
+					<section>
+						<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-16 z-40 -mx-4 mb-4 flex items-center justify-between border-b px-4 py-3 backdrop-blur">
+							<h2 className="text-xl font-semibold">Your Picks</h2>
+							<div className="flex items-center gap-2">
+								{copyableSheets.length > 0 && (
 									<Button
-										className="h-auto p-0"
-										onClick={() => setSelectedDate(undefined)}
+										className="text-xs"
+										onClick={() => setCopyPicksOpen(true)}
 										size="sm"
-										variant="link">
-										Show Final Results
+										variant="ghost">
+										Copy from another group
 									</Button>
 								)}
+								<Button
+									disabled={isSaving}
+									onClick={handleSavePicks}
+									size="sm"
+									variant={
+										saveStatus === 'success'
+											? 'outline'
+											: saveStatus === 'error'
+												? 'destructive'
+												: 'default'
+									}>
+									{isSaving && 'Saving...'}
+									{!isSaving && saveStatus === 'success' && (
+										<>
+											<Check className="mr-1 h-4 w-4" />
+											Saved
+										</>
+									)}
+									{!isSaving && saveStatus === 'error' && (
+										<>
+											<X className="mr-1 h-4 w-4" />
+											Error
+										</>
+									)}
+									{!isSaving && saveStatus === 'idle' && 'Save All Picks'}
+								</Button>
 							</div>
-						)}
+						</div>
 
-						<MlbLeaderboard
-							currentUserId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
-							groupId={groupId}
-							onMemberSelect={(member) => {
-								setSelectedMember(member);
-								setSheetOpen(true);
-							}}
-							selectedDate={selectedDate}
-						/>
-
+						{/* Sport-specific picks form - renders based on group.sport */}
 						{sheet && (
-							<MlbLockedResults
-								groupId={groupId}
-								selectedDate={selectedDate}
+							<PicksForm
+								onPostseasonPicksChange={setPostseasonPicks}
+								onTeamPicksChange={setTeamPicks}
+								onWorldSeriesPicksChange={setWorldSeriesPicks}
 								sheet={sheet}
-								userId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
 							/>
 						)}
-					</div>
-				) : (
-					<div className="space-y-8">
-						<section>
-							<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-16 z-40 -mx-4 mb-4 flex items-center justify-between border-b px-4 py-3 backdrop-blur">
-								<h2 className="text-xl font-semibold">Your Picks</h2>
-								<div className="flex items-center gap-2">
-									{copyableSheets.length > 0 && (
-										<Button
-											className="text-xs"
-											onClick={() => setCopyPicksOpen(true)}
-											size="sm"
-											variant="ghost">
-											Copy from another group
-										</Button>
-									)}
-									<Button
-										disabled={isSaving}
-										onClick={handleSavePicks}
-										size="sm"
-										variant={saveStatus === 'success' ? 'outline' : saveStatus === 'error' ? 'destructive' : 'default'}>
-										{isSaving ? (
-											'Saving...'
-										) : saveStatus === 'success' ? (
-											<>
-												<Check className="mr-1 h-4 w-4" />
-												Saved
-											</>
-										) : saveStatus === 'error' ? (
-											<>
-												<X className="mr-1 h-4 w-4" />
-												Error
-											</>
-										) : (
-											'Save All Picks'
-										)}
-									</Button>
+					</section>
+
+					<section>
+						<h2 className="mb-4 text-xl font-semibold">League Members</h2>
+						<Card>
+							<CardContent className="p-4">
+								<p className="text-muted-foreground mb-4 text-sm">
+									Other members{"'"} picks will be visible after the lock date.
+								</p>
+								<div className="flex flex-wrap gap-3">
+									{group.members.map((member) => {
+										const user = resolveRef(member.user);
+										const displayName = user
+											? `${user.nameFirst ?? ''} ${user.nameLast ?? ''}`.trim() || 'Member'
+											: 'Member';
+										const initials = user?.nameFirst
+											? user.nameFirst.slice(0, 2).toUpperCase()
+											: '??';
+										return (
+											<div
+												className="bg-muted flex items-center gap-2 rounded-full px-3 py-1.5"
+												key={resolveRefId(member.user)}>
+												<Avatar className="h-6 w-6">
+													<AvatarFallback className="bg-primary text-primary-foreground text-xs">
+														{initials}
+													</AvatarFallback>
+												</Avatar>
+												<span className="text-sm">{displayName}</span>
+											</div>
+										);
+									})}
 								</div>
-							</div>
-
-							{/* Sport-specific picks form - renders based on group.sport */}
-							{sheet && (
-								<MlbPicksForm
-									onPostseasonPicksChange={setPostseasonPicks}
-									onTeamPicksChange={setTeamPicks}
-									onWorldSeriesPicksChange={setWorldSeriesPicks}
-									sheet={sheet}
-								/>
-							)}
-						</section>
-
-						<section>
-							<h2 className="mb-4 text-xl font-semibold">League Members</h2>
-							<Card>
-								<CardContent className="p-4">
-									<p className="text-muted-foreground mb-4 text-sm">
-										Other members{"'"} picks will be visible after the lock date.
-									</p>
-									<div className="flex flex-wrap gap-3">
-										{group.members.map((member) => {
-											const user = typeof member.user === 'object' ? member.user : null;
-											const displayName = user
-												? `${user.nameFirst ?? ''} ${user.nameLast ?? ''}`.trim() || 'Member'
-												: 'Member';
-											const initials = user?.nameFirst
-												? user.nameFirst.slice(0, 2).toUpperCase()
-												: '??';
-											return (
-												<div
-													className="bg-muted flex items-center gap-2 rounded-full px-3 py-1.5"
-													key={populatedToId(member.user)}>
-													<Avatar className="h-6 w-6">
-														<AvatarFallback className="bg-primary text-primary-foreground text-xs">
-															{initials}
-														</AvatarFallback>
-													</Avatar>
-													<span className="text-sm">{displayName}</span>
-												</div>
-											);
-										})}
-									</div>
-								</CardContent>
-							</Card>
-						</section>
-					</div>
-				)}
-			</main>
+							</CardContent>
+						</Card>
+					</section>
+				</div>
+			)}
 
 			<SheetUI onOpenChange={setSheetOpen} open={sheetOpen}>
 				{selectedMember && group && (
-					<MlbMemberSheet
+					<MemberSheet
 						groupId={groupId}
 						isCurrentUser={selectedMember.isCurrentUser}
 						memberInitials={selectedMember.userInitials}
@@ -502,11 +501,12 @@ export default function LeagueDetailPage() {
 						<DialogTitle>Copy Picks from Another League</DialogTitle>
 					</DialogHeader>
 					<div className="py-4">
-						{copyableSheets.length === 0 ? (
+						{copyableSheets.length === 0 && (
 							<p className="text-muted-foreground text-center text-sm">
 								No other leagues found for this sport and season.
 							</p>
-						) : (
+						)}
+						{copyableSheets.length > 0 && (
 							<div className="space-y-2">
 								{copyableSheets.map((s) => (
 									<Button
@@ -528,6 +528,8 @@ export default function LeagueDetailPage() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-		</div>
+		</PageShell>
 	);
-}
+};
+
+export default LeagueDetailPage;

@@ -96,13 +96,13 @@ function compareDates(a: string, b: string): number {
 	return a.localeCompare(b);
 }
 
-export function DatePicker({
+const DatePicker = ({
 	maxDate,
 	minDate,
 	onChange,
 	placeholder = 'Pick a date',
 	value,
-}: DatePickerProps) {
+}: DatePickerProps) => {
 	const [open, setOpen] = useState(false);
 
 	// Current view month/year
@@ -263,3 +263,5 @@ export function DatePicker({
 		</Popover>
 	);
 }
+
+export default DatePicker;

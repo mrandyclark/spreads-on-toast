@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { SiteHeader } from '@/components/layout/site-header';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import PageShell from '@/components/layout/page-shell';
+import ScheduleSkeleton from '@/components/team-detail/schedule-skeleton';
+import TeamHeader from '@/components/team-detail/team-header';
+import TeamStatsClient from '@/components/team-detail/team-stats-client';
 import { getStartedSeasonsWithDates, getTeamDetailData } from '@/server/standings/standings.actions';
 import { teamService } from '@/server/teams/team.service';
-import { Sport } from '@/types';
+import { Sport, TeamSummary } from '@/types';
 
-import { TeamHeader, TeamStatsClient } from './team-detail-client';
 import { TeamScheduleSection } from './team-schedule-section';
 
 interface TeamPageProps {
@@ -21,29 +22,7 @@ interface TeamPageProps {
 	}>;
 }
 
-function SectionSkeleton({ height = 'h-48' }: { height?: string }) {
-	return (
-		<Card>
-			<CardHeader>
-				<div className="bg-muted h-5 w-40 animate-pulse rounded" />
-			</CardHeader>
-			<CardContent>
-				<div className={`bg-muted ${height} w-full animate-pulse rounded`} />
-			</CardContent>
-		</Card>
-	);
-}
-
-function ScheduleSkeleton() {
-	return (
-		<div className="grid gap-6 lg:grid-cols-2">
-			<SectionSkeleton />
-			<SectionSkeleton />
-		</div>
-	);
-}
-
-export default async function TeamPage({ params, searchParams }: TeamPageProps) {
+const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 	const { abbreviation, league } = await params;
 	const { date: dateParam, season: seasonParam } = await searchParams;
 
@@ -54,9 +33,10 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
 		notFound();
 	}
 
-	const [team, seasons] = await Promise.all([
+	const [team, seasons, allTeamsRaw] = await Promise.all([
 		teamService.findByAbbreviation(abbreviation, sport),
 		getStartedSeasonsWithDates(),
+		teamService.findBySport(sport),
 	]);
 
 	if (!team) {
@@ -73,39 +53,47 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
 	const teamName = team.name;
 	const teamAbbreviation = team.abbreviation.toLowerCase();
 
+	const allTeams: TeamSummary[] = allTeamsRaw.map((t) => ({
+		abbreviation: t.abbreviation,
+		city: t.city,
+		conference: t.conference,
+		division: t.division,
+		id: t.id,
+		name: t.name,
+	}));
+
 	// Fetch team stats at page level so date changes are fast (parallelized internally)
 	const { current, history } = await getTeamDetailData(teamId, season, selectedDate);
 
 	return (
-		<div className="bg-background min-h-screen">
-			<SiteHeader />
-
-			<main className="mx-auto max-w-5xl px-4 py-8">
-				<TeamHeader
-					availableDates={availableDates}
+		<PageShell>
+			<TeamHeader
+				allTeams={allTeams}
+				availableDates={availableDates}
+				season={season}
+				seasons={seasons}
+				selectedDate={selectedDate}
+				teamAbbreviation={teamAbbreviation}
+				teamCity={teamCity}
+				teamName={teamName}>
+				<TeamStatsClient
+					current={current}
+					history={history}
 					season={season}
-					seasons={seasons}
 					selectedDate={selectedDate}
-					teamAbbreviation={teamAbbreviation}
-					teamCity={teamCity}
-					teamName={teamName}>
-					<TeamStatsClient
-						current={current}
-						history={history}
+				/>
+
+				<Suspense fallback={<ScheduleSkeleton />}>
+					<TeamScheduleSection
 						season={season}
 						selectedDate={selectedDate}
+						teamAbbreviation={teamAbbreviation}
+						teamId={teamId}
 					/>
-
-					<Suspense fallback={<ScheduleSkeleton />}>
-						<TeamScheduleSection
-							season={season}
-							selectedDate={selectedDate}
-							teamAbbreviation={teamAbbreviation}
-							teamId={teamId}
-						/>
-					</Suspense>
-				</TeamHeader>
-			</main>
-		</div>
+				</Suspense>
+			</TeamHeader>
+		</PageShell>
 	);
-}
+};
+
+export default TeamPage;

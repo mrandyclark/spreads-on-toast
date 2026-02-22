@@ -43,6 +43,7 @@ export interface TeamSummary {
 	abbreviation: string;
 	city: string;
 	conference: Conference;
+	division: Division;
 	id: string;
 	name: string;
 }
@@ -51,7 +52,6 @@ export interface TeamSummary {
  * Team with its line for a season (for pick UI)
  */
 export interface TeamWithLine extends TeamSummary {
-	division: Division;
 	line: number;
 }
 

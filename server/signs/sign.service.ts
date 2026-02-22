@@ -1,4 +1,4 @@
-import { populatedToId } from '@/lib/mongo-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { SignModel } from '@/models/sign.model';
 import { Sign, SignRole } from '@/types';
 
@@ -17,7 +17,7 @@ class SignService extends BaseService<Sign> {
 		}
 
 		// Already a member
-		if (sign.members.some((m) => populatedToId(m.user) === userId)) {
+		if (sign.members.some((m) => resolveRefId(m.user) === userId)) {
 			return sign;
 		}
 

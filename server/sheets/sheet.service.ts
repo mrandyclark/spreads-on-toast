@@ -1,4 +1,4 @@
-import { populatedToId } from '@/lib/mongo-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { SheetModel } from '@/models/sheet.model';
 import { Sheet, Sport, TeamPick } from '@/types';
 
@@ -15,7 +15,7 @@ class SheetService extends BaseService<Sheet> {
 
 		const teamPicks: TeamPick[] = teamLines.map((tl) => ({
 			line: tl.line,
-			team: populatedToId(tl.team)!,
+			team: resolveRefId(tl.team)!,
 		}));
 
 		return this.create({

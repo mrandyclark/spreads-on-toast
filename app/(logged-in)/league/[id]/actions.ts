@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { populatedToId } from '@/lib/ref-utils';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { withAuth } from '@/lib/with-auth-action';
 import { getGroupForMember, groupService } from '@/server/groups/group.actions';
 import { calculateProjectedWins } from '@/server/mlb-api';
@@ -13,17 +13,21 @@ import {
 	getStandingsForDate,
 } from '@/server/standings/standings.actions';
 import {
+	CopyableSheet,
 	Group,
+	GroupResults,
 	GroupRole,
 	GroupVisibility,
+	LeaderboardData,
+	LeaderboardEntry,
 	PickDirection,
 	PickResult,
-	PostseasonPicks,
+	SavePicksInput,
 	Sheet,
 	Team,
 	TeamPick,
+	TeamPickResult,
 	User,
-	WorldSeriesPicks,
 } from '@/types';
 
 export const getGroupAction = withAuth(async (user, groupId: string) => {
@@ -43,7 +47,7 @@ export const updateGroupNameAction = withAuth(async (user, groupId: string, name
 		return { error: 'Group not found' };
 	}
 
-	const member = group.members.find((m) => populatedToId(m.user) === user.id);
+	const member = group.members.find((m) => resolveRefId(m.user) === user.id);
 
 	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
 		return { error: 'Not authorized to edit group' };
@@ -61,7 +65,7 @@ export const updateGroupVisibilityAction = withAuth(async (user, groupId: string
 		return { error: 'Group not found' };
 	}
 
-	const member = group.members.find((m) => populatedToId(m.user) === user.id);
+	const member = group.members.find((m) => resolveRefId(m.user) === user.id);
 
 	if (!member || (member.role !== GroupRole.Owner && member.role !== GroupRole.Admin)) {
 		return { error: 'Not authorized to edit group' };
@@ -82,12 +86,6 @@ export const getSheetAction = withAuth(async (user, groupId: string) => {
 	return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
 });
 
-export interface CopyableSheet {
-	groupId: string;
-	groupName: string;
-	sheetId: string;
-}
-
 export const getCopyableSheetsAction = withAuth(async (user, groupId: string) => {
 	const currentGroup = await groupService.findById(groupId);
 
@@ -106,10 +104,10 @@ export const getCopyableSheetsAction = withAuth(async (user, groupId: string) =>
 	const sheets = await sheetService.find({ group: { $in: otherGroupIds }, user: user.id });
 
 	const result: CopyableSheet[] = sheets.map((s) => {
-		const group = otherGroups.find((g) => g.id === populatedToId(s.group));
+		const group = otherGroups.find((g) => g.id === resolveRefId(s.group));
 
 		return {
-			groupId: populatedToId(s.group)!,
+			groupId: resolveRefId(s.group)!,
 			groupName: group?.name ?? 'Unknown',
 			sheetId: s.id,
 		};
@@ -121,7 +119,7 @@ export const getCopyableSheetsAction = withAuth(async (user, groupId: string) =>
 export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: string, sourceSheetId: string) => {
 	const sourceSheet = await sheetService.findById(sourceSheetId);
 
-	if (!sourceSheet || populatedToId(sourceSheet.user) !== user.id) {
+	if (!sourceSheet || resolveRefId(sourceSheet.user) !== user.id) {
 		return { error: 'Source sheet not found' };
 	}
 
@@ -142,11 +140,11 @@ export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: str
 	}
 
 	const sourcePicksMap = new Map(
-		sourceSheet.teamPicks.map((tp: TeamPick) => [populatedToId(tp.team), tp.pick]),
+		sourceSheet.teamPicks.map((tp: TeamPick) => [resolveRefId(tp.team), tp.pick]),
 	);
 
 	const updatedTeamPicks = targetSheet.teamPicks.map((tp: TeamPick) => {
-		const teamId = populatedToId(tp.team)!;
+		const teamId = resolveRefId(tp.team)!;
 		const sourcePick = sourcePicksMap.get(teamId);
 
 		return {
@@ -183,12 +181,6 @@ export const getSheetForMemberAction = withAuth(async (user, groupId: string, me
 	return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
 });
 
-export interface SavePicksInput {
-	postseasonPicks?: PostseasonPicks;
-	teamPicks: Record<string, 'over' | 'under' | null>;
-	worldSeriesPicks?: WorldSeriesPicks;
-}
-
 export const savePicksAction = withAuth(async (user, groupId: string, input: SavePicksInput) => {
 	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, user.id);
 
@@ -203,7 +195,7 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 	}
 
 	const updatedTeamPicks: TeamPick[] = sheet.teamPicks.map((tp: TeamPick) => {
-		const teamId = populatedToId(tp.team)!;
+		const teamId = resolveRefId(tp.team)!;
 		const pick = input.teamPicks[teamId];
 		return {
 			line: tp.line,
@@ -227,29 +219,6 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 		return { error: 'Failed to save picks' };
 	}
 });
-
-// Results types
-export interface TeamPickResult {
-	actualWins?: number;
-	gamesPlayed?: number;
-	line: number;
-	pick: 'over' | 'under';
-	projectedWins: number;
-	result: PickResult;
-	team: Team;
-}
-
-export interface GroupResults {
-	date?: string;
-	picks: TeamPickResult[];
-	summary: {
-		wins: number;
-		losses: number;
-		pushes: number;
-		pending: number;
-		total: number;
-	};
-}
 
 export const getResultsAction = withAuth(
 	async (user, groupId: string, userId?: string, date?: string) => {
@@ -299,9 +268,11 @@ export const getResultsAction = withAuth(
 		for (const teamPick of sheet.teamPicks as TeamPick[]) {
 			if (!teamPick.pick) {continue;}
 
-			const team = teamPick.team as Team;
-			const teamId = populatedToId(teamPick.team)!;
-			const standing = standingsData.get(teamId);
+			const team = resolveRef(teamPick.team);
+
+			if (!team) {continue;}
+
+			const standing = standingsData.get(team.id);
 
 			const actualWins = standing?.wins ?? 0;
 			const gamesPlayed = standing?.gamesPlayed ?? 0;
@@ -311,18 +282,6 @@ export const getResultsAction = withAuth(
 
 			const result = calculatePickResult(teamPick.pick, teamPick.line, projectedWinsForComparison);
 
-			const teamData =
-				typeof team === 'object' && team !== null
-					? {
-						abbreviation: team.abbreviation,
-						city: team.city,
-						conference: team.conference,
-						id: team.id,
-						name: team.name,
-						sport: team.sport,
-					}
-					: team;
-
 			picks.push({
 				actualWins,
 				gamesPlayed,
@@ -330,7 +289,14 @@ export const getResultsAction = withAuth(
 				pick: teamPick.pick,
 				projectedWins: projectedWinsForDisplay,
 				result,
-				team: teamData as Team,
+				team: {
+					abbreviation: team.abbreviation,
+					city: team.city,
+					conference: team.conference,
+					id: team.id,
+					name: team.name,
+					sport: team.sport,
+				} as Team,
 			});
 
 			if (result === PickResult.Win) {
@@ -357,23 +323,6 @@ export const getResultsAction = withAuth(
 		};
 	},
 );
-
-// Leaderboard types
-export interface LeaderboardEntry {
-	losses: number;
-	pushes: number;
-	total: number;
-	userId: string;
-	userInitials: string;
-	userName: string;
-	winPct: number;
-	wins: number;
-}
-
-export interface LeaderboardData {
-	date?: string;
-	entries: LeaderboardEntry[];
-}
 
 export const getLeaderboardAction = withAuth(async (user, groupId: string, date?: string) => {
 	const group = await groupService.findForMemberPopulated(groupId, user.id);
@@ -405,7 +354,7 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 
 	for (const member of group.members) {
 		const memberUser = member.user as User;
-		const memberId = populatedToId(member.user)!;
+		const memberId = resolveRefId(member.user)!;
 		const sheet = sheets.find((s) => s.user.toString() === memberId);
 
 		let wins = 0;
@@ -416,7 +365,7 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 			for (const teamPick of sheet.teamPicks as TeamPick[]) {
 				if (!teamPick.pick) {continue;}
 
-				const teamId = populatedToId(teamPick.team)!;
+				const teamId = resolveRefId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
 
 				const projectedWins =

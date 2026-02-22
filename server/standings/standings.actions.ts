@@ -1,4 +1,4 @@
-import { populatedToId } from '@/lib/mongo-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import {
 	PickResult,
 	SeasonWithDates,
@@ -293,7 +293,7 @@ export async function getStandingsBoardData(
 		teamLineService.findBySeason(Sport.MLB, season),
 	]);
 
-	const linesByTeamId = new Map(teamLines.map((tl) => [populatedToId(tl.team), tl.line]));
+	const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
 	const result: StandingsBoardData[] = [];
 
 	for (const standing of standings) {

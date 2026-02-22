@@ -12,6 +12,7 @@ Spreads on Toast — Next.js app for MLB over/under betting with digital sign di
 - Path alias: `@/` maps to project root
 - Never add comments or documentation unless asked
 - Prefer minimal edits — single-line fixes over refactors when possible
+- **Always use curly braces** for `if`/`else`/`for`/`while` — no braceless single-line bodies (enforced by `curly: ['error', 'all']`)
 
 ## Architecture
 
@@ -31,7 +32,10 @@ Spreads on Toast — Next.js app for MLB over/under betting with digital sign di
 ### Ref handling
 
 - `Ref<T> = string | T` — used for populated/unpopulated Mongoose fields (defined in `types/mongo.ts`)
-- Use `populatedToId(ref)` and `populatedArrayToId(refs)` from `lib/mongo-utils.ts` to extract IDs — never inline `typeof ref === 'string' ? ref : ref.id` or `String(ref)`
+- Use `resolveRefId(ref)` to get the ID string (works with both populated and unpopulated refs, accepts optional refs returning `string | undefined`)
+- Use `resolveRef<T>(ref)` to get the populated object (returns `T | null`)
+- Use `resolveRefIds(refs)` for arrays of refs
+- Never inline `typeof ref === 'object'` or `typeof ref === 'string'` checks
 - When a service method returns populated docs, pass `{ populate: 'path' }` to BaseService methods — they handle `dbConnect`, `lean`, and `cleanMongoDocs` automatically. Return the domain type (e.g., `TeamStanding[]`) — `Ref<T>` handles both shapes
 
 ### BaseService methods
@@ -62,6 +66,58 @@ Populate accepts `string | string[]` for multiple paths. **Never call `model.fin
 - If custom theme colors disappear, delete `.next` and rebuild
 - Use `Suspense` boundaries for slow independent data sections (see team detail page)
 - Client-side date/season changes use `router.push()` — keep page-level fetches fast, only wrap truly slow sections in Suspense
+
+### File structure
+
+- **`app/`** — routing and page-level orchestration only. Only `page.tsx`, `layout.tsx`, `actions.ts`, and server components that do data fetching. No client components.
+- **`components/`** — all UI components, organized by feature. Max one directory level deep.
+- **`lib/`** — shared utilities, constants, and helpers (no React, no server-only code).
+
+### Component directory layout (`components/`)
+
+- **`ui/`** — shadcn primitives (button, card, dialog, etc.)
+- **`layout/`** — `PageShell`, `PageHeader`, `BackLink`, `SiteHeader`
+- **`marketing/`** — landing page sections (hero, features, FAQ, etc.)
+- **`dashboard/`** — dashboard-client, signs-client
+- **`game-detail/`** — game page components (game-info, linescore, score-display, etc.)
+- **`team-detail/`** — team page components (team-header, team-stats-client, stat-card, etc.)
+- **`team-schedule/`** — schedule-difficulty, upcoming-schedule, sos-card, game-row
+- **`team-chip/`** — team-chip + team-chip-badge
+- **`win-profile/`** — win-profile + situational-bar, contribution-bar
+- **`standings/`** — standings-board, league-standings, division-rows, standings-chart
+- **`league-detail/`** — leaderboard, locked-results, member-sheet, picks-form, team-picks, etc.
+- **`sign-detail/`** — sign-detail-client, team-picker
+- Standalone files at root: `leaderboard-mockup.tsx`, `toast-icon.tsx`
+
+**Rules:** Use a directory when a component has private sub-components. Never nest more than one level deep. No barrel `index.ts` files — always import directly from the component file. When adding a new component, place it in the directory of its parent consumer (or create a new directory if it's a new feature area).
+
+### Utility libraries (`lib/`)
+
+- **`lib/format-utils.ts`** — `pluralize(noun, count)` (regex-based English pluralization), `countAndPluralize(count, noun)` (prepends count), `formatMoney`, `getOrdinalSuffix`, `ordinal`
+- **`lib/state-utils.ts`** — immutable state helpers for React: `toggleValue`, `safeArray`, `safePush`, `safeJoin`, `safeToggle`, `safeUpdate`, `safeUpdateMultiple`, `handleRemoveByKey/Index/Function`, `safeReplaceByIndex`, `handleReplaceByIndex`, `reorderArrayByDragDrop`
+- **`lib/date-utils.ts`** — `toDateString`, `formatDateDisplay`, `formatGameDate`, `formatGameTime`, `formatShortDate`
+- **`lib/constants.ts`** — `DIVISION_LABELS`, `DIVISION_ORDER` (NL first, then AL), `NL_DIVISIONS`, `AL_DIVISIONS` — all typed with `Division` enum. Never define inline division order arrays.
+- **`lib/ref-utils.ts`** — `resolveRef`, `resolveRefId`, `resolveRefIds` — **app/ files must import from here**, not `mongo-utils` (avoids Mongoose in client bundle)
+- **`lib/sheet-utils.ts`** — `getTeamId`, `getTeamFromPick`, `toTeamsWithLines`, `getFullTeamName`, `getTeamsByConference` — team/pick data helpers that delegate to `resolveRef`/`resolveRefId`
+
+### Component style
+
+- **Arrow function + `export default`** for all components: `const MyComponent = () => { ... }; export default MyComponent;`
+- **One component per file.** Internal helper components go in separate files in the same directory.
+- **No ternary conditional rendering** in JSX. Use `{condition && (...)}` / `{!condition && (...)}` patterns instead.
+- Ternaries are fine for inline values (e.g., button text: `{isSaving ? 'Saving...' : 'Save'}`), just not for rendering different JSX blocks.
+- **Always use `cn()` for dynamic classNames.** Never use template literals for className — use `cn('base-classes', condition && 'conditional-class')` instead of `` className={`base ${condition ? 'a' : 'b'}`} ``.
+- **All shared types live in `types/`.** Only `interface FooProps` (component props) may be defined in component files. Everything else goes in the appropriate `types/*.ts` file so it can be imported from `@/types`.
+
+### Conventions
+
+- Use `countAndPluralize(count, 'member')` instead of `{count} member{count !== 1 ? 's' : ''}`
+- Use `toggleValue(arr, value)` instead of inline `arr.includes(v) ? arr.filter(...) : [...arr, v]`
+- Use `ordinal(n)` instead of inline ordinal suffix logic
+- Division labels always use `DIVISION_LABELS` from `lib/constants.ts` — never define inline `Record<string, string>` maps
+- Division ordering always uses `DIVISION_ORDER` (or `NL_DIVISIONS`/`AL_DIVISIONS`) from `lib/constants.ts` — never define inline division order arrays
+- Ref resolution always uses `resolveRef`/`resolveRefId` from `lib/ref-utils.ts` — never inline `typeof ref === 'object'` checks
+- Date formatting functions live in `lib/date-utils.ts` — never define inline `toLocaleDateString` wrappers in page files
 
 ## Auth
 

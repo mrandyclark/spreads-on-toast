@@ -1,4 +1,4 @@
-import { SignDetailClient } from './sign-detail-client';
+import SignDetailClient from '@/components/sign-detail/sign-detail-client';
 
 export default async function SignDetailPage({
 	params,

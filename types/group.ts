@@ -1,5 +1,7 @@
 import { BaseDocument, Ref } from './mongo';
+import { PickResult, PostseasonPicks, WorldSeriesPicks } from './sheet';
 import { Sport } from './sport';
+import { Team } from './team';
 import { User } from './user';
 
 /**
@@ -87,4 +89,75 @@ export interface GroupMemberSummary {
 	name: string;
 	rank: number;
 	totalPicks: number;
+}
+
+export interface CreateGroupInput {
+	lockDate: string;
+	name: string;
+	season: string;
+	sport: Sport;
+}
+
+export interface CopyableSheet {
+	groupId: string;
+	groupName: string;
+	sheetId: string;
+}
+
+export interface SavePicksInput {
+	postseasonPicks?: PostseasonPicks;
+	teamPicks: Record<string, 'over' | 'under' | null>;
+	worldSeriesPicks?: WorldSeriesPicks;
+}
+
+export interface TeamPickResult {
+	actualWins?: number;
+	gamesPlayed?: number;
+	line: number;
+	pick: 'over' | 'under';
+	projectedWins: number;
+	result: PickResult;
+	team: Team;
+}
+
+export interface GroupResults {
+	date?: string;
+	picks: TeamPickResult[];
+	summary: {
+		losses: number;
+		pending?: number;
+		pushes: number;
+		total: number;
+		wins: number;
+	};
+}
+
+export interface LeaderboardEntry {
+	losses: number;
+	pushes: number;
+	rank?: number;
+	total: number;
+	userId: string;
+	userInitials: string;
+	userName: string;
+	winPct: number;
+	wins: number;
+}
+
+export interface LeaderboardData {
+	date?: string;
+	entries: LeaderboardEntry[];
+}
+
+export interface LeaderboardResponse {
+	date?: string;
+	entries: LeaderboardEntry[];
+	season: string;
+}
+
+export interface SelectedMember {
+	isCurrentUser: boolean;
+	userId: string;
+	userInitials: string;
+	userName: string;
 }

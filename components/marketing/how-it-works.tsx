@@ -17,13 +17,13 @@ const steps = [
 		title: 'Lock them in',
 	},
 	{
-		description: 'Track standings all season and see who called it best.',
+		description: 'Follow live leaderboards, dig into team stats, and see who called it best by season\u2019s end.',
 		icon: Trophy,
 		title: 'Crown a winner',
 	},
 ];
 
-export function HowItWorks() {
+const HowItWorks = () => {
 	return (
 		<section className="bg-muted/30 py-16 sm:py-24" id="how-it-works">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -70,3 +70,5 @@ export function HowItWorks() {
 		</section>
 	);
 }
+
+export default HowItWorks;

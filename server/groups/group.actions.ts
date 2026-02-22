@@ -1,4 +1,4 @@
-import { populatedToId } from '@/lib/mongo-utils';
+import { resolveRefId } from '@/lib/ref-utils';
 import { Group } from '@/types';
 
 import { sheetService } from '../sheets/sheet.service';
@@ -38,7 +38,7 @@ export async function joinGroupByInviteCode(
 		return { error: 'Invalid invite code' };
 	}
 
-	const isMember = group.members.some((m) => populatedToId(m.user) === userId);
+	const isMember = group.members.some((m) => resolveRefId(m.user) === userId);
 
 	if (isMember) {
 		return { error: 'You are already a member of this group' };

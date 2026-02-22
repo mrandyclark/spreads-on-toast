@@ -1,5 +1,5 @@
-import { ScheduleDifficulty } from '@/components/league/schedule-difficulty';
-import { UpcomingSchedule } from '@/components/league/upcoming-schedule';
+import ScheduleDifficulty from '@/components/team-schedule/schedule-difficulty';
+import UpcomingSchedule from '@/components/team-schedule/upcoming-schedule';
 import { gameService } from '@/server/schedule/game.service';
 import { getScheduleDifficultyByTeamId } from '@/server/schedule/schedule-difficulty';
 

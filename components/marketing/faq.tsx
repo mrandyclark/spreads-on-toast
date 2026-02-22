@@ -13,7 +13,7 @@ const faqs = [
 	},
 	{
 		answer:
-			'We currently support NFL, NBA, MLB, NHL, and College Football (CFB). We pull win totals from Vegas lines at the start of each season. More sports coming soon!',
+			"We currently support MLB with live standings, scores, and win totals updated daily throughout the season. More sports are on the way.",
 		question: 'What sports do you support?',
 	},
 	{
@@ -28,12 +28,12 @@ const faqs = [
 	},
 	{
 		answer:
-			'Yes! spreadsontoast is free to use. We may introduce optional premium features down the road, but the core experience will always be free.',
+			"Yes! spreadsontoast is free to use. We may introduce optional premium features down the road, but the core experience will always be free.",
 		question: 'Is it free?',
 	},
 ];
 
-export function FAQ() {
+const FAQ = () => {
 	return (
 		<section className="py-16 sm:py-24" id="faq">
 			<div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -67,3 +67,5 @@ export function FAQ() {
 		</section>
 	);
 }
+
+export default FAQ;
