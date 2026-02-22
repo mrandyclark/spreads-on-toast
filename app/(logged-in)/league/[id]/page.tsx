@@ -4,7 +4,7 @@ import { resolveRefId } from '@/lib/ref-utils';
 import { getGroupForMember } from '@/server/groups/group.actions';
 import { groupService } from '@/server/groups/group.service';
 import { sheetService } from '@/server/sheets/sheet.service';
-import { CopyableSheet, Group, Sheet } from '@/types';
+import { CopyableSheet } from '@/types';
 
 export default async function LeagueDetailPage({
 	params,
@@ -54,8 +54,8 @@ export default async function LeagueDetailPage({
 	return (
 		<LeagueDetailClient
 			initialCopyableSheets={copyableSheets}
-			initialGroup={JSON.parse(JSON.stringify(group)) as Group}
-			initialSheet={sheet ? JSON.parse(JSON.stringify(sheet)) as Sheet : null}
+			initialGroup={group}
+			initialSheet={sheet}
 		/>
 	);
 }

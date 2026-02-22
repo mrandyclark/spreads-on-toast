@@ -21,7 +21,6 @@ import {
 	PickDirection,
 	PickResult,
 	SavePicksInput,
-	Sheet,
 	Team,
 	TeamPick,
 	TeamPickResult,
@@ -121,22 +120,31 @@ export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: str
 export const getSheetForMemberAction = withAuth(async (user, groupId: string, memberId: string) => {
 	const group = await getGroupForMember(groupId, user.id);
 
-	if (!group) {return {};}
+	if (!group) {
+		return {};
+	}
 
 	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, memberId);
 
-	if (!sheet) {return {};}
-	return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
+	if (!sheet) {
+		return {};
+	}
+
+	return { sheet };
 });
 
 export const savePicksAction = withAuth(async (user, groupId: string, input: SavePicksInput) => {
 	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, user.id);
 
-	if (!sheet) {return { error: 'Sheet not found' };}
+	if (!sheet) {
+		return { error: 'Sheet not found' };
+	}
 
 	const group = await getGroupForMember(groupId, user.id);
 
-	if (!group) {return { error: 'Group not found' };}
+	if (!group) {
+		return { error: 'Group not found' };
+	}
 
 	if (new Date(group.lockDate) < new Date()) {
 		return { error: 'Picks are locked' };
@@ -172,16 +180,22 @@ export const getResultsAction = withAuth(
 	async (user, groupId: string, userId?: string, date?: string) => {
 		const isMember = await groupService.isMember(groupId, user.id);
 
-		if (!isMember) {return {};}
+		if (!isMember) {
+			return {};
+		}
 
 		const group = await groupService.findById(groupId);
 
-		if (!group) {return {};}
+		if (!group) {
+			return {};
+		}
 
 		const targetUserId = userId || user.id;
 		const sheet = await sheetService.findByUserAndGroupPopulated(targetUserId, groupId);
 
-		if (!sheet) {return {};}
+		if (!sheet) {
+			return {};
+		}
 
 		// Get standings data
 		let standingsData: Map<string, { projectedWins: number; wins: number; gamesPlayed: number }>;
@@ -214,11 +228,15 @@ export const getResultsAction = withAuth(
 		let pushes = 0;
 
 		for (const teamPick of sheet.teamPicks as TeamPick[]) {
-			if (!teamPick.pick) {continue;}
+			if (!teamPick.pick) {
+				continue;
+			}
 
 			const team = resolveRef(teamPick.team);
 
-			if (!team) {continue;}
+			if (!team) {
+				continue;
+			}
 
 			const standing = standingsData.get(team.id);
 
@@ -275,7 +293,9 @@ export const getResultsAction = withAuth(
 export const getLeaderboardAction = withAuth(async (user, groupId: string, date?: string) => {
 	const group = await groupService.findForMemberPopulated(groupId, user.id);
 
-	if (!group) {return {};}
+	if (!group) {
+		return {};
+	}
 
 	// Get standings data
 	let standingsData: Map<string, { wins: number; gamesPlayed: number }>;
@@ -311,7 +331,9 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 
 		if (sheet) {
 			for (const teamPick of sheet.teamPicks as TeamPick[]) {
-				if (!teamPick.pick) {continue;}
+				if (!teamPick.pick) {
+					continue;
+				}
 
 				const teamId = resolveRefId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
@@ -322,9 +344,13 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 						: 0;
 				const result: PickResult = calculatePickResult(teamPick.pick, teamPick.line, projectedWins);
 
-				if (result === 'win') {wins++;}
-				else if (result === 'loss') {losses++;}
-				else if (result === 'push') {pushes++;}
+				if (result === 'win') {
+					wins++;
+				} else if (result === 'loss') {
+					losses++;
+				} else if (result === 'push') {
+					pushes++;
+				}
 			}
 		}
 

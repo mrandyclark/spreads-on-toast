@@ -68,6 +68,7 @@ const eslintConfig = defineConfig([
 	// Code style rules
 	{
 		rules: {
+			'brace-style': ['error', '1tbs'],
 			curly: ['error', 'all'],
 			indent: [2, 'tab', { SwitchCase: 1 }],
 			'padding-line-between-statements': [

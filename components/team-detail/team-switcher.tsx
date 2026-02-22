@@ -47,7 +47,9 @@ const TeamSwitcher = ({ currentAbbreviation, season, teams }: TeamSwitcherProps)
 					{DIVISION_ORDER.map((div) => {
 						const divTeams = teamsByDivision[div];
 
-						if (!divTeams || divTeams.length === 0) {return null;}
+						if (!divTeams || divTeams.length === 0) {
+							return null;
+						}
 
 						return (
 							<div key={div}>

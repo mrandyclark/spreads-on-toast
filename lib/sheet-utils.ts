@@ -103,7 +103,9 @@ export function toTeamsWithLines(teamPicks: TeamPick[]): TeamWithLine[] {
 		.map((tp) => {
 			const team = getTeamFromPick(tp);
 
-			if (!team) {return null;}
+			if (!team) {
+				return null;
+			}
 			return {
 				abbreviation: team.abbreviation,
 				city: team.city,
