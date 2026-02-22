@@ -290,7 +290,6 @@ const LeagueDetailClient = ({ initialCopyableSheets, initialGroup, initialSheet 
 					)}
 
 					<Leaderboard
-						currentUserId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
 						groupId={group.id}
 						onMemberSelect={(member) => {
 							setSelectedMember(member);
@@ -304,7 +303,6 @@ const LeagueDetailClient = ({ initialCopyableSheets, initialGroup, initialSheet 
 							groupId={group.id}
 							selectedDate={selectedDate}
 							sheet={sheet}
-							userId="e8291a50-6e79-4842-b85d-dc5ba36fec80"
 						/>
 					)}
 				</div>

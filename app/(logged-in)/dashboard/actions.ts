@@ -2,48 +2,20 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { getAuthUser } from '@/lib/auth';
+import { withAuth } from '@/lib/with-auth-action';
 import { joinGroupByInviteCode } from '@/server/groups/group.actions';
 import { groupService } from '@/server/groups/group.service';
 import { seasonService } from '@/server/seasons/season.service';
 import { getStandingsBoardData } from '@/server/standings/standings.actions';
-import { CreateGroupInput, Group, Season, Sport, StandingsBoardData } from '@/types';
+import { CreateGroupInput, Sport } from '@/types';
 
-export async function getGroupsAction(): Promise<{ error?: string; groups?: Group[] }> {
-	const user = await getAuthUser();
-
-	if (!user) {
-		return { error: 'Unauthorized' };
-	}
-
-	const groups = await groupService.findByUser(user.id);
-
-	return { groups };
-}
-
-export async function getSeasonsAction(
-	sport: Sport,
-): Promise<{ error?: string; seasons?: Season[] }> {
-	const user = await getAuthUser();
-
-	if (!user) {
-		return { error: 'Unauthorized' };
-	}
-
+export const getSeasonsAction = withAuth(async (_user, sport: Sport) => {
 	const seasons = await seasonService.findBySport(sport);
 
 	return { seasons };
-}
+});
 
-export async function createGroupAction(
-	input: CreateGroupInput,
-): Promise<{ error?: string; group?: Group }> {
-	const user = await getAuthUser();
-
-	if (!user) {
-		return { error: 'Unauthorized' };
-	}
-
+export const createGroupAction = withAuth(async (user, input: CreateGroupInput) => {
 	if (!input.name.trim()) {
 		return { error: 'Group name is required' };
 	}
@@ -64,17 +36,9 @@ export async function createGroupAction(
 		console.error('Failed to create group:', error);
 		return { error: 'Failed to create group' };
 	}
-}
+});
 
-export async function joinGroupAction(
-	inviteCode: string,
-): Promise<{ error?: string; group?: Group }> {
-	const user = await getAuthUser();
-
-	if (!user) {
-		return { error: 'Unauthorized' };
-	}
-
+export const joinGroupAction = withAuth(async (user, inviteCode: string) => {
 	if (!inviteCode.trim()) {
 		return { error: 'Invite code is required' };
 	}
@@ -93,12 +57,9 @@ export async function joinGroupAction(
 		console.error('Failed to join group:', error);
 		return { error: 'Failed to join group' };
 	}
-}
+});
 
-export async function getStandingsAction(
-	season: string,
-	date: string,
-): Promise<{ error?: string; standings?: StandingsBoardData[] }> {
+export const getStandingsAction = withAuth(async (_user, season: string, date: string) => {
 	if (!season || !date) {
 		return { error: 'Season and date are required' };
 	}
@@ -106,4 +67,4 @@ export async function getStandingsAction(
 	const standings = await getStandingsBoardData(season, date);
 
 	return { standings };
-}
+});

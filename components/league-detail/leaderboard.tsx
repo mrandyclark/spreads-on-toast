@@ -12,14 +12,12 @@ import { cn } from '@/lib/utils';
 import { LeaderboardData, LeaderboardEntry, SelectedMember } from '@/types';
 
 interface MlbLeaderboardProps {
-	currentUserId: string;
 	groupId: string;
 	onMemberSelect?: (member: SelectedMember) => void;
 	selectedDate?: string; // YYYY-MM-DD format for historical lookup
 }
 
 const MlbLeaderboard = ({
-	currentUserId,
 	groupId,
 	onMemberSelect,
 	selectedDate,
@@ -60,7 +58,7 @@ const MlbLeaderboard = ({
 				<CardContent className="p-0">
 					<div className="divide-border divide-y">
 						{leaderboard.entries.map((entry: LeaderboardEntry, index: number) => {
-							const isCurrentUser = entry.userId.toLowerCase() === currentUserId.toLowerCase();
+							const { isCurrentUser } = entry;
 							const rank = index + 1;
 
 							return (

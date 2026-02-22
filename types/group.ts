@@ -133,6 +133,7 @@ export interface GroupResults {
 }
 
 export interface LeaderboardEntry {
+	isCurrentUser: boolean;
 	losses: number;
 	pushes: number;
 	rank?: number;

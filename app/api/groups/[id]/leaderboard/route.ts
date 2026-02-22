@@ -116,6 +116,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		const userInitials = user?.nameFirst ? user.nameFirst.slice(0, 2).toUpperCase() : '??';
 
 		entries.push({
+			isCurrentUser: false,
 			losses,
 			pushes,
 			rank: 0, // Will be set after sorting

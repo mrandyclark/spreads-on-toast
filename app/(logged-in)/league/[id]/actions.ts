@@ -13,8 +13,6 @@ import {
 	getStandingsForDate,
 } from '@/server/standings/standings.actions';
 import {
-	CopyableSheet,
-	Group,
 	GroupResults,
 	GroupRole,
 	GroupVisibility,
@@ -29,16 +27,6 @@ import {
 	TeamPickResult,
 	User,
 } from '@/types';
-
-export const getGroupAction = withAuth(async (user, groupId: string) => {
-	const group = await getGroupForMember(groupId, user.id);
-
-	if (!group) {
-		return {};
-	}
-
-	return { group: JSON.parse(JSON.stringify(group)) as Group };
-});
 
 export const updateGroupNameAction = withAuth(async (user, groupId: string, name: string) => {
 	const group = await groupService.findById(groupId);
@@ -74,46 +62,6 @@ export const updateGroupVisibilityAction = withAuth(async (user, groupId: string
 	await groupService.findByIdAndUpdate(groupId, { $set: { visibility } });
 
 	return { success: true };
-});
-
-export const getSheetAction = withAuth(async (user, groupId: string) => {
-	const sheet = await sheetService.findByGroupAndUserPopulated(groupId, user.id);
-
-	if (!sheet) {
-		return {};
-	}
-
-	return { sheet: JSON.parse(JSON.stringify(sheet)) as Sheet };
-});
-
-export const getCopyableSheetsAction = withAuth(async (user, groupId: string) => {
-	const currentGroup = await groupService.findById(groupId);
-
-	if (!currentGroup) {
-		return { sheets: [] };
-	}
-
-	const groups = await groupService.findByUserSportSeason(user.id, currentGroup.sport, currentGroup.season);
-	const otherGroups = groups.filter((g) => g.id !== groupId);
-
-	if (otherGroups.length === 0) {
-		return { sheets: [] };
-	}
-
-	const otherGroupIds = otherGroups.map((g) => g.id);
-	const sheets = await sheetService.find({ group: { $in: otherGroupIds }, user: user.id });
-
-	const result: CopyableSheet[] = sheets.map((s) => {
-		const group = otherGroups.find((g) => g.id === resolveRefId(s.group));
-
-		return {
-			groupId: resolveRefId(s.group)!,
-			groupName: group?.name ?? 'Unknown',
-			sheetId: s.id,
-		};
-	});
-
-	return { sheets: result };
 });
 
 export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: string, sourceSheetId: string) => {
@@ -391,7 +339,7 @@ export const getLeaderboardAction = withAuth(async (user, groupId: string, date?
 			? `${memberUser.nameFirst?.[0] ?? ''}${memberUser.nameLast?.[0] ?? ''}`.toUpperCase() || '?'
 			: '?';
 
-		entries.push({ losses, pushes, total, userId: memberId, userInitials, userName, winPct, wins });
+		entries.push({ isCurrentUser: memberId === user.id, losses, pushes, total, userId: memberId, userInitials, userName, winPct, wins });
 	}
 
 	entries.sort((a, b) => b.wins - a.wins || b.winPct - a.winPct);

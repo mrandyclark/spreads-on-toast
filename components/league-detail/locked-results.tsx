@@ -17,10 +17,9 @@ interface MlbLockedResultsProps {
 	groupId: string;
 	selectedDate?: string; // YYYY-MM-DD format for historical lookup
 	sheet: Sheet;
-	userId: string;
 }
 
-const MlbLockedResults = ({ groupId, selectedDate, sheet, userId }: MlbLockedResultsProps) => {
+const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProps) => {
 	const [results, setResults] = useState<GroupResults | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +28,7 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet, userId }: MlbLockedRes
 			setIsLoading(true);
 
 			try {
-				const result = await getResultsAction(groupId, userId, selectedDate);
+				const result = await getResultsAction(groupId, undefined, selectedDate);
 
 				if (result.results) {
 					setResults(result.results);
@@ -40,7 +39,7 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet, userId }: MlbLockedRes
 		}
 
 		fetchResults();
-	}, [groupId, userId, selectedDate]);
+	}, [groupId, selectedDate]);
 
 	if (isLoading) {
 		return <div className="text-muted-foreground">Loading results...</div>;
