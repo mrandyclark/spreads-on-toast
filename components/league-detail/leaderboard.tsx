@@ -1,11 +1,12 @@
 'use client';
 
-import { ChevronRight, Crown } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertCircle, ChevronRight, Crown } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { getLeaderboardAction } from '@/app/(logged-in)/league/[id]/actions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -24,27 +25,43 @@ const MlbLeaderboard = ({
 }: MlbLeaderboardProps) => {
 	const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<null | string>(null);
+
+	const fetchLeaderboard = useCallback(async () => {
+		setIsLoading(true);
+		setError(null);
+
+		try {
+			const result = await getLeaderboardAction(groupId, selectedDate);
+
+			if (result.error) {
+				setError(result.errorMessage ?? 'Failed to load leaderboard');
+			} else if (result.leaderboard) {
+				setLeaderboard(result.leaderboard);
+			}
+		} catch {
+			setError('Failed to load leaderboard');
+		} finally {
+			setIsLoading(false);
+		}
+	}, [groupId, selectedDate]);
 
 	useEffect(() => {
-		async function fetchLeaderboard() {
-			setIsLoading(true);
-
-			try {
-				const result = await getLeaderboardAction(groupId, selectedDate);
-
-				if (result.leaderboard) {
-					setLeaderboard(result.leaderboard);
-				}
-			} finally {
-				setIsLoading(false);
-			}
-		}
-
 		fetchLeaderboard();
-	}, [groupId, selectedDate]);
+	}, [fetchLeaderboard]);
 
 	if (isLoading) {
 		return <div className="text-muted-foreground">Loading leaderboard...</div>;
+	}
+
+	if (error) {
+		return (
+			<div className="flex flex-col items-center gap-2 py-4 text-center">
+				<AlertCircle className="text-destructive h-5 w-5" />
+				<p className="text-muted-foreground text-sm">{error}</p>
+				<Button onClick={fetchLeaderboard} size="sm" variant="outline">Retry</Button>
+			</div>
+		);
 	}
 
 	if (!leaderboard || leaderboard.entries.length === 0) {

@@ -1,10 +1,11 @@
 'use client';
 
-import { Trophy } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertCircle, Trophy } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { getResultsAction } from '@/app/(logged-in)/league/[id]/actions';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
@@ -22,27 +23,43 @@ interface MlbLockedResultsProps {
 const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProps) => {
 	const [results, setResults] = useState<GroupResults | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<null | string>(null);
+
+	const fetchResults = useCallback(async () => {
+		setIsLoading(true);
+		setError(null);
+
+		try {
+			const result = await getResultsAction(groupId, undefined, selectedDate);
+
+			if (result.error) {
+				setError(result.errorMessage ?? 'Failed to load results');
+			} else if (result.results) {
+				setResults(result.results);
+			}
+		} catch {
+			setError('Failed to load results');
+		} finally {
+			setIsLoading(false);
+		}
+	}, [groupId, selectedDate]);
 
 	useEffect(() => {
-		async function fetchResults() {
-			setIsLoading(true);
-
-			try {
-				const result = await getResultsAction(groupId, undefined, selectedDate);
-
-				if (result.results) {
-					setResults(result.results);
-				}
-			} finally {
-				setIsLoading(false);
-			}
-		}
-
 		fetchResults();
-	}, [groupId, selectedDate]);
+	}, [fetchResults]);
 
 	if (isLoading) {
 		return <div className="text-muted-foreground">Loading results...</div>;
+	}
+
+	if (error) {
+		return (
+			<div className="flex flex-col items-center gap-2 py-4 text-center">
+				<AlertCircle className="text-destructive h-5 w-5" />
+				<p className="text-muted-foreground text-sm">{error}</p>
+				<Button onClick={fetchResults} size="sm" variant="outline">Retry</Button>
+			</div>
+		);
 	}
 
 	const { al: alPostseasonTeams, nl: nlPostseasonTeams } = getPostseasonTeams(sheet);

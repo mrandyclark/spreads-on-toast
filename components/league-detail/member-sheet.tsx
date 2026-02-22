@@ -1,7 +1,7 @@
 'use client';
 
-import { Trophy } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertCircle, Trophy } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { getResultsAction, getSheetForMemberAction } from '@/app/(logged-in)/league/[id]/actions';
 import { Badge } from '@/components/ui/badge';
@@ -41,17 +41,21 @@ const MlbMemberSheet = ({
 	const [results, setResults] = useState<GroupResults | null>(null);
 	const [sheet, setSheet] = useState<null | Sheet>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<null | string>(null);
 
-	useEffect(() => {
-		async function fetchData() {
-			setIsLoading(true);
+	const fetchData = useCallback(async () => {
+		setIsLoading(true);
+		setError(null);
 
-			try {
-				const [resultsResult, sheetResult] = await Promise.all([
-					getResultsAction(groupId, userId, selectedDate),
-					getSheetForMemberAction(groupId, userId),
-				]);
+		try {
+			const [resultsResult, sheetResult] = await Promise.all([
+				getResultsAction(groupId, userId, selectedDate),
+				getSheetForMemberAction(groupId, userId),
+			]);
 
+			if (resultsResult.error || sheetResult.error) {
+				setError(resultsResult.errorMessage ?? sheetResult.errorMessage ?? 'Failed to load member data');
+			} else {
 				if (resultsResult.results) {
 					setResults(resultsResult.results);
 				}
@@ -59,15 +63,19 @@ const MlbMemberSheet = ({
 				if (sheetResult.sheet) {
 					setSheet(sheetResult.sheet);
 				}
-			} finally {
-				setIsLoading(false);
 			}
+		} catch {
+			setError('Failed to load member data');
+		} finally {
+			setIsLoading(false);
 		}
+	}, [groupId, userId, selectedDate]);
 
+	useEffect(() => {
 		if (userId) {
 			fetchData();
 		}
-	}, [groupId, userId, selectedDate]);
+	}, [fetchData, userId]);
 
 	const { al: alPostseasonTeams, nl: nlPostseasonTeams } = getPostseasonTeams(sheet);
 	const { alChampion, nlChampion, winner: wsWinner } = getWorldSeriesChampions(sheet);
@@ -124,7 +132,15 @@ const MlbMemberSheet = ({
 				<div className="text-muted-foreground mt-6 text-sm">Loading picks...</div>
 			)}
 
-			{!isLoading && (
+			{!isLoading && error && (
+				<div className="mt-6 flex flex-col items-center gap-2 py-4 text-center">
+					<AlertCircle className="text-destructive h-5 w-5" />
+					<p className="text-muted-foreground text-sm">{error}</p>
+					<Button onClick={fetchData} size="sm" variant="outline">Retry</Button>
+				</div>
+			)}
+
+			{!isLoading && !error && (
 				<div className="mt-6">
 					<Tabs className="w-full" defaultValue="teams">
 						<TabsList className="mb-4 w-full">
