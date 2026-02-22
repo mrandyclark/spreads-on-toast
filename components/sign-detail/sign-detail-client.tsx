@@ -1,10 +1,9 @@
 'use client';
 
 import { Check, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { getSignAction, getTeamsAction, updateSignConfigAction } from '@/app/(logged-in)/signs/actions';
+import { updateSignConfigAction } from '@/app/(logged-in)/signs/actions';
 import BackLink from '@/components/layout/back-link';
 import PageShell from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
@@ -25,71 +24,32 @@ import { Division, Sign, SignConfig, Team } from '@/types';
 
 import TeamPicker from './team-picker';
 
-const SignDetailClient = ({ signId }: { signId: string }) => {
-	const [sign, setSign] = useState<null | Sign>(null);
-	const [teams, setTeams] = useState<Team[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+interface SignDetailClientProps {
+	initialSign: Sign;
+	initialTeams: Team[];
+}
+
+const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) => {
+	const [sign, setSign] = useState<Sign>(initialSign);
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveSuccess, setSaveSuccess] = useState(false);
 	const [error, setError] = useState('');
 
 	// Content config state
-	const [standingsDivisions, setStandingsDivisions] = useState<string[]>([]);
-	const [lastGameTeamIds, setLastGameTeamIds] = useState<string[]>([]);
-	const [nextGameTeamIds, setNextGameTeamIds] = useState<string[]>([]);
-	const [openerCountdownTeamIds, setOpenerCountdownTeamIds] = useState<string[]>([]);
+	const [standingsDivisions, setStandingsDivisions] = useState<string[]>(initialSign.config.content.standingsDivisions ?? []);
+	const [lastGameTeamIds, setLastGameTeamIds] = useState<string[]>(initialSign.config.content.lastGameTeamIds ?? []);
+	const [nextGameTeamIds, setNextGameTeamIds] = useState<string[]>(initialSign.config.content.nextGameTeamIds ?? []);
+	const [openerCountdownTeamIds, setOpenerCountdownTeamIds] = useState<string[]>(initialSign.config.content.openerCountdownTeamIds ?? []);
 
 	// Display config state
-	const [brightness, setBrightness] = useState(35);
-	const [rotationInterval, setRotationInterval] = useState(10);
+	const [brightness, setBrightness] = useState(initialSign.config.display.brightness);
+	const [rotationInterval, setRotationInterval] = useState(initialSign.config.display.rotationIntervalSeconds);
 
 	// Schedule config state
-	const [scheduleEnabled, setScheduleEnabled] = useState(false);
-	const [onTime, setOnTime] = useState('07:00');
-	const [offTime, setOffTime] = useState('23:00');
-	const [timezone, setTimezone] = useState('America/Los_Angeles');
-
-	useEffect(() => {
-		async function fetchData() {
-			try {
-				const [signResult, teamsResult] = await Promise.all([
-					getSignAction(signId),
-					getTeamsAction(),
-				]);
-
-				if (signResult.sign) {
-					const s = signResult.sign;
-					setSign(s);
-
-					// Initialize content config
-					setStandingsDivisions(s.config.content.standingsDivisions ?? []);
-					setLastGameTeamIds(s.config.content.lastGameTeamIds ?? []);
-					setNextGameTeamIds(s.config.content.nextGameTeamIds ?? []);
-					setOpenerCountdownTeamIds(s.config.content.openerCountdownTeamIds ?? []);
-
-					// Initialize display config
-					setBrightness(s.config.display.brightness);
-					setRotationInterval(s.config.display.rotationIntervalSeconds);
-
-					// Initialize schedule config
-					setScheduleEnabled(s.config.schedule.enabled);
-					setOnTime(s.config.schedule.onTime);
-					setOffTime(s.config.schedule.offTime);
-					setTimezone(s.config.schedule.timezone);
-				} else {
-					setError(signResult.error || 'Sign not found');
-				}
-
-				if (teamsResult.teams) {
-					setTeams(teamsResult.teams);
-				}
-			} finally {
-				setIsLoading(false);
-			}
-		}
-
-		fetchData();
-	}, [signId]);
+	const [scheduleEnabled, setScheduleEnabled] = useState(initialSign.config.schedule.enabled);
+	const [onTime, setOnTime] = useState(initialSign.config.schedule.onTime);
+	const [offTime, setOffTime] = useState(initialSign.config.schedule.offTime);
+	const [timezone, setTimezone] = useState(initialSign.config.schedule.timezone);
 
 	const handleSave = async () => {
 		setIsSaving(true);
@@ -115,7 +75,7 @@ const SignDetailClient = ({ signId }: { signId: string }) => {
 			},
 		};
 
-		const result = await updateSignConfigAction(signId, config);
+		const result = await updateSignConfigAction(sign.id, config);
 
 		if (result.sign) {
 			setSign(result.sign);
@@ -140,39 +100,7 @@ const SignDetailClient = ({ signId }: { signId: string }) => {
 		setList(toggleValue(list, teamId));
 	};
 
-	if (isLoading) {
-		return (
-			<PageShell maxWidth="3xl">
-				<div className="space-y-4">
-					{[1, 2, 3].map((i) => (
-						<Card key={i}>
-							<CardContent className="p-6">
-								<div className="bg-muted h-4 w-32 animate-pulse rounded" />
-								<div className="bg-muted mt-4 h-20 animate-pulse rounded" />
-							</CardContent>
-						</Card>
-					))}
-				</div>
-			</PageShell>
-		);
-	}
-
-	if (!sign) {
-		return (
-			<PageShell maxWidth="3xl">
-				<Card>
-					<CardContent className="py-16 text-center">
-						<p className="text-muted-foreground">{error || 'Sign not found'}</p>
-						<Button asChild className="mt-4" variant="outline">
-							<Link href="/signs">Back to Signs</Link>
-						</Button>
-					</CardContent>
-				</Card>
-			</PageShell>
-		);
-	}
-
-	const teamsByDivision = teams.reduce<Record<string, Team[]>>((acc, team) => {
+	const teamsByDivision = initialTeams.reduce<Record<string, Team[]>>((acc, team) => {
 		const div = team.division;
 
 		if (!acc[div]) {

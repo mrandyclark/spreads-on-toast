@@ -3,13 +3,12 @@
 import { Plus, Trophy, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { createGroupAction, getGroupsAction, getSeasonsAction, joinGroupAction } from '@/app/(logged-in)/dashboard/actions';
+import { createGroupAction, getSeasonsAction, joinGroupAction } from '@/app/(logged-in)/dashboard/actions';
 import PageHeader from '@/components/layout/page-header';
 import PageShell from '@/components/layout/page-shell';
 import StandingsBoard from '@/components/standings/standings-board';
 import { Button } from '@/components/ui/button';
 import CardLink from '@/components/ui/card-link';
-import CardListSkeleton from '@/components/ui/card-list-skeleton';
 import {
 	Dialog,
 	DialogContent,
@@ -32,39 +31,28 @@ import {
 } from '@/components/ui/select';
 import { countAndPluralize } from '@/lib/format-utils';
 import { cn } from '@/lib/utils';
-import { Group, GroupVisibility, Season, Sport } from '@/types';
+import { Group, GroupVisibility, Season, SeasonWithDates, Sport } from '@/types';
 
-const DashboardClient = () => {
+interface DashboardClientProps {
+	initialGroups: Group[];
+	initialSeasons: Season[];
+	initialStandingsSeasons: SeasonWithDates[];
+}
+
+const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeasons }: DashboardClientProps) => {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isJoinOpen, setIsJoinOpen] = useState(false);
 	const [groupName, setGroupName] = useState('');
 	const [groupSport, setGroupSport] = useState('MLB');
-	const [groupSeason, setGroupSeason] = useState('');
+	const [groupSeason, setGroupSeason] = useState(initialSeasons[0]?.season ?? '');
 	const [inviteCode, setInviteCode] = useState('');
-	const [groups, setGroups] = useState<Group[]>([]);
-	const [seasons, setSeasons] = useState<Season[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	const [groups, setGroups] = useState<Group[]>(initialGroups);
+	const [seasons, setSeasons] = useState<Season[]>(initialSeasons);
 	const [createError, setCreateError] = useState('');
 	const [isCreating, setIsCreating] = useState(false);
 	const [joinError, setJoinError] = useState('');
 	const [isJoining, setIsJoining] = useState(false);
 	const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
-
-	useEffect(() => {
-		async function fetchGroups() {
-			try {
-				const result = await getGroupsAction();
-
-				if (result.groups) {
-					setGroups(result.groups);
-				}
-			} finally {
-				setIsLoading(false);
-			}
-		}
-
-		fetchGroups();
-	}, []);
 
 	useEffect(() => {
 		async function fetchSeasons() {
@@ -240,9 +228,7 @@ const DashboardClient = () => {
 				title="Your Groups"
 			/>
 
-			{isLoading && <CardListSkeleton />}
-
-			{!isLoading && (() => {
+			{(() => {
 				const filteredGroups = groups.filter((g) =>
 					viewMode === 'archived'
 						? g.visibility === GroupVisibility.Archived
@@ -342,7 +328,7 @@ const DashboardClient = () => {
 			)}
 
 			<div className="mt-12">
-				<StandingsBoard />
+				<StandingsBoard initialSeasons={initialStandingsSeasons} />
 			</div>
 		</PageShell>
 	);

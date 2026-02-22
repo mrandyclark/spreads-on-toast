@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { getStandingsAction } from '@/app/(logged-in)/dashboard/actions';
 import DatePicker from '@/components/ui/date-picker';
 import {
 	Select,
@@ -15,35 +16,15 @@ import { SeasonWithDates, StandingsBoardData } from '@/types';
 
 import LeagueStandings from './league-standings';
 
-const MlbStandingsBoard = () => {
-	const [seasons, setSeasons] = useState<SeasonWithDates[]>([]);
-	const [selectedSeason, setSelectedSeason] = useState<string>('');
-	const [selectedDate, setSelectedDate] = useState<string>('');
+interface StandingsBoardProps {
+	initialSeasons: SeasonWithDates[];
+}
+
+const MlbStandingsBoard = ({ initialSeasons }: StandingsBoardProps) => {
+	const [selectedSeason, setSelectedSeason] = useState<string>(initialSeasons[0]?.season ?? '');
+	const [selectedDate, setSelectedDate] = useState<string>(initialSeasons[0]?.latestDate ?? '');
 	const [standings, setStandings] = useState<StandingsBoardData[]>([]);
-	const [isLoadingSeasons, setIsLoadingSeasons] = useState(true);
 	const [isLoadingStandings, setIsLoadingStandings] = useState(false);
-
-	// Fetch available seasons on mount
-	useEffect(() => {
-		async function fetchSeasons() {
-			try {
-				const response = await fetch('/api/standings/seasons');
-				const data = await response.json();
-
-				setSeasons(data);
-
-				// Default to first season (most recent) and its latest date
-				if (data.length > 0) {
-					setSelectedSeason(data[0].season);
-					setSelectedDate(data[0].latestDate ?? '');
-				}
-			} finally {
-				setIsLoadingSeasons(false);
-			}
-		}
-
-		void fetchSeasons();
-	}, []);
 
 	// Fetch standings when season/date changes
 	useEffect(() => {
@@ -55,12 +36,11 @@ const MlbStandingsBoard = () => {
 			setIsLoadingStandings(true);
 
 			try {
-				const response = await fetch(
-					`/api/standings?season=${selectedSeason}&date=${selectedDate}`,
-				);
-				const data = await response.json();
+				const result = await getStandingsAction(selectedSeason, selectedDate);
 
-				setStandings(data);
+				if (result.standings) {
+					setStandings(result.standings);
+				}
 			} finally {
 				setIsLoadingStandings(false);
 			}
@@ -70,7 +50,7 @@ const MlbStandingsBoard = () => {
 	}, [selectedSeason, selectedDate]);
 
 	// Get date range for selected season
-	const currentSeasonData = seasons.find((s) => s.season === selectedSeason);
+	const currentSeasonData = initialSeasons.find((s) => s.season === selectedSeason);
 	const availableDates = currentSeasonData?.dates ?? [];
 	const minDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : undefined;
 	const maxDate = availableDates.length > 0 ? availableDates[0] : undefined;
@@ -79,7 +59,7 @@ const MlbStandingsBoard = () => {
 	const handleSeasonChange = (season: string) => {
 		setSelectedSeason(season);
 
-		const seasonData = seasons.find((s) => s.season === season);
+		const seasonData = initialSeasons.find((s) => s.season === season);
 
 		if (seasonData?.latestDate) {
 			setSelectedDate(seasonData.latestDate);
@@ -90,16 +70,7 @@ const MlbStandingsBoard = () => {
 	const alStandings = standings.filter((t) => t.conference === 'AL');
 	const nlStandings = standings.filter((t) => t.conference === 'NL');
 
-	if (isLoadingSeasons) {
-		return (
-			<section>
-				<h2 className="mb-4 text-xl font-semibold">MLB Standings</h2>
-				<div className="text-muted-foreground">Loading...</div>
-			</section>
-		);
-	}
-
-	if (seasons.length === 0) {
+	if (initialSeasons.length === 0) {
 		return (
 			<section>
 				<h2 className="mb-4 text-xl font-semibold">MLB Standings</h2>
@@ -119,7 +90,7 @@ const MlbStandingsBoard = () => {
 							<SelectValue placeholder="Season" />
 						</SelectTrigger>
 						<SelectContent>
-							{seasons.map((s) => (
+							{initialSeasons.map((s) => (
 								<SelectItem key={s.season} value={s.season}>
 									{s.season}
 								</SelectItem>

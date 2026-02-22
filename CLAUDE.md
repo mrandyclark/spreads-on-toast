@@ -73,6 +73,13 @@ Populate accepts `string | string[]` for multiple paths. **Never call `model.fin
 - **`components/`** — all UI components, organized by feature. Max one directory level deep.
 - **`lib/`** — shared utilities, constants, and helpers (no React, no server-only code).
 
+### Data fetching
+
+- **Initial data loads happen in server `page.tsx` files** and are passed as `initialFoo` props to client components. Never use `useEffect` + server action for initial page data.
+- **Reactive fetches** (user changes a dropdown, date picker, etc.) use server actions called from `useEffect` in client components — this is fine.
+- **Never use `fetch('/api/...')` in client components.** Use server actions instead. API routes exist only for external consumers (e.g., sign displays).
+- Client components accept `initialFoo` props and manage local state with `useState(initialFoo)`.
+
 ### Component directory layout (`components/`)
 
 - **`ui/`** — shadcn primitives (button, card, dialog, etc.)

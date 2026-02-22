@@ -6,7 +6,8 @@ import { getAuthUser } from '@/lib/auth';
 import { joinGroupByInviteCode } from '@/server/groups/group.actions';
 import { groupService } from '@/server/groups/group.service';
 import { seasonService } from '@/server/seasons/season.service';
-import { CreateGroupInput, Group, Season, Sport } from '@/types';
+import { getStandingsBoardData } from '@/server/standings/standings.actions';
+import { CreateGroupInput, Group, Season, Sport, StandingsBoardData } from '@/types';
 
 export async function getGroupsAction(): Promise<{ error?: string; groups?: Group[] }> {
 	const user = await getAuthUser();
@@ -92,4 +93,17 @@ export async function joinGroupAction(
 		console.error('Failed to join group:', error);
 		return { error: 'Failed to join group' };
 	}
+}
+
+export async function getStandingsAction(
+	season: string,
+	date: string,
+): Promise<{ error?: string; standings?: StandingsBoardData[] }> {
+	if (!season || !date) {
+		return { error: 'Season and date are required' };
+	}
+
+	const standings = await getStandingsBoardData(season, date);
+
+	return { standings };
 }

@@ -1,14 +1,13 @@
 'use client';
 
 import { Monitor, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { createSignAction, getSignsAction } from '@/app/(logged-in)/signs/actions';
+import { createSignAction } from '@/app/(logged-in)/signs/actions';
 import PageHeader from '@/components/layout/page-header';
 import PageShell from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import CardLink from '@/components/ui/card-link';
-import CardListSkeleton from '@/components/ui/card-list-skeleton';
 import {
 	Dialog,
 	DialogContent,
@@ -24,29 +23,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sign } from '@/types';
 
-const SignsClient = () => {
-	const [signs, setSigns] = useState<Sign[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+interface SignsClientProps {
+	initialSigns: Sign[];
+}
+
+const SignsClient = ({ initialSigns }: SignsClientProps) => {
+	const [signs, setSigns] = useState<Sign[]>(initialSigns);
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [signName, setSignName] = useState('');
 	const [createError, setCreateError] = useState('');
 	const [isCreating, setIsCreating] = useState(false);
-
-	useEffect(() => {
-		async function fetchSigns() {
-			try {
-				const result = await getSignsAction();
-
-				if (result.signs) {
-					setSigns(result.signs);
-				}
-			} finally {
-				setIsLoading(false);
-			}
-		}
-
-		fetchSigns();
-	}, []);
 
 	const handleCreateSign = async () => {
 		if (signName.trim()) {
@@ -118,9 +104,7 @@ const SignsClient = () => {
 				title="Your Signs"
 			/>
 
-			{isLoading && <CardListSkeleton />}
-
-			{!isLoading && signs.length === 0 && (
+			{signs.length === 0 && (
 				<EmptyState
 					action={
 						<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
@@ -134,7 +118,7 @@ const SignsClient = () => {
 				/>
 			)}
 
-			{!isLoading && signs.length > 0 && (
+			{signs.length > 0 && (
 				<div className="grid gap-4">
 					{signs.map((sign) => (
 						<CardLink href={`/signs/${sign.id}`} icon={Monitor} key={sign.id} title={sign.title}>
