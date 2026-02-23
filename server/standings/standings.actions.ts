@@ -289,7 +289,9 @@ export async function getStandingsBoardData(
 	const normalizedDate = new Date(Date.UTC(year, month - 1, day));
 
 	const [standings, teamLines] = await Promise.all([
-		standingService.findByDatePopulated(normalizedDate, season),
+		standingService.findByDatePopulated(normalizedDate, season, {
+			select: 'team wins losses projectedWins pythagoreanWins',
+		}),
 		teamLineService.findBySeason(Sport.MLB, season),
 	]);
 
@@ -390,7 +392,9 @@ export async function getDivisionStandings(date?: string): Promise<DivisionStand
 		targetDate = latestDate;
 	}
 
-	const standings = await standingService.findByDatePopulated(targetDate, season);
+	const standings = await standingService.findByDatePopulated(targetDate, season, {
+		select: 'team wins losses divisionGamesBack divisionRank',
+	});
 
 	if (standings.length === 0) {
 		return null;

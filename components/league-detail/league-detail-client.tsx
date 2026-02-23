@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar, Check, Copy, Lock, Pencil, Users, X } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import BackLink from '@/components/layout/back-link';
 import PageShell from '@/components/layout/page-shell';
@@ -31,17 +31,17 @@ import { CopyableSheet, Group, GroupRole, PostseasonPicks, SelectedMember, Sheet
 
 import {
 	copyPicksFromSheetAction,
+	getCopyableSheetsAction,
 	savePicksAction,
 	updateGroupNameAction,
 } from '../../app/(logged-in)/league/[id]/actions';
 
 interface LeagueDetailClientProps {
-	initialCopyableSheets: CopyableSheet[];
 	initialGroup: Group;
 	initialSheet: null | Sheet;
 }
 
-const LeagueDetailClient = ({ initialCopyableSheets, initialGroup, initialSheet }: LeagueDetailClientProps) => {
+const LeagueDetailClient = ({ initialGroup, initialSheet }: LeagueDetailClientProps) => {
 	const [group, setGroup] = useState<Group>(initialGroup);
 	const [sheet] = useState<null | Sheet>(initialSheet);
 	const [isSaving, setIsSaving] = useState(false);
@@ -67,8 +67,29 @@ const LeagueDetailClient = ({ initialCopyableSheets, initialGroup, initialSheet 
 	const [editingName, setEditingName] = useState('');
 	const [isSavingName, setIsSavingName] = useState(false);
 	const [copyPicksOpen, setCopyPicksOpen] = useState(false);
-	const [copyableSheets] = useState<CopyableSheet[]>(initialCopyableSheets);
+	const [copyableSheets, setCopyableSheets] = useState<CopyableSheet[]>([]);
+	const [isLoadingCopyable, setIsLoadingCopyable] = useState(false);
 	const [isCopyingPicks, setIsCopyingPicks] = useState(false);
+
+	const loadCopyableSheets = useCallback(async () => {
+		setIsLoadingCopyable(true);
+
+		try {
+			const result = await getCopyableSheetsAction(group.id);
+
+			if (result.sheets) {
+				setCopyableSheets(result.sheets);
+			}
+		} finally {
+			setIsLoadingCopyable(false);
+		}
+	}, [group.id]);
+
+	useEffect(() => {
+		if (copyPicksOpen && copyableSheets.length === 0 && !isLoadingCopyable) {
+			void loadCopyableSheets();
+		}
+	}, [copyPicksOpen, copyableSheets.length, isLoadingCopyable, loadCopyableSheets]);
 
 	const lockDate = new Date(group.lockDate);
 	const isLocked = lockDate < new Date();
@@ -314,15 +335,13 @@ const LeagueDetailClient = ({ initialCopyableSheets, initialGroup, initialSheet 
 						<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-16 z-40 -mx-4 mb-4 flex items-center justify-between border-b px-4 py-3 backdrop-blur">
 							<h2 className="text-xl font-semibold">Your Picks</h2>
 							<div className="flex items-center gap-2">
-								{copyableSheets.length > 0 && (
-									<Button
-										className="text-xs"
-										onClick={() => setCopyPicksOpen(true)}
-										size="sm"
-										variant="ghost">
-										Copy from another group
-									</Button>
-								)}
+								<Button
+									className="text-xs"
+									onClick={() => setCopyPicksOpen(true)}
+									size="sm"
+									variant="ghost">
+									Copy from another group
+								</Button>
 								<Button
 									disabled={isSaving}
 									onClick={handleSavePicks}
@@ -451,12 +470,17 @@ const LeagueDetailClient = ({ initialCopyableSheets, initialGroup, initialSheet 
 						<DialogTitle>Copy Picks from Another League</DialogTitle>
 					</DialogHeader>
 					<div className="py-4">
-						{copyableSheets.length === 0 && (
+						{isLoadingCopyable && (
+							<p className="text-muted-foreground text-center text-sm">
+								Loading...
+							</p>
+						)}
+						{!isLoadingCopyable && copyableSheets.length === 0 && (
 							<p className="text-muted-foreground text-center text-sm">
 								No other leagues found for this sport and season.
 							</p>
 						)}
-						{copyableSheets.length > 0 && (
+						{!isLoadingCopyable && copyableSheets.length > 0 && (
 							<div className="space-y-2">
 								{copyableSheets.map((s) => (
 									<Button

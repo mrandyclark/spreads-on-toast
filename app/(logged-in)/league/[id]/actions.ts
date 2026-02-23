@@ -14,6 +14,7 @@ import {
 	getStandingsForDate,
 } from '@/server/standings/standings.actions';
 import {
+	CopyableSheet,
 	GroupResults,
 	GroupRole,
 	GroupVisibility,
@@ -25,6 +26,7 @@ import {
 	TeamPick,
 	TeamPickResult,
 } from '@/types';
+import { groupService as groupSvc } from '@/server/groups/group.service';
 
 export const updateGroupNameAction = withAuth(async (user, groupId: string, name: string) => {
 	const group = await groupService.findById(groupId);
@@ -288,6 +290,36 @@ export const getResultsAction = withAuth(
 		};
 	},
 );
+
+export const getCopyableSheetsAction = withAuth(async (user, groupId: string) => {
+	const group = await groupService.findById(groupId);
+
+	if (!group) {
+		return { sheets: [] as CopyableSheet[] };
+	}
+
+	const otherGroups = await groupSvc.findByUserSportSeason(user.id, group.sport, group.season);
+	const filteredGroups = otherGroups.filter((g) => g.id !== groupId);
+
+	if (filteredGroups.length === 0) {
+		return { sheets: [] as CopyableSheet[] };
+	}
+
+	const otherGroupIds = filteredGroups.map((g) => g.id);
+	const sheets = await sheetService.find({ group: { $in: otherGroupIds }, user: user.id });
+
+	const copyableSheets: CopyableSheet[] = sheets.map((s) => {
+		const g = filteredGroups.find((fg) => fg.id === resolveRefId(s.group));
+
+		return {
+			groupId: resolveRefId(s.group)!,
+			groupName: g?.name ?? 'Unknown',
+			sheetId: s.id,
+		};
+	});
+
+	return { sheets: copyableSheets };
+});
 
 export const getLeaderboardAction = withAuth(async (user, groupId: string, date?: string) => {
 	const group = await groupService.findForMemberPopulated(groupId, user.id);

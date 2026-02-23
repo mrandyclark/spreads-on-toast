@@ -16,8 +16,8 @@ class StandingService extends BaseService<TeamStanding> {
 		return this.find({ date, season }, options);
 	}
 
-	async findByDatePopulated(date: Date, season: string): Promise<TeamStanding[]> {
-		return this.find({ date, season }, { populate: 'team' });
+	async findByDatePopulated(date: Date, season: string, options?: { select?: string }): Promise<TeamStanding[]> {
+		return this.find({ date, season }, { populate: 'team', ...options });
 	}
 
 	async findByTeamSeasonDate(teamId: string, season: string, date: Date): Promise<null | TeamStanding> {
@@ -41,7 +41,7 @@ class StandingService extends BaseService<TeamStanding> {
 			return [];
 		}
 
-		return this.find({ date: latestDate, season });
+		return this.find({ date: latestDate, season }, { select: 'team wins' });
 	}
 
 	async findDateRange(season: string): Promise<{ maxDate: Date | null; minDate: Date | null }> {

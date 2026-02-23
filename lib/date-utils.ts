@@ -8,6 +8,13 @@ export function toDateString(dateInput: Date | string | undefined): string {
 		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 	}
 
+	if (dateInput instanceof Date) {
+		const year = dateInput.getFullYear();
+		const month = String(dateInput.getMonth() + 1).padStart(2, '0');
+		const day = String(dateInput.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
+
 	const str = String(dateInput);
 
 	// If already in YYYY-MM-DD format, return as-is

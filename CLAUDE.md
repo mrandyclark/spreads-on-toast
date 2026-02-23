@@ -150,3 +150,23 @@ return serverError('save picks');
 ```
 
 Clients check `result.error` for error presence and display `result.errorMessage` to users.
+
+## Testing
+
+- **Vitest** with `globals: true`, `environment: 'node'`, `@/` alias via `vitest.config.mts`
+- **Co-located test files** — `foo.test.ts` next to `foo.ts` (not a separate `__tests__/` directory)
+- `pnpm test` (single run), `pnpm test:watch` (watch mode)
+
+### Test tiers
+
+1. **`lib/` pure utilities** — no mocking, just input → output
+2. **`server/*.actions.ts`** — mock service singletons with `vi.mock('./foo.service', () => ({ fooService: { ... } }))`
+3. **`app/**/actions.ts`** — mock `@/lib/auth` (`getAuthUser` returns fake user), `next/cache` (`revalidatePath`), and downstream services/actions
+
+### Mocking patterns
+
+- Mock service modules before importing the code under test — `vi.mock()` calls are hoisted automatically
+- Use `vi.mocked(service.method).mockResolvedValue(...)` for per-test setup
+- Use `vi.clearAllMocks()` in `beforeEach` to reset between tests
+- When testing code that mutates its input (e.g., `getGroupForMember` adds fields to the group object), return fresh objects from mocks via factory functions to avoid test pollution
+- Mock all transitive service imports that would trigger Mongoose/`MONGO_URI` loading (e.g., when testing `standings.actions`, mock `standing.service`, `season.service`, `team-line.service`, `team.service`)
