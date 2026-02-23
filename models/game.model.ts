@@ -25,6 +25,14 @@ const LeagueRecordSchema = new Schema(
 	{ _id: false },
 );
 
+const GamePlayerRefSchema = new Schema(
+	{
+		fullName: { type: String },
+		mlbId: { type: Number },
+	},
+	{ _id: false },
+);
+
 const GameTeamDataSchema = new Schema(
 	{
 		errors: { type: Number },
@@ -32,19 +40,12 @@ const GameTeamDataSchema = new Schema(
 		isWinner: { type: Boolean },
 		leagueRecord: { type: LeagueRecordSchema },
 		leftOnBase: { type: Number },
+		probablePitcher: { type: GamePlayerRefSchema },
 		score: { type: Number },
 		seriesNumber: { type: Number },
 		splitSquad: { type: Boolean },
 		team: { ...UuidRefType, ref: ModelName.Team },
 		teamMlbId: { required: true, type: Number },
-	},
-	{ _id: false },
-);
-
-const GamePlayerRefSchema = new Schema(
-	{
-		fullName: { type: String },
-		mlbId: { type: Number },
 	},
 	{ _id: false },
 );

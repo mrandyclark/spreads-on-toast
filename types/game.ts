@@ -53,6 +53,7 @@ export interface GameTeamData {
 		wins: number;
 	};
 	leftOnBase?: number;
+	probablePitcher?: GamePlayerRef;
 	score?: number;
 	seriesNumber: number;
 	splitSquad: boolean;
@@ -203,6 +204,11 @@ export interface MlbScheduleTeam {
 		losses: number;
 		pct: string;
 		wins: number;
+	};
+	probablePitcher?: {
+		fullName: string;
+		id: number;
+		link: string;
 	};
 	score?: number;
 	seriesNumber: number;

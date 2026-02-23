@@ -389,6 +389,7 @@ export interface ScheduleGameData {
 	awayScore?: number;
 	awaySeriesNumber: number;
 	awaySplitSquad: boolean;
+	awayProbablePitcher?: { fullName: string; mlbId: number };
 	awayTeamMlbId: number;
 	awayTeamName: string;
 	calendarEventId: string;
@@ -405,6 +406,7 @@ export interface ScheduleGameData {
 	homeScore?: number;
 	homeSeriesNumber: number;
 	homeSplitSquad: boolean;
+	homeProbablePitcher?: { fullName: string; mlbId: number };
 	homeTeamMlbId: number;
 	homeTeamName: string;
 	ifNecessary: boolean;
@@ -580,6 +582,7 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 		awayScore: game.teams.away.score,
 		awaySeriesNumber: game.teams.away.seriesNumber,
 		awaySplitSquad: game.teams.away.splitSquad,
+		awayProbablePitcher: game.teams.away.probablePitcher ? { fullName: game.teams.away.probablePitcher.fullName, mlbId: game.teams.away.probablePitcher.id } : undefined,
 		awayTeamMlbId: game.teams.away.team.id,
 		awayTeamName: game.teams.away.team.name,
 		calendarEventId: game.calendarEventID,
@@ -600,6 +603,7 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 		homeScore: game.teams.home.score,
 		homeSeriesNumber: game.teams.home.seriesNumber,
 		homeSplitSquad: game.teams.home.splitSquad,
+		homeProbablePitcher: game.teams.home.probablePitcher ? { fullName: game.teams.home.probablePitcher.fullName, mlbId: game.teams.home.probablePitcher.id } : undefined,
 		homeTeamMlbId: game.teams.home.team.id,
 		homeTeamName: game.teams.home.team.name,
 		ifNecessary: game.ifNecessary === 'Y',
@@ -640,7 +644,7 @@ export async function fetchMlbSchedule(
 	teamMlbId: number,
 	season: string,
 ): Promise<ScheduleGameData[]> {
-	const url = `${MLB_API_BASE}/schedule?sportId=1&teamId=${teamMlbId}&season=${season}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R,F,D,L,W&hydrate=linescore`;
+	const url = `${MLB_API_BASE}/schedule?sportId=1&teamId=${teamMlbId}&season=${season}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R,F,D,L,W&hydrate=linescore,probablePitcher`;
 
 	console.log(`[MLB API] Fetching schedule for team ${teamMlbId}, season ${season}`);
 
