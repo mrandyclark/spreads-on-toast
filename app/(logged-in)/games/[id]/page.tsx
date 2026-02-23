@@ -10,8 +10,9 @@ import BackLink from '@/components/layout/back-link';
 import PageShell from '@/components/layout/page-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { resolveRef } from '@/lib/ref-utils';
-import { gameService } from '@/server/schedule/game.service';
 import { GameState } from '@/types';
+
+import { getGameDetail } from './actions';
 
 interface GamePageProps {
 	params: Promise<{ id: string }>;
@@ -20,7 +21,7 @@ interface GamePageProps {
 const GamePage = async ({ params }: GamePageProps) => {
 	const { id } = await params;
 
-	const game = await gameService.findByIdPopulated(id);
+	const { ballpark, game } = await getGameDetail(id);
 
 	if (!game) {
 		notFound();
@@ -35,12 +36,18 @@ const GamePage = async ({ params }: GamePageProps) => {
 
 	return (
 		<PageShell maxWidth="4xl">
-			{/* Back link */}
-			<div className="mb-6">
+			{/* Back links */}
+			<div className="mb-6 flex items-center gap-4">
 				<BackLink
-					href={homeAbbr ? `/teams/mlb/${homeAbbr}` : '/dashboard'}
-					label={homeAbbr ? `Back to ${homeTeam?.city} ${homeTeam?.name}` : 'Back to dashboard'}
+					href={`/games?date=${game.officialDate}`}
+					label="All games"
 				/>
+				{homeAbbr && (
+					<BackLink
+						href={`/teams/mlb/${homeAbbr}`}
+						label={`${homeTeam?.abbreviation}`}
+					/>
+				)}
 			</div>
 
 			{/* Matchup hero */}
@@ -110,6 +117,24 @@ const GamePage = async ({ params }: GamePageProps) => {
 							</div>
 						</div>
 
+						{/* Probable pitchers */}
+						{(game.awayTeam.probablePitcher || game.homeTeam.probablePitcher) && (
+							<div className="border-border w-full border-t pt-4">
+								<p className="text-muted-foreground mb-2 text-center text-xs font-medium uppercase tracking-wide">
+									Probable Pitchers
+								</p>
+								<div className="flex items-center justify-center gap-4 text-sm">
+									<span className="text-right flex-1">
+										{game.awayTeam.probablePitcher?.fullName ?? 'TBD'}
+									</span>
+									<span className="text-muted-foreground text-xs">vs</span>
+									<span className="flex-1">
+										{game.homeTeam.probablePitcher?.fullName ?? 'TBD'}
+									</span>
+								</div>
+							</div>
+						)}
+
 						{/* Description (e.g., postponement reason) */}
 						{game.description && (
 							<p className="text-muted-foreground text-center text-sm italic">
@@ -129,7 +154,7 @@ const GamePage = async ({ params }: GamePageProps) => {
 			{isFinal && <div className="mb-6"><GameLinescore game={game} /></div>}
 
 			{/* Game info */}
-			<GameInfo game={game} />
+			<GameInfo ballpark={ballpark} game={game} />
 		</PageShell>
 	);
 };

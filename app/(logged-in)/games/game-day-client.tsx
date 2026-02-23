@@ -1,12 +1,12 @@
 'use client';
 
-import { Calendar, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import DatePicker from '@/components/ui/date-picker';
 
 import { GameDayCard, getGameDayData } from './actions';
 
@@ -71,15 +71,11 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 						{games.length > 0 && ` · ${games.length} game${games.length !== 1 ? 's' : ''}`}
 					</p>
 				</div>
-				<div className="flex items-center gap-2">
-					<Calendar className="text-muted-foreground h-4 w-4" />
-					<Input
-						className="w-auto"
-						onChange={(e) => handleDateChange(e.target.value)}
-						type="date"
-						value={selectedDate}
-					/>
-				</div>
+				<DatePicker
+					onChange={(date) => date && handleDateChange(date)}
+					placeholder="Select date"
+					value={selectedDate}
+				/>
 			</div>
 
 			{/* Games grid */}
@@ -108,7 +104,13 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 	);
 };
 
-const GameCard = ({ formatGameTime, game }: { formatGameTime: (d: string) => string; game: GameDayCard }) => {
+const GameCard = ({
+	formatGameTime,
+	game,
+}: {
+	formatGameTime: (d: string) => string;
+	game: GameDayCard;
+}) => {
 	return (
 		<Link href={`/games/${game.gameId}`}>
 			<Card className="hover:bg-muted/50 transition-colors">
@@ -123,9 +125,7 @@ const GameCard = ({ formatGameTime, game }: { formatGameTime: (d: string) => str
 							)}
 							<span>{formatGameTime(game.gameDate)}</span>
 						</div>
-						{game.venue && (
-							<span className="truncate pl-2">{game.venue.name}</span>
-						)}
+						{game.venue && <span className="truncate pl-2">{game.venue.name}</span>}
 					</div>
 
 					{/* Matchup */}
@@ -138,7 +138,9 @@ const GameCard = ({ formatGameTime, game }: { formatGameTime: (d: string) => str
 									style={{ backgroundColor: game.awayTeamColors?.primary ?? '#666' }}
 								/>
 								<span className="font-semibold">{game.awayTeamAbbreviation}</span>
-								<span className="text-muted-foreground text-sm">{game.awayTeamCity} {game.awayTeamName}</span>
+								<span className="text-muted-foreground text-sm">
+									{game.awayTeamCity} {game.awayTeamName}
+								</span>
 							</div>
 							<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
 						</div>
@@ -151,7 +153,9 @@ const GameCard = ({ formatGameTime, game }: { formatGameTime: (d: string) => str
 									style={{ backgroundColor: game.homeTeamColors?.primary ?? '#666' }}
 								/>
 								<span className="font-semibold">{game.homeTeamAbbreviation}</span>
-								<span className="text-muted-foreground text-sm">{game.homeTeamCity} {game.homeTeamName}</span>
+								<span className="text-muted-foreground text-sm">
+									{game.homeTeamCity} {game.homeTeamName}
+								</span>
 							</div>
 							<span className="text-muted-foreground text-xs">{game.homeRecord}</span>
 						</div>
@@ -172,10 +176,14 @@ const GameCard = ({ formatGameTime, game }: { formatGameTime: (d: string) => str
 					{game.venue && (
 						<div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
 							{game.venue.roofType !== 'open' && (
-								<span className="bg-muted rounded px-1.5 py-0.5 capitalize">{game.venue.roofType}</span>
+								<span className="bg-muted rounded px-1.5 py-0.5 capitalize">
+									{game.venue.roofType}
+								</span>
 							)}
 							{game.venue.elevation > 1000 && (
-								<span className="bg-muted rounded px-1.5 py-0.5">{game.venue.elevation.toLocaleString()}ft</span>
+								<span className="bg-muted rounded px-1.5 py-0.5">
+									{game.venue.elevation.toLocaleString()}ft
+								</span>
 							)}
 						</div>
 					)}

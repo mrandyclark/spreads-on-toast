@@ -1,9 +1,9 @@
-import { Calendar, Clock, MapPin, Moon, Sun } from 'lucide-react';
+import { Calendar, Clock, Compass, MapPin, Moon, Mountain, Sun } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatGameDate, formatGameTime } from '@/lib/date-utils';
 import { resolveRef } from '@/lib/ref-utils';
-import { Game, GameType } from '@/types';
+import { Ballpark, Game, GameType } from '@/types';
 
 const GAME_TYPE_LABELS: Record<string, string> = {
 	[GameType.DivisionSeries]: 'Division Series',
@@ -16,11 +16,18 @@ const GAME_TYPE_LABELS: Record<string, string> = {
 	[GameType.WorldSeries]: 'World Series',
 };
 
+const ROOF_LABELS: Record<string, string> = {
+	dome: 'Dome (enclosed)',
+	open: 'Open air',
+	retractable: 'Retractable roof',
+};
+
 interface GameInfoProps {
+	ballpark: Ballpark | null;
 	game: Game;
 }
 
-const GameInfo = ({ game }: GameInfoProps) => {
+const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 	const awayTeam = resolveRef(game.awayTeam.team);
 	const homeTeam = resolveRef(game.homeTeam.team);
 	const gameTypeLabel = GAME_TYPE_LABELS[game.gameType] ?? game.gameType;
@@ -95,6 +102,29 @@ const GameInfo = ({ game }: GameInfoProps) => {
 									</p>
 								</div>
 							)}
+						</div>
+					</div>
+				)}
+
+				{ballpark && (
+					<div className="border-border mt-4 border-t pt-4">
+						<div className="grid gap-3 text-sm sm:grid-cols-2">
+							<div className="flex items-center gap-2">
+								<Mountain className="text-muted-foreground h-4 w-4 shrink-0" />
+								<span>Elevation: {ballpark.elevation.toLocaleString()} ft</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<MapPin className="text-muted-foreground h-4 w-4 shrink-0" />
+								<span>{ROOF_LABELS[ballpark.roofType] ?? ballpark.roofType}</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<Compass className="text-muted-foreground h-4 w-4 shrink-0" />
+								<span>Field orientation: {ballpark.fieldOrientation}°</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<MapPin className="text-muted-foreground h-4 w-4 shrink-0" />
+								<span>{ballpark.location.city}, {ballpark.location.state}</span>
+							</div>
 						</div>
 					</div>
 				)}
