@@ -13,3 +13,4 @@ export * from './sport';
 export * from './standings';
 export * from './team';
 export * from './user';
+export * from './weather';

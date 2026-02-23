@@ -171,22 +171,6 @@ const GameCard = ({
 							</div>
 						</div>
 					)}
-
-					{/* Venue info */}
-					{game.venue && (
-						<div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
-							{game.venue.roofType !== 'open' && (
-								<span className="bg-muted rounded px-1.5 py-0.5 capitalize">
-									{game.venue.roofType}
-								</span>
-							)}
-							{game.venue.elevation > 1000 && (
-								<span className="bg-muted rounded px-1.5 py-0.5">
-									{game.venue.elevation.toLocaleString()}ft
-								</span>
-							)}
-						</div>
-					)}
 				</CardContent>
 			</Card>
 		</Link>
