@@ -28,7 +28,7 @@ const BALLPARK_DATA: {
 	teamAbbreviation: string;
 }[] = [
 	// eslint-disable-next-line perfectionist/sort-objects
-	{ teamAbbreviation: 'AZ', name: 'Chase Field', lat: 33.45, lng: -112.07, city: 'Phoenix', state: 'AZ', mlbVenueId: 15, fieldOrientation: 198, roofType: 'retractable', elevation: 1082 },
+	{ teamAbbreviation: 'ARI', name: 'Chase Field', lat: 33.45, lng: -112.07, city: 'Phoenix', state: 'AZ', mlbVenueId: 15, fieldOrientation: 198, roofType: 'retractable', elevation: 1082 },
 	{ city: 'Atlanta', elevation: 1050, fieldOrientation: 225, lat: 33.89, lng: -84.47, mlbVenueId: 4705, name: 'Truist Park', roofType: 'open', state: 'GA', teamAbbreviation: 'ATL' },
 	{ city: 'Baltimore', elevation: 30, fieldOrientation: 218, lat: 39.28, lng: -76.62, mlbVenueId: 2, name: 'Oriole Park at Camden Yards', roofType: 'open', state: 'MD', teamAbbreviation: 'BAL' },
 	{ city: 'Boston', elevation: 20, fieldOrientation: 65, lat: 42.35, lng: -71.10, mlbVenueId: 3, name: 'Fenway Park', roofType: 'open', state: 'MA', teamAbbreviation: 'BOS' },
