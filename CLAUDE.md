@@ -131,7 +131,7 @@ Populate accepts `string | string[]` for multiple paths. **Never call `model.fin
 
 - `lib/auth.ts` → `getAuthUser()` — checks Bearer token first, falls back to Kinde session cookie
 - `lib/with-auth-action.ts` → `withAuth()` wrapper for server actions
-- `server/http/responses.ts` → `withAuth()` wrapper for API routes
+- `server/http/responses.ts` → `jsonResponse()` / `errorResponse()` helpers for API routes
 
 ### Server action error handling
 
