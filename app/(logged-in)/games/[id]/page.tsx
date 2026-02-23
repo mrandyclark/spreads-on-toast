@@ -36,18 +36,12 @@ const GamePage = async ({ params }: GamePageProps) => {
 
 	return (
 		<PageShell maxWidth="4xl">
-			{/* Back links */}
-			<div className="mb-6 flex items-center gap-4">
+			{/* Back link */}
+			<div className="mb-6">
 				<BackLink
 					href={`/games?date=${game.officialDate}`}
 					label="All games"
 				/>
-				{homeAbbr && (
-					<BackLink
-						href={`/teams/mlb/${homeAbbr}`}
-						label={`${homeTeam?.abbreviation}`}
-					/>
-				)}
 			</div>
 
 			{/* Matchup hero */}
