@@ -6,6 +6,7 @@ import {
 	handleRemoveByIndex,
 	handleRemoveByKey,
 	handleReplaceByIndex,
+	removeValueFromArray,
 	reorderArrayByDragDrop,
 	safeArray,
 	safeJoin,
@@ -15,7 +16,6 @@ import {
 	safeUpdate,
 	safeUpdateByIndex,
 	safeUpdateMultiple,
-	removeValueFromArray,
 	toggleValue,
 } from './state-utils';
 

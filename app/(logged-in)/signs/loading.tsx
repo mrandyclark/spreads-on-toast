@@ -1,5 +1,5 @@
-import CardListSkeleton from '@/components/ui/card-list-skeleton';
 import PageShell from '@/components/layout/page-shell';
+import CardListSkeleton from '@/components/ui/card-list-skeleton';
 import Skeleton from '@/components/ui/skeleton';
 
 const SignsLoading = () => {

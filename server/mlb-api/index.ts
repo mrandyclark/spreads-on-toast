@@ -386,10 +386,10 @@ export function calculatePythagoreanWins(
 export interface ScheduleGameData {
 	awayIsWinner?: boolean;
 	awayLeagueRecord: { losses: number; pct: string; wins: number };
+	awayProbablePitcher?: { fullName: string; mlbId: number };
 	awayScore?: number;
 	awaySeriesNumber: number;
 	awaySplitSquad: boolean;
-	awayProbablePitcher?: { fullName: string; mlbId: number };
 	awayTeamMlbId: number;
 	awayTeamName: string;
 	calendarEventId: string;
@@ -403,10 +403,10 @@ export interface ScheduleGameData {
 	gameType: GameType;
 	homeIsWinner?: boolean;
 	homeLeagueRecord: { losses: number; pct: string; wins: number };
+	homeProbablePitcher?: { fullName: string; mlbId: number };
 	homeScore?: number;
 	homeSeriesNumber: number;
 	homeSplitSquad: boolean;
-	homeProbablePitcher?: { fullName: string; mlbId: number };
 	homeTeamMlbId: number;
 	homeTeamName: string;
 	ifNecessary: boolean;
@@ -579,10 +579,10 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 			pct: game.teams.away.leagueRecord.pct,
 			wins: game.teams.away.leagueRecord.wins,
 		},
+		awayProbablePitcher: game.teams.away.probablePitcher ? { fullName: game.teams.away.probablePitcher.fullName, mlbId: game.teams.away.probablePitcher.id } : undefined,
 		awayScore: game.teams.away.score,
 		awaySeriesNumber: game.teams.away.seriesNumber,
 		awaySplitSquad: game.teams.away.splitSquad,
-		awayProbablePitcher: game.teams.away.probablePitcher ? { fullName: game.teams.away.probablePitcher.fullName, mlbId: game.teams.away.probablePitcher.id } : undefined,
 		awayTeamMlbId: game.teams.away.team.id,
 		awayTeamName: game.teams.away.team.name,
 		calendarEventId: game.calendarEventID,
@@ -600,10 +600,10 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 			pct: game.teams.home.leagueRecord.pct,
 			wins: game.teams.home.leagueRecord.wins,
 		},
+		homeProbablePitcher: game.teams.home.probablePitcher ? { fullName: game.teams.home.probablePitcher.fullName, mlbId: game.teams.home.probablePitcher.id } : undefined,
 		homeScore: game.teams.home.score,
 		homeSeriesNumber: game.teams.home.seriesNumber,
 		homeSplitSquad: game.teams.home.splitSquad,
-		homeProbablePitcher: game.teams.home.probablePitcher ? { fullName: game.teams.home.probablePitcher.fullName, mlbId: game.teams.home.probablePitcher.id } : undefined,
 		homeTeamMlbId: game.teams.home.team.id,
 		homeTeamName: game.teams.home.team.name,
 		ifNecessary: game.ifNecessary === 'Y',

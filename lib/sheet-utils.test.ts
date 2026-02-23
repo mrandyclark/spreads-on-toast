@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Team, TeamPick } from '@/types';
+
 import { Conference, Division, Sport } from '@/types';
 
 import {
@@ -12,8 +14,6 @@ import {
 	getTeamsFromPicks,
 	toTeamsWithLines,
 } from './sheet-utils';
-
-import type { Team, TeamPick } from '@/types';
 
 const makeTeam = (overrides: Partial<Team> & { abbreviation: string; city: string; id: string; name: string }): Team => ({
 	conference: Conference.AL,

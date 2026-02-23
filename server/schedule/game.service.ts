@@ -160,6 +160,17 @@ class GameService extends BaseService<Game> {
 		return results;
 	}
 
+	async findByDatePopulated(date: string): Promise<Game[]> {
+		return this.find(
+			{
+				gameType: GameType.RegularSeason,
+				officialDate: date,
+				publicFacing: true,
+			},
+			{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
+		);
+	}
+
 	async findByIdPopulated(id: string): Promise<Game | null> {
 		return this.findById(id, { populate: TEAM_POPULATE });
 	}

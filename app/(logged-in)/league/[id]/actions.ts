@@ -6,6 +6,7 @@ import { forbidden, locked, notFound, serverError } from '@/lib/action-errors';
 import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { withAuth } from '@/lib/with-auth-action';
 import { calculateLeaderboard, getGroupForMember, groupService } from '@/server/groups/group.actions';
+import { groupService as groupSvc } from '@/server/groups/group.service';
 import { calculateProjectedWins } from '@/server/mlb-api';
 import { teamLineService } from '@/server/seasons/team-line.service';
 import { sheetService } from '@/server/sheets/sheet.service';
@@ -27,7 +28,6 @@ import {
 	TeamPick,
 	TeamPickResult,
 } from '@/types';
-import { groupService as groupSvc } from '@/server/groups/group.service';
 
 export const updateGroupNameAction = withAuth(async (user, groupId: string, name: string) => {
 	const group = await groupService.findById(groupId);

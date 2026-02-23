@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '@/lib/auth';
+
 import {
 	Group,
 	GroupRole,

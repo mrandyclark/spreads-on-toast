@@ -14,7 +14,7 @@ const DashboardLoading = () => {
 
 			<div className="grid gap-4">
 				{Array.from({ length: 3 }, (_, i) => (
-					<div key={i} className="border-border rounded-lg border p-4 sm:p-6">
+					<div className="border-border rounded-lg border p-4 sm:p-6" key={i}>
 						<div className="flex items-center gap-4">
 							<Skeleton className="h-12 w-12 rounded-xl" />
 							<div className="flex-1 space-y-2">

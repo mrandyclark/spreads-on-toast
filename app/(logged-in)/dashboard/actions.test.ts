@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '@/lib/auth';
 import type { Group, Season } from '@/types';
+
 import { Sport } from '@/types';
 
 const mockUser: AuthUser = {
@@ -45,7 +46,7 @@ import { groupService } from '@/server/groups/group.service';
 import { seasonService } from '@/server/seasons/season.service';
 import { getStandingsBoardData } from '@/server/standings/standings.actions';
 
-import { createGroupAction, getStandingsAction, getSeasonsAction, joinGroupAction } from './actions';
+import { createGroupAction, getSeasonsAction, getStandingsAction, joinGroupAction } from './actions';
 
 const mockGroup = { id: 'group1', name: 'Test' } as unknown as Group;
 
