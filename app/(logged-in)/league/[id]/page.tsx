@@ -1,6 +1,8 @@
 import LeagueDetailClient from '@/components/league-detail/league-detail-client';
 import { getAuthUser } from '@/lib/auth';
+import { resolveRefId } from '@/lib/ref-utils';
 import { getGroupForMember } from '@/server/groups/group.actions';
+import { teamLineService } from '@/server/seasons/team-line.service';
 import { sheetService } from '@/server/sheets/sheet.service';
 
 export default async function LeagueDetailPage({
@@ -28,10 +30,18 @@ export default async function LeagueDetailPage({
 		);
 	}
 
+	const teamLines = await teamLineService.findBySeason(group.sport, group.season);
+	const linesByTeamId: Record<string, number> = {};
+
+	for (const tl of teamLines) {
+		linesByTeamId[resolveRefId(tl.team)] = tl.line;
+	}
+
 	return (
 		<LeagueDetailClient
 			initialGroup={group}
 			initialSheet={sheet}
+			linesByTeamId={linesByTeamId}
 		/>
 	);
 }

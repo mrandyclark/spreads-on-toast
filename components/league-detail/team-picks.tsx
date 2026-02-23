@@ -13,11 +13,12 @@ import { PickChoice, TeamPick } from '@/types';
 import TeamPickCard from './team-pick-card';
 
 interface MlbTeamPicksProps {
+	linesByTeamId: Record<string, number>;
 	onPicksChange?: (picks: Record<string, PickChoice>) => void;
 	teamPicks: TeamPick[];
 }
 
-const MlbTeamPicks = ({ onPicksChange, teamPicks }: MlbTeamPicksProps) => {
+const MlbTeamPicks = ({ linesByTeamId, onPicksChange, teamPicks }: MlbTeamPicksProps) => {
 	const [picks, setPicks] = useState<Record<string, PickChoice>>(() => {
 		const initial: Record<string, PickChoice> = {};
 		teamPicks.forEach((tp) => {
@@ -30,7 +31,8 @@ const MlbTeamPicks = ({ onPicksChange, teamPicks }: MlbTeamPicksProps) => {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterLeague, setFilterLeague] = useState<'AL' | 'all' | 'NL'>('all');
 
-	const teamsWithLines = toTeamsWithLines(teamPicks);
+	const linesMap = new Map(Object.entries(linesByTeamId));
+	const teamsWithLines = toTeamsWithLines(teamPicks, linesMap);
 
 	const handlePickChange = (teamId: string, pick: PickChoice) => {
 		const newPicks = { ...picks, [teamId]: pick };

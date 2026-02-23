@@ -44,6 +44,12 @@ vi.mock('@/server/groups/group.service', () => ({
 	},
 }));
 
+vi.mock('@/server/seasons/team-line.service', () => ({
+	teamLineService: {
+		findBySeason: vi.fn(() => Promise.resolve([])),
+	},
+}));
+
 vi.mock('@/server/sheets/sheet.service', () => ({
 	sheetService: {
 		find: vi.fn(),

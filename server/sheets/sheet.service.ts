@@ -14,7 +14,6 @@ class SheetService extends BaseService<Sheet> {
 		const teamLines = await teamLineService.findBySeason(input.sport, input.season);
 
 		const teamPicks: TeamPick[] = teamLines.map((tl) => ({
-			line: tl.line,
 			team: resolveRefId(tl.team)!,
 		}));
 

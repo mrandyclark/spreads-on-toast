@@ -15,7 +15,7 @@ import {
 
 const TeamPickSchema = new Schema<TeamPick>(
 	{
-		line: { required: true, type: Number },
+		line: { type: Number },
 		pick: { enum: enumToValues(PickDirection), type: String },
 		result: { enum: enumToValues(PickResult), type: String },
 		team: { ...UuidRefType, ref: ModelName.Team, required: true },

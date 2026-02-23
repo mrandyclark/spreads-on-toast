@@ -39,9 +39,10 @@ import {
 interface LeagueDetailClientProps {
 	initialGroup: Group;
 	initialSheet: null | Sheet;
+	linesByTeamId: Record<string, number>;
 }
 
-const LeagueDetailClient = ({ initialGroup, initialSheet }: LeagueDetailClientProps) => {
+const LeagueDetailClient = ({ initialGroup, initialSheet, linesByTeamId }: LeagueDetailClientProps) => {
 	const [group, setGroup] = useState<Group>(initialGroup);
 	const [sheet] = useState<null | Sheet>(initialSheet);
 	const [isSaving, setIsSaving] = useState(false);
@@ -374,6 +375,7 @@ const LeagueDetailClient = ({ initialGroup, initialSheet }: LeagueDetailClientPr
 						{/* Sport-specific picks form - renders based on group.sport */}
 						{sheet && (
 							<PicksForm
+								linesByTeamId={linesByTeamId}
 								onPostseasonPicksChange={setPostseasonPicks}
 								onTeamPicksChange={setTeamPicks}
 								onWorldSeriesPicksChange={setWorldSeriesPicks}

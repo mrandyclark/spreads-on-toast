@@ -2,6 +2,7 @@ import { resolveRefId } from '@/lib/ref-utils';
 import { calculateProjectedWins } from '@/server/mlb-api';
 import { Group, LeaderboardEntry, PickResult, TeamPick, User } from '@/types';
 
+import { teamLineService } from '../seasons/team-line.service';
 import { sheetService } from '../sheets/sheet.service';
 import {
 	calculatePickResult,
@@ -123,7 +124,11 @@ export async function calculateLeaderboard(
 		}
 	}
 
-	const sheets = await sheetService.findByGroupPopulated(groupId);
+	const [sheets, teamLines] = await Promise.all([
+		sheetService.findByGroupPopulated(groupId),
+		teamLineService.findBySeason(group.sport, group.season),
+	]);
+	const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
 	const entries: LeaderboardEntry[] = [];
 
 	for (const member of group.members) {
@@ -148,7 +153,8 @@ export async function calculateLeaderboard(
 					standing && standing.gamesPlayed > 0
 						? calculateProjectedWins(standing.wins, standing.gamesPlayed, 162, false)
 						: 0;
-				const result: PickResult = calculatePickResult(teamPick.pick, teamPick.line, projectedWins);
+				const line = linesByTeamId.get(teamId) ?? 0;
+				const result: PickResult = calculatePickResult(teamPick.pick, line, projectedWins);
 
 				if (result === PickResult.Win) {
 					wins++;

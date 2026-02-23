@@ -31,7 +31,7 @@ export enum PickResult {
  * A single team pick (over/under on win total)
  */
 export interface TeamPick {
-	line: number; // The line at time of pick (e.g., 91.5)
+	line?: number; // Deprecated: was copied from TeamLine, now resolved at read time
 	pick?: PickDirection; // 'over' or 'under' (undefined until user picks)
 	result?: PickResult; // Set after season ends
 	team: Ref<Team>; // Team ID or populated Team

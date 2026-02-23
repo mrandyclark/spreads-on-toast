@@ -7,6 +7,7 @@ import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { withAuth } from '@/lib/with-auth-action';
 import { calculateLeaderboard, getGroupForMember, groupService } from '@/server/groups/group.actions';
 import { calculateProjectedWins } from '@/server/mlb-api';
+import { teamLineService } from '@/server/seasons/team-line.service';
 import { sheetService } from '@/server/sheets/sheet.service';
 import {
 	calculatePickResult,
@@ -96,7 +97,6 @@ export const copyPicksFromSheetAction = withAuth(async (user, targetGroupId: str
 		const sourcePick = sourcePicksMap.get(teamId);
 
 		return {
-			line: tp.line,
 			pick: sourcePick ?? tp.pick,
 			team: teamId,
 		};
@@ -155,7 +155,6 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 		const teamId = resolveRefId(tp.team)!;
 		const pick = input.teamPicks[teamId];
 		return {
-			line: tp.line,
 			pick: pick ? (pick === 'over' ? PickDirection.Over : PickDirection.Under) : undefined,
 			team: teamId,
 		};
@@ -192,11 +191,16 @@ export const getResultsAction = withAuth(
 		}
 
 		const targetUserId = userId || user.id;
-		const sheet = await sheetService.findByUserAndGroupPopulated(targetUserId, groupId);
+		const [sheet, teamLines] = await Promise.all([
+			sheetService.findByUserAndGroupPopulated(targetUserId, groupId),
+			teamLineService.findBySeason(group.sport, group.season),
+		]);
 
 		if (!sheet) {
 			return notFound('Sheet');
 		}
+
+		const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
 
 		// Get standings data
 		let standingsData: Map<string, { projectedWins: number; wins: number; gamesPlayed: number }>;
@@ -247,12 +251,13 @@ export const getResultsAction = withAuth(
 				gamesPlayed > 0 ? calculateProjectedWins(actualWins, gamesPlayed, 162, false) : 0;
 			const projectedWinsForDisplay = standing?.projectedWins ?? 0;
 
-			const result = calculatePickResult(teamPick.pick, teamPick.line, projectedWinsForComparison);
+			const line = linesByTeamId.get(team.id) ?? 0;
+			const result = calculatePickResult(teamPick.pick, line, projectedWinsForComparison);
 
 			picks.push({
 				actualWins,
 				gamesPlayed,
-				line: teamPick.line,
+				line,
 				pick: teamPick.pick,
 				projectedWins: projectedWinsForDisplay,
 				result,

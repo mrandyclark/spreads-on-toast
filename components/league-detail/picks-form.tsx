@@ -9,6 +9,7 @@ import MlbTeamPicks from './team-picks';
 import MlbWorldSeriesPicks from './world-series-picks';
 
 interface MlbPicksFormProps {
+	linesByTeamId: Record<string, number>;
 	onPostseasonPicksChange?: (picks: PostseasonPicks) => void;
 	onTeamPicksChange?: (picks: Record<string, PickChoice>) => void;
 	onWorldSeriesPicksChange?: (picks: WorldSeriesPicks) => void;
@@ -20,6 +21,7 @@ interface MlbPicksFormProps {
  * Contains all pick sections: team win totals, postseason, and World Series
  */
 const MlbPicksForm = ({
+	linesByTeamId,
 	onPostseasonPicksChange,
 	onTeamPicksChange,
 	onWorldSeriesPicksChange,
@@ -38,7 +40,7 @@ const MlbPicksForm = ({
 		<div className="space-y-8">
 			<section>
 				<h2 className="mb-4 text-xl font-semibold">Team Win Totals</h2>
-				<MlbTeamPicks onPicksChange={onTeamPicksChange} teamPicks={sheet.teamPicks} />
+				<MlbTeamPicks linesByTeamId={linesByTeamId} onPicksChange={onTeamPicksChange} teamPicks={sheet.teamPicks} />
 			</section>
 
 			<section>

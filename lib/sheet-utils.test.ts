@@ -43,8 +43,8 @@ const mets = makeTeam({
 	name: 'Mets',
 });
 
-const populatedPick = (team: Team, line = 91.5): TeamPick => ({ line, team });
-const unpopulatedPick = (teamId: string, line = 91.5): TeamPick => ({ line, team: teamId });
+const populatedPick = (team: Team): TeamPick => ({ team });
+const unpopulatedPick = (teamId: string): TeamPick => ({ team: teamId });
 
 describe('sheet-utils', () => {
 	describe('getTeamId', () => {
@@ -115,8 +115,9 @@ describe('sheet-utils', () => {
 
 	describe('toTeamsWithLines', () => {
 		it('converts populated picks to TeamWithLine sorted by full name', () => {
-			const picks = [populatedPick(yankees, 91.5), populatedPick(redSox, 82.5)];
-			const result = toTeamsWithLines(picks);
+			const picks = [populatedPick(yankees), populatedPick(redSox)];
+			const linesMap = new Map([['t1', 91.5], ['t2', 82.5]]);
+			const result = toTeamsWithLines(picks, linesMap);
 			expect(result).toEqual([
 				{
 					abbreviation: 'BOS',
@@ -141,7 +142,8 @@ describe('sheet-utils', () => {
 
 		it('skips unpopulated picks', () => {
 			const picks = [populatedPick(yankees), unpopulatedPick('t2')];
-			expect(toTeamsWithLines(picks)).toHaveLength(1);
+			const linesMap = new Map([['t1', 91.5], ['t2', 82.5]]);
+			expect(toTeamsWithLines(picks, linesMap)).toHaveLength(1);
 		});
 	});
 });

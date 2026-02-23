@@ -12,6 +12,12 @@ vi.mock('./group.service', () => ({
 	},
 }));
 
+vi.mock('../seasons/team-line.service', () => ({
+	teamLineService: {
+		findBySeason: vi.fn(() => Promise.resolve([])),
+	},
+}));
+
 vi.mock('../sheets/sheet.service', () => ({
 	sheetService: {
 		createForGroup: vi.fn(),

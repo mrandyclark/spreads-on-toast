@@ -96,9 +96,10 @@ export function getTeamsByConference(teamPicks: TeamPick[]): { al: Team[]; nl: T
 }
 
 /**
- * Convert populated TeamPick[] to TeamWithLine[], sorted by full name
+ * Convert populated TeamPick[] to TeamWithLine[], sorted by full name.
+ * Lines are resolved from the provided map (keyed by team ID).
  */
-export function toTeamsWithLines(teamPicks: TeamPick[]): TeamWithLine[] {
+export function toTeamsWithLines(teamPicks: TeamPick[], linesByTeamId: Map<string, number>): TeamWithLine[] {
 	return teamPicks
 		.map((tp) => {
 			const team = getTeamFromPick(tp);
@@ -112,7 +113,7 @@ export function toTeamsWithLines(teamPicks: TeamPick[]): TeamWithLine[] {
 				conference: team.conference,
 				division: team.division,
 				id: team.id,
-				line: tp.line,
+				line: linesByTeamId.get(team.id) ?? 0,
 				name: team.name,
 			};
 		})
