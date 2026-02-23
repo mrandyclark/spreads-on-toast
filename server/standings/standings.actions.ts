@@ -1,3 +1,4 @@
+import { cached } from '@/lib/cache';
 import { resolveRefId } from '@/lib/ref-utils';
 import {
 	PickResult,
@@ -163,11 +164,11 @@ function calculateWinProfile(standing: Record<string, unknown> | TeamStanding): 
 /**
  * Get comprehensive team detail data for the team page
  */
-export async function getTeamDetailData(
+export const getTeamDetailData = cached(async (
 	teamId: string,
 	season: string,
 	selectedDate?: string,
-): Promise<{ current: null | TeamDetailData; history: TeamHistoryDataPoint[] }> {
+): Promise<{ current: null | TeamDetailData; history: TeamHistoryDataPoint[] }> => {
 	const [team, teamLine, standings] = await Promise.all([
 		teamService.findById(teamId),
 		teamLineService.findByTeamAndSeason(teamId, season),
@@ -254,12 +255,12 @@ export async function getTeamDetailData(
 	}));
 
 	return { current, history };
-}
+});
 
 /**
  * Get seasons that have started with their available standings dates
  */
-export async function getStartedSeasonsWithDates(): Promise<SeasonWithDates[]> {
+export const getStartedSeasonsWithDates = cached(async (): Promise<SeasonWithDates[]> => {
 	const [seasons, datesMap] = await Promise.all([
 		seasonService.findStarted(Sport.MLB),
 		standingService.findDatesBySeason(),
@@ -276,15 +277,12 @@ export async function getStartedSeasonsWithDates(): Promise<SeasonWithDates[]> {
 			season: season.season,
 		};
 	});
-}
+});
 
 /**
  * Get standings board data for the UI
  */
-export async function getStandingsBoardData(
-	season: string,
-	date: string,
-): Promise<StandingsBoardData[]> {
+export const getStandingsBoardData = cached(async (season: string, date: string): Promise<StandingsBoardData[]> => {
 	const [year, month, day] = date.split('-').map(Number);
 	const normalizedDate = new Date(Date.UTC(year, month - 1, day));
 
@@ -321,7 +319,7 @@ export async function getStandingsBoardData(
 	}
 
 	return result;
-}
+});
 
 /**
  * Get final standings for a season (last day of data)
@@ -373,7 +371,7 @@ export async function getStandingsDateRange(season: string): Promise<{ maxDate: 
 /**
  * Get division standings for external consumers (e.g., Raspberry Pi sign)
  */
-export async function getDivisionStandings(date?: string): Promise<DivisionStandingsResponse | null> {
+export const getDivisionStandings = cached(async (date?: string): Promise<DivisionStandingsResponse | null> => {
 	let targetDate: Date;
 	let season: string;
 
@@ -452,7 +450,7 @@ export async function getDivisionStandings(date?: string): Promise<DivisionStand
 		divisions,
 		season,
 	};
-}
+});
 
 /**
  * Calculate the result of an over/under pick
