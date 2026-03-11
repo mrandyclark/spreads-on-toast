@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { Division, Sign, SignConfig, Team } from '@/types';
 
 import TeamPicker from './team-picker';
+import WifiSetup from './wifi-setup';
 
 interface SignDetailClientProps {
 	initialSign: Sign;
@@ -119,7 +120,9 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 				<BackLink href="/signs" label="Back to Signs" />
 				<div className="flex items-center justify-between">
 					<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{sign.title}</h1>
-					<Button
+					<div className="flex items-center gap-2">
+						<WifiSetup />
+						<Button
 						className="gap-2"
 						disabled={isSaving}
 						onClick={handleSave}>
@@ -137,6 +140,7 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 							'Save Changes'
 						)}
 					</Button>
+					</div>
 				</div>
 				{error && <p className="text-destructive mt-2 text-sm">{error}</p>}
 			</div>
