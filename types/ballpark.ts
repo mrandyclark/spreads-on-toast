@@ -19,7 +19,7 @@ export interface BallparkLocation {
 
 /**
  * A ballpark / stadium
- * Maps to Game.venue.mlbId for weather lookups
+ * Maps to Game.venue.mlbId for venue data lookups
  */
 export interface Ballpark extends BaseDocument {
 	elevation: number; // Feet above sea level

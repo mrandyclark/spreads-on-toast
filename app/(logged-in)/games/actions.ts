@@ -3,7 +3,6 @@
 import { resolveRef } from '@/lib/ref-utils';
 import { ballparkService } from '@/server/ballparks/ballpark.service';
 import { gameService } from '@/server/schedule/game.service';
-import { weatherService } from '@/server/weather/weather.service';
 import { Game, Sport, Team } from '@/types';
 
 /**
@@ -34,13 +33,6 @@ export interface GameDayCard {
 		name: string;
 		roofType: string;
 	};
-	weather: null | {
-		conditions: string;
-		humidity: number;
-		temperature: number;
-		windDirection: number;
-		windSpeed: number;
-	};
 }
 
 function formatRecord(record: { losses: number; wins: number }): string {
@@ -50,7 +42,6 @@ function formatRecord(record: { losses: number; wins: number }): string {
 function toGameDayCard(
 	game: Game,
 	venueMap: Map<number, { elevation: number; fieldOrientation: number; roofType: string }>,
-	weatherMap: Map<string, { conditions: string; humidity: number; temperature: number; windDirection: number; windSpeed: number }>,
 ): GameDayCard | null {
 	const awayTeam = resolveRef<Team>(game.awayTeam.team);
 	const homeTeam = resolveRef<Team>(game.homeTeam.team);
@@ -60,7 +51,6 @@ function toGameDayCard(
 	}
 
 	const venueData = venueMap.get(game.venue.mlbId);
-	const weatherData = weatherMap.get(game.id);
 
 	return {
 		awayPitcher: game.awayTeam.probablePitcher?.fullName ?? null,
@@ -89,30 +79,17 @@ function toGameDayCard(
 					roofType: venueData.roofType,
 				}
 			: null,
-		weather: weatherData
-			? {
-					conditions: weatherData.conditions,
-					humidity: weatherData.humidity,
-					temperature: weatherData.temperature,
-					windDirection: weatherData.windDirection,
-					windSpeed: weatherData.windSpeed,
-				}
-			: null,
 	};
 }
 
 /**
- * Get all games for a given date with ballpark and weather data
+ * Get all games for a given date with ballpark data
  */
 export async function getGameDayData(date: string): Promise<GameDayCard[]> {
 	const [games, ballparks] = await Promise.all([
 		gameService.findByDatePopulated(date),
 		ballparkService.findBySport(Sport.MLB),
 	]);
-
-	// Fetch weather for all games
-	const gameIds = games.map((g) => g.id);
-	const weatherData = await weatherService.findByGameIds(gameIds);
 
 	const venueMap = new Map(
 		ballparks.map((bp) => [
@@ -125,21 +102,8 @@ export async function getGameDayData(date: string): Promise<GameDayCard[]> {
 		]),
 	);
 
-	const weatherMap = new Map(
-		weatherData.map((w) => [
-			w.game as string,
-			{
-				conditions: w.conditions,
-				humidity: w.humidity,
-				temperature: w.temperature,
-				windDirection: w.windDirection,
-				windSpeed: w.windSpeed,
-			},
-		]),
-	);
-
 	return games
-		.map((game) => toGameDayCard(game, venueMap, weatherMap))
+		.map((game) => toGameDayCard(game, venueMap))
 		.filter((card): card is GameDayCard => card !== null);
 }
 

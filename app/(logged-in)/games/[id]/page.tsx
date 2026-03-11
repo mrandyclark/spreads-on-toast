@@ -21,7 +21,7 @@ interface GamePageProps {
 const GamePage = async ({ params }: GamePageProps) => {
 	const { id } = await params;
 
-	const { ballpark, game, weather } = await getGameDetail(id);
+	const { ballpark, game } = await getGameDetail(id);
 
 	if (!game) {
 		notFound();
@@ -125,28 +125,6 @@ const GamePage = async ({ params }: GamePageProps) => {
 									<span className="flex-1">
 										{game.homeTeam.probablePitcher?.fullName ?? 'TBD'}
 									</span>
-								</div>
-							</div>
-						)}
-
-						{/* Weather forecast */}
-						{weather && (
-							<div className="border-border w-full border-t pt-4">
-								<p className="text-muted-foreground mb-2 text-center text-xs font-medium uppercase tracking-wide">
-									Weather Forecast
-								</p>
-								<div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-									<span>{weather.conditions}</span>
-									<span>·</span>
-									<span>{weather.temperature}°F</span>
-									{weather.windSpeed > 0 && (
-										<>
-											<span>·</span>
-											<span>Wind {weather.windSpeed} mph</span>
-										</>
-									)}
-									<span>·</span>
-									<span>{weather.humidity}% humidity</span>
 								</div>
 							</div>
 						)}

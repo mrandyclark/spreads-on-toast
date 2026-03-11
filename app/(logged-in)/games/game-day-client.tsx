@@ -171,21 +171,6 @@ const GameCard = ({
 							</div>
 						</div>
 					)}
-
-					{/* Weather */}
-					{game.weather && (
-						<div className="text-muted-foreground mt-3 border-t pt-3 text-xs">
-							<div className="flex items-center justify-between gap-2">
-								<span className="truncate">{game.weather.conditions}</span>
-								<div className="flex shrink-0 items-center gap-2">
-									<span>{game.weather.temperature}°F</span>
-									{game.weather.windSpeed > 0 && (
-										<span>Wind {game.weather.windSpeed} mph</span>
-									)}
-								</div>
-							</div>
-						</div>
-					)}
 				</CardContent>
 			</Card>
 		</Link>

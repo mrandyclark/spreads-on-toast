@@ -2,27 +2,22 @@
 
 import { ballparkService } from '@/server/ballparks/ballpark.service';
 import { gameService } from '@/server/schedule/game.service';
-import { weatherService } from '@/server/weather/weather.service';
-import { Ballpark, Game, Weather } from '@/types';
+import { Ballpark, Game } from '@/types';
 
 /**
- * Get game detail with populated teams, ballpark, and weather data
+ * Get game detail with populated teams and ballpark data
  */
 export async function getGameDetail(gameId: string): Promise<{
 	ballpark: Ballpark | null;
 	game: Game | null;
-	weather: Weather | null;
 }> {
 	const game = await gameService.findByIdPopulated(gameId);
 
 	if (!game) {
-		return { ballpark: null, game: null, weather: null };
+		return { ballpark: null, game: null };
 	}
 
-	const [ballpark, weather] = await Promise.all([
-		ballparkService.findByMlbVenueId(game.venue.mlbId),
-		weatherService.findByGameId(gameId),
-	]);
+	const ballpark = await ballparkService.findByMlbVenueId(game.venue.mlbId);
 
-	return { ballpark, game, weather };
+	return { ballpark, game };
 }
