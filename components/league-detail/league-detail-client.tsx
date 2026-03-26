@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
-import { toDateString } from '@/lib/date-utils';
+import { formatDateDisplay, toDateString } from '@/lib/date-utils';
 import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { getTeamId } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
@@ -272,11 +272,7 @@ const LeagueDetailClient = ({ initialGroup, initialSheet, linesByTeamId }: Leagu
 									<p className="font-medium">{daysUntilLock} days until picks lock</p>
 									<p className="text-muted-foreground text-sm">
 										Locks on{' '}
-										{lockDate.toLocaleDateString('en-US', {
-											day: 'numeric',
-											month: 'long',
-											weekday: 'long',
-										})}
+										{formatDateDisplay(toDateString(group.lockDate))}
 									</p>
 								</div>
 							</>
@@ -428,8 +424,8 @@ const LeagueDetailClient = ({ initialGroup, initialSheet, linesByTeamId }: Leagu
 						memberInitials={selectedMember.userInitials}
 						memberName={selectedMember.userName}
 						onDateChange={setSelectedDate}
-						seasonEndDate={group.seasonEndDate?.toString()}
-						seasonStartDate={group.seasonStartDate?.toString()}
+						seasonEndDate={group.seasonEndDate ? toDateString(group.seasonEndDate) : undefined}
+						seasonStartDate={group.seasonStartDate ? toDateString(group.seasonStartDate) : undefined}
 						selectedDate={selectedDate}
 						userId={selectedMember.userId}
 					/>

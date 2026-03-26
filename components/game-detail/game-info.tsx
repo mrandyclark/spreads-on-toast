@@ -46,7 +46,17 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 					</div>
 					<div className="flex items-center gap-2">
 						<Clock className="text-muted-foreground h-4 w-4 shrink-0" />
-						<span>{game.status.startTimeTBD ? 'Time TBD' : formatGameTime(game.gameDate)}</span>
+						{game.status.startTimeTBD && <span>Time TBD</span>}
+						{!game.status.startTimeTBD && (
+							<span>
+								{formatGameTime(game.gameDate, ballpark?.timezone)}
+								{ballpark?.timezone && ballpark.timezone !== 'America/New_York' && (
+									<span className="text-muted-foreground">
+										{' '}({formatGameTime(game.gameDate)})
+									</span>
+								)}
+							</span>
+						)}
 					</div>
 					<div className="flex items-center gap-2">
 						<MapPin className="text-muted-foreground h-4 w-4 shrink-0" />

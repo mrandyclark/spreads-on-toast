@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState, useTransition } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import DatePicker from '@/components/ui/date-picker';
+import { formatGameTime } from '@/lib/date-utils';
 
 import { GameDayCard, getGameDayData } from './actions';
 
@@ -52,14 +53,6 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 		});
 	};
 
-	const formatGameTime = (isoDate: string) => {
-		const date = new Date(isoDate);
-		return date.toLocaleTimeString('en-US', {
-			hour: 'numeric',
-			minute: '2-digit',
-		});
-	};
-
 	return (
 		<div>
 			{/* Header */}
@@ -96,7 +89,7 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 			) : (
 				<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					{games.map((game) => (
-						<GameCard formatGameTime={formatGameTime} game={game} key={game.gameId} />
+						<GameCard game={game} key={game.gameId} />
 					))}
 				</div>
 			)}
@@ -105,10 +98,8 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 };
 
 const GameCard = ({
-	formatGameTime,
 	game,
 }: {
-	formatGameTime: (d: string) => string;
 	game: GameDayCard;
 }) => {
 	return (

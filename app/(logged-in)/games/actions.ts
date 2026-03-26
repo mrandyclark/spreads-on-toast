@@ -73,11 +73,11 @@ function toGameDayCard(
 		status: game.status.abstractGameState,
 		venue: venueData
 			? {
-					elevation: venueData.elevation,
-					fieldOrientation: venueData.fieldOrientation,
-					name: game.venue.name,
-					roofType: venueData.roofType,
-				}
+				elevation: venueData.elevation,
+				fieldOrientation: venueData.fieldOrientation,
+				name: game.venue.name,
+				roofType: venueData.roofType,
+			}
 			: null,
 	};
 }

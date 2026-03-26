@@ -123,23 +123,23 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 					<div className="flex items-center gap-2">
 						<WifiSetup />
 						<Button
-						className="gap-2"
-						disabled={isSaving}
-						onClick={handleSave}>
-						{isSaving ? (
-							<>
-								<Loader2 className="h-4 w-4 animate-spin" />
+							className="gap-2"
+							disabled={isSaving}
+							onClick={handleSave}>
+							{isSaving ? (
+								<>
+									<Loader2 className="h-4 w-4 animate-spin" />
 									Saving...
-							</>
-						) : saveSuccess ? (
-							<>
-								<Check className="h-4 w-4" />
+								</>
+							) : saveSuccess ? (
+								<>
+									<Check className="h-4 w-4" />
 									Saved!
-							</>
-						) : (
-							'Save Changes'
-						)}
-					</Button>
+								</>
+							) : (
+								'Save Changes'
+							)}
+						</Button>
 					</div>
 				</div>
 				{error && <p className="text-destructive mt-2 text-sm">{error}</p>}

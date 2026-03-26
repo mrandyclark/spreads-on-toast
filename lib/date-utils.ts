@@ -1,17 +1,27 @@
 /**
+ * Get today's date as YYYY-MM-DD in US Eastern time.
+ * MLB uses ET as its reference timezone, and this avoids Vercel (UTC) server
+ * returning tomorrow's date after 6pm CT / 7pm ET.
+ */
+export function todayET(): string {
+	const now = new Date();
+	const parts = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).split('-');
+	return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+}
+
+/**
  * Convert a Date object or string to YYYY-MM-DD format
  * Handles various input formats including ISO strings and Date objects
  */
 export function toDateString(dateInput: Date | string | undefined): string {
 	if (!dateInput) {
-		const now = new Date();
-		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+		return todayET();
 	}
 
 	if (dateInput instanceof Date) {
-		const year = dateInput.getFullYear();
-		const month = String(dateInput.getMonth() + 1).padStart(2, '0');
-		const day = String(dateInput.getDate()).padStart(2, '0');
+		const year = dateInput.getUTCFullYear();
+		const month = String(dateInput.getUTCMonth() + 1).padStart(2, '0');
+		const day = String(dateInput.getUTCDate()).padStart(2, '0');
 		return `${year}-${month}-${day}`;
 	}
 
@@ -27,18 +37,16 @@ export function toDateString(dateInput: Date | string | undefined): string {
 		return str.split('T')[0];
 	}
 
-	// Parse as Date and extract local date parts
+	// Parse as Date and extract UTC date parts (DB dates are stored as midnight UTC)
 	const d = new Date(dateInput);
 
 	if (isNaN(d.getTime())) {
-		// Invalid date, return today
-		const now = new Date();
-		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+		return todayET();
 	}
 
-	const year = d.getFullYear();
-	const month = String(d.getMonth() + 1).padStart(2, '0');
-	const day = String(d.getDate()).padStart(2, '0');
+	const year = d.getUTCFullYear();
+	const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+	const day = String(d.getUTCDate()).padStart(2, '0');
 	return `${year}-${month}-${day}`;
 }
 
@@ -84,24 +92,30 @@ export function formatDateDisplay(dateStr: string): string {
 }
 
 /**
- * Format a Date for long display: "Monday, June 2, 2025"
+ * Format a date string for long display: "Monday, June 2, 2025"
+ * Uses US Eastern timezone to avoid Vercel UTC rendering
  */
-export function formatGameDate(date: Date): string {
-	return date.toLocaleDateString('en-US', {
+export function formatGameDate(date: Date | string): string {
+	const d = typeof date === 'string' ? new Date(date) : date;
+	return d.toLocaleDateString('en-US', {
 		day: 'numeric',
 		month: 'long',
+		timeZone: 'America/New_York',
 		weekday: 'long',
 		year: 'numeric',
 	});
 }
 
 /**
- * Format a Date for time display: "7:10 PM EDT"
+ * Format a date for time display in a specific timezone: "7:10 PM EDT"
+ * Defaults to US Eastern
  */
-export function formatGameTime(date: Date): string {
-	return date.toLocaleTimeString('en-US', {
+export function formatGameTime(date: Date | string, timeZone = 'America/New_York'): string {
+	const d = typeof date === 'string' ? new Date(date) : date;
+	return d.toLocaleTimeString('en-US', {
 		hour: 'numeric',
 		minute: '2-digit',
+		timeZone,
 		timeZoneName: 'short',
 	});
 }

@@ -1,5 +1,5 @@
 import PageShell from '@/components/layout/page-shell';
-import { toDateString } from '@/lib/date-utils';
+import { todayET } from '@/lib/date-utils';
 
 import GameDayClient from './game-day-client';
 
@@ -11,7 +11,7 @@ interface GamesPageProps {
 
 const GamesPage = async ({ searchParams }: GamesPageProps) => {
 	const { date: dateParam } = await searchParams;
-	const selectedDate = dateParam ?? toDateString(new Date());
+	const selectedDate = dateParam ?? todayET();
 
 	return (
 		<PageShell>

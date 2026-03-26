@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDateDisplay, formatShortDate, toDateString } from './date-utils';
+import { formatDateDisplay, formatGameDate, formatGameTime, formatShortDate, toDateString, todayET } from './date-utils';
 
 describe('date-utils', () => {
 	describe('toDateString', () => {
@@ -12,9 +12,14 @@ describe('date-utils', () => {
 			expect(toDateString('2025-09-26T00:00:00.000Z')).toBe('2025-09-26');
 		});
 
-		it('converts Date object to YYYY-MM-DD', () => {
-			const date = new Date(2025, 5, 15); // June 15, 2025
+		it('converts Date object to YYYY-MM-DD using UTC', () => {
+			const date = new Date('2025-06-15T00:00:00.000Z');
 			expect(toDateString(date)).toBe('2025-06-15');
+		});
+
+		it('does not shift midnight UTC dates back a day', () => {
+			const date = new Date('2026-03-26T00:00:00.000Z');
+			expect(toDateString(date)).toBe('2026-03-26');
 		});
 
 		it('returns today for undefined', () => {
@@ -67,6 +72,64 @@ describe('date-utils', () => {
 		it('does not pad single digits', () => {
 			const date = new Date(2025, 0, 5); // Jan 5
 			expect(formatShortDate(date)).toBe('1/5');
+		});
+	});
+
+	describe('todayET', () => {
+		it('returns YYYY-MM-DD format', () => {
+			const result = todayET();
+			expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+		});
+
+		it('returns a valid date', () => {
+			const result = todayET();
+			const [year, month, day] = result.split('-').map(Number);
+			expect(year).toBeGreaterThanOrEqual(2025);
+			expect(month).toBeGreaterThanOrEqual(1);
+			expect(month).toBeLessThanOrEqual(12);
+			expect(day).toBeGreaterThanOrEqual(1);
+			expect(day).toBeLessThanOrEqual(31);
+		});
+	});
+
+	describe('formatGameDate', () => {
+		it('formats Date object', () => {
+			const result = formatGameDate(new Date('2025-06-02T23:10:00.000Z'));
+			expect(result).toContain('June');
+			expect(result).toContain('2025');
+		});
+
+		it('formats ISO string', () => {
+			const result = formatGameDate('2025-06-02T23:10:00.000Z');
+			expect(result).toContain('June');
+			expect(result).toContain('2025');
+		});
+
+		it('uses ET timezone so midnight UTC stays same date', () => {
+			const result = formatGameDate('2025-06-02T00:00:00.000Z');
+			expect(result).toContain('June 1');
+		});
+	});
+
+	describe('formatGameTime', () => {
+		it('formats with default ET timezone', () => {
+			const result = formatGameTime('2025-06-02T23:10:00.000Z');
+			expect(result).toMatch(/\d{1,2}:\d{2}\s[AP]M\s[A-Z]{2,4}/);
+		});
+
+		it('formats ISO string', () => {
+			const result = formatGameTime('2025-06-02T23:10:00.000Z');
+			expect(result).toContain('PM');
+		});
+
+		it('accepts custom timezone', () => {
+			const result = formatGameTime('2025-06-02T23:10:00.000Z', 'America/Chicago');
+			expect(result).toContain('CDT');
+		});
+
+		it('accepts Date object', () => {
+			const result = formatGameTime(new Date('2025-06-02T23:10:00.000Z'));
+			expect(result).toMatch(/\d{1,2}:\d{2}\s[AP]M\s[A-Z]{2,4}/);
 		});
 	});
 });

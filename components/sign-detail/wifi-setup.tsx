@@ -25,12 +25,12 @@ const BLE_COMMAND_UUID = '12345678-1234-5678-1234-56789abcdef3';
 const BLE_WIFI_LIST_UUID = '12345678-1234-5678-1234-56789abcdef4';
 const BLE_STATUS_UUID = '12345678-1234-5678-1234-56789abcdef5';
 
-type SetupStep = 'scan' | 'connected' | 'configuring' | 'success' | 'error';
+type SetupStep = 'configuring' | 'connected' | 'error' | 'scan' | 'success';
 
 const WifiSetup = () => {
 	const [open, setOpen] = useState(false);
 	const [step, setStep] = useState<SetupStep>('scan');
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<null | string>(null);
 	const [ssid, setSsid] = useState('');
 	const [password, setPassword] = useState('');
 	const [wifiNetworks, setWifiNetworks] = useState<string[]>([]);
@@ -355,6 +355,11 @@ const WifiSetup = () => {
 									<p className="text-muted-foreground text-sm">
 										This may take up to 30 seconds
 									</p>
+									{status && (
+										<p className="text-muted-foreground text-xs">
+											Status: {status}
+										</p>
+									)}
 								</div>
 							</div>
 						)}
