@@ -200,20 +200,21 @@ export async function syncLiveGames(): Promise<{
 		'status.abstractGameState': GameState.Live,
 	});
 
-	// If no live games, check if any Preview games start within 30 minutes
+	// If no live games, check for Preview games that should be live (gameDate already passed)
+	// or are starting within 30 minutes
 	if (liveCount === 0) {
-		const upcomingCount = await GameModel.countDocuments({
-			gameDate: { $gte: now, $lte: soon },
+		const needsUpdateCount = await GameModel.countDocuments({
 			officialDate: date,
 			'status.abstractGameState': GameState.Preview,
+			gameDate: { $lte: soon }, // already started OR starting within 30 min
 		});
 
-		if (upcomingCount === 0) {
+		if (needsUpdateCount === 0) {
 			console.log(`[Live Sync] No live or upcoming games for ${date}, skipping`);
 			return { errors: [], gamesChecked: 0, skipped: true, updated: 0 };
 		}
 
-		console.log(`[Live Sync] ${upcomingCount} games starting soon for ${date}`);
+		console.log(`[Live Sync] ${needsUpdateCount} games need updating for ${date}`);
 	} else {
 		console.log(`[Live Sync] ${liveCount} live games for ${date}`);
 	}
