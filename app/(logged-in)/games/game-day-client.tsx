@@ -3,7 +3,7 @@
 import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import DatePicker from '@/components/ui/date-picker';
@@ -21,20 +21,43 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 	const [games, setGames] = useState<GameDayCard[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	const fetchGames = useCallback(async (date: string) => {
-		setLoading(true);
+	const fetchGames = useCallback(async (date: string, silent = false) => {
+		if (!silent) {
+			setLoading(true);
+		}
 
 		try {
 			const data = await getGameDayData(date);
 			setGames(data);
 		} finally {
-			setLoading(false);
+			if (!silent) {
+				setLoading(false);
+			}
 		}
 	}, []);
 
 	useEffect(() => {
 		fetchGames(selectedDate);
 	}, [selectedDate, fetchGames]);
+
+	// Poll every 30s when any game is Live
+	const hasLiveGames = games.some((g) => g.status === 'Live');
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+	useEffect(() => {
+		if (hasLiveGames) {
+			intervalRef.current = setInterval(() => {
+				fetchGames(selectedDate, true);
+			}, 30_000);
+		}
+
+		return () => {
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+				intervalRef.current = null;
+			}
+		};
+	}, [hasLiveGames, selectedDate, fetchGames]);
 
 	const handleDateChange = (newDate: string) => {
 		startTransition(() => {
@@ -102,19 +125,31 @@ const GameCard = ({
 }: {
 	game: GameDayCard;
 }) => {
+	const isLive = game.status === 'Live';
+	const isFinal = game.status === 'Final';
+	const hasScore = isLive || isFinal;
+
 	return (
 		<Link href={`/games/${game.gameId}`}>
 			<Card className="hover:bg-muted/50 transition-colors">
 				<CardContent className="p-4">
-					{/* Time + Venue row */}
+					{/* Status + Venue row */}
 					<div className="text-muted-foreground mb-3 flex items-center justify-between text-xs">
 						<div className="flex items-center gap-1.5">
-							{game.dayNight === 'night' ? (
+							{isLive ? (
+								<span className="bg-destructive inline-block h-2 w-2 animate-pulse rounded-full" />
+							) : game.dayNight === 'night' ? (
 								<Moon className="h-3 w-3" />
 							) : (
 								<Sun className="h-3 w-3" />
 							)}
-							<span>{formatGameTime(game.gameDate)}</span>
+							<span>
+								{isLive && game.currentInning
+									? `${game.inningState ?? ''} ${game.currentInning}`.trim()
+									: isFinal
+										? 'Final'
+										: formatGameTime(game.gameDate)}
+							</span>
 						</div>
 						{game.venue && <span className="truncate pl-2">{game.venue.name}</span>}
 					</div>
@@ -133,7 +168,11 @@ const GameCard = ({
 									{game.awayTeamCity} {game.awayTeamName}
 								</span>
 							</div>
-							<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
+							{hasScore && game.awayScore != null ? (
+								<span className="text-lg font-bold tabular-nums">{game.awayScore}</span>
+							) : (
+								<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
+							)}
 						</div>
 
 						{/* Home team */}
@@ -148,7 +187,11 @@ const GameCard = ({
 									{game.homeTeamCity} {game.homeTeamName}
 								</span>
 							</div>
-							<span className="text-muted-foreground text-xs">{game.homeRecord}</span>
+							{hasScore && game.homeScore != null ? (
+								<span className="text-lg font-bold tabular-nums">{game.homeScore}</span>
+							) : (
+								<span className="text-muted-foreground text-xs">{game.homeRecord}</span>
+							)}
 						</div>
 					</div>
 

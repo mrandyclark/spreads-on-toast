@@ -1,10 +1,11 @@
 import { randomUUID } from 'crypto';
 
 import { dbConnect } from '@/lib/mongoose';
+import { todayET } from '@/lib/date-utils';
 import { GameModel } from '@/models/game.model';
-import { Sport } from '@/types';
+import { GameState, Sport } from '@/types';
 
-import { fetchMlbSchedule, ScheduleGameData } from '../mlb-api';
+import { fetchMlbSchedule, fetchMlbScheduleByDate, ScheduleGameData } from '../mlb-api';
 import { teamService } from '../teams/team.service';
 
 export async function syncTeamSchedule(
@@ -173,4 +174,109 @@ async function syncGamesToDatabase(
 	console.log(`[Schedule Sync] Season ${season}: Created ${created}, Updated ${updated}, Errors ${errors.length}`);
 
 	return { created, errors, updated };
+}
+
+/**
+ * Lightweight live sync — fetches today's games in a single API call
+ * and updates scores/linescore/status for games that are in-progress
+ * or recently completed. Designed to run every 5 minutes during game hours.
+ */
+export async function syncLiveGames(): Promise<{
+	errors: string[];
+	gamesChecked: number;
+	skipped?: boolean;
+	updated: number;
+}> {
+	await dbConnect();
+
+	const date = todayET();
+
+	// Early bail-out: only call MLB API when games are in progress or about to start
+	const now = new Date();
+	const soon = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
+
+	const liveCount = await GameModel.countDocuments({
+		officialDate: date,
+		'status.abstractGameState': GameState.Live,
+	});
+
+	// If no live games, check if any Preview games start within 30 minutes
+	if (liveCount === 0) {
+		const upcomingCount = await GameModel.countDocuments({
+			gameDate: { $gte: now, $lte: soon },
+			officialDate: date,
+			'status.abstractGameState': GameState.Preview,
+		});
+
+		if (upcomingCount === 0) {
+			console.log(`[Live Sync] No live or upcoming games for ${date}, skipping`);
+			return { errors: [], gamesChecked: 0, skipped: true, updated: 0 };
+		}
+
+		console.log(`[Live Sync] ${upcomingCount} games starting soon for ${date}`);
+	} else {
+		console.log(`[Live Sync] ${liveCount} live games for ${date}`);
+	}
+
+	const games = await fetchMlbScheduleByDate(date);
+
+	let updated = 0;
+	const errors: string[] = [];
+
+	// Only update games that are Live or Final (skip Preview — nothing to update)
+	const activeGames = games.filter(
+		(g) => g.status.abstractGameState === GameState.Live || g.status.abstractGameState === GameState.Final,
+	);
+
+	console.log(`[Live Sync] ${games.length} games today, ${activeGames.length} active/final`);
+
+	for (const game of activeGames) {
+		try {
+			// Only update if our DB copy isn't already Final
+			const existing = await GameModel.findOne(
+				{ mlbGameId: game.mlbGameId },
+				{ 'status.abstractGameState': 1 },
+			);
+
+			if (!existing) {
+				continue;
+			}
+
+			// Skip if already Final in our DB (no new data to update)
+			if (existing.status.abstractGameState === GameState.Final) {
+				continue;
+			}
+
+			await GameModel.updateOne(
+				{ mlbGameId: game.mlbGameId },
+				{
+					$set: {
+						'awayTeam.errors': game.linescore?.teams.away.errors,
+						'awayTeam.hits': game.linescore?.teams.away.hits,
+						'awayTeam.isWinner': game.awayIsWinner,
+						'awayTeam.leftOnBase': game.linescore?.teams.away.leftOnBase,
+						'awayTeam.score': game.awayScore,
+						'homeTeam.errors': game.linescore?.teams.home.errors,
+						'homeTeam.hits': game.linescore?.teams.home.hits,
+						'homeTeam.isWinner': game.homeIsWinner,
+						'homeTeam.leftOnBase': game.linescore?.teams.home.leftOnBase,
+						'homeTeam.score': game.homeScore,
+						isTie: game.isTie,
+						linescore: game.linescore,
+						status: game.status,
+					},
+				},
+			);
+
+			updated++;
+		} catch (error) {
+			const msg = `Error updating game ${game.mlbGameId}: ${error}`;
+			console.error(`[Live Sync] ${msg}`);
+			errors.push(msg);
+		}
+	}
+
+	console.log(`[Live Sync] Updated ${updated} games`);
+
+	return { errors, gamesChecked: activeGames.length, updated };
 }

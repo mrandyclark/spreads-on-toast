@@ -670,6 +670,33 @@ export async function fetchMlbSchedule(
 }
 
 /**
+ * Fetch all MLB games for a specific date (single API call)
+ * Used by live sync to get current scores without per-team fetching
+ * @param date - Date in YYYY-MM-DD format
+ */
+export async function fetchMlbScheduleByDate(date: string): Promise<ScheduleGameData[]> {
+	const url = `${MLB_API_BASE}/schedule?sportId=1&date=${date}&gameType=R,F,D,L,W&hydrate=linescore,probablePitcher`;
+
+	const response = await fetch(url);
+
+	if (!response.ok) {
+		throw new Error(`MLB API error: ${response.status} ${response.statusText}`);
+	}
+
+	const data: MlbScheduleResponse = await response.json();
+
+	const games: ScheduleGameData[] = [];
+
+	for (const dateEntry of data.dates) {
+		for (const game of dateEntry.games) {
+			games.push(transformGame(game));
+		}
+	}
+
+	return games;
+}
+
+/**
  * Fetch schedule for all MLB teams for a season
  * Note: This fetches by team, so games will be duplicated (once per team)
  * The sync function should handle deduplication by mlbGameId

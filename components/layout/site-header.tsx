@@ -1,7 +1,7 @@
 'use client';
 
 import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
-import { Menu, Monitor } from 'lucide-react';
+import { Calendar, Menu, Monitor } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -90,6 +90,12 @@ const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
 								<span className="text-muted-foreground text-sm">{userName}</span>
 							)}
 							<Button asChild size="sm" variant="ghost">
+								<Link href="/games">
+									<Calendar className="mr-1 h-4 w-4" />
+									Games
+								</Link>
+							</Button>
+							<Button asChild size="sm" variant="ghost">
 								<Link href="/signs">
 									<Monitor className="mr-1 h-4 w-4" />
 									Signs
@@ -170,6 +176,6 @@ const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
 			</div>
 		</header>
 	);
-}
+};
 
 export default SiteHeader;

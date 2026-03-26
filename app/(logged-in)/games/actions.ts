@@ -11,21 +11,25 @@ import { Game, Sport, Team } from '@/types';
 export interface GameDayCard {
 	awayPitcher: null | string;
 	awayRecord: string;
+	awayScore?: number;
 	awayTeamAbbreviation: string;
 	awayTeamCity: string;
 	awayTeamColors?: { primary: string; secondary: string };
 	awayTeamId: string;
 	awayTeamName: string;
+	currentInning?: number;
 	dayNight: 'day' | 'night';
 	gameDate: string;
 	gameId: string;
 	homePitcher: null | string;
 	homeRecord: string;
+	homeScore?: number;
 	homeTeamAbbreviation: string;
 	homeTeamCity: string;
 	homeTeamColors?: { primary: string; secondary: string };
 	homeTeamId: string;
 	homeTeamName: string;
+	inningState?: string;
 	status: string;
 	venue: null | {
 		elevation: number;
@@ -55,21 +59,25 @@ function toGameDayCard(
 	return {
 		awayPitcher: game.awayTeam.probablePitcher?.fullName ?? null,
 		awayRecord: formatRecord(game.awayTeam.leagueRecord),
+		awayScore: game.awayTeam.score,
 		awayTeamAbbreviation: awayTeam.abbreviation,
 		awayTeamCity: awayTeam.city,
 		awayTeamColors: awayTeam.colors,
 		awayTeamId: awayTeam.id,
 		awayTeamName: awayTeam.name,
+		currentInning: game.linescore?.currentInning,
 		dayNight: game.dayNight,
 		gameDate: game.gameDate.toISOString(),
 		gameId: game.id,
 		homePitcher: game.homeTeam.probablePitcher?.fullName ?? null,
 		homeRecord: formatRecord(game.homeTeam.leagueRecord),
+		homeScore: game.homeTeam.score,
 		homeTeamAbbreviation: homeTeam.abbreviation,
 		homeTeamCity: homeTeam.city,
 		homeTeamColors: homeTeam.colors,
 		homeTeamId: homeTeam.id,
 		homeTeamName: homeTeam.name,
+		inningState: game.linescore?.inningState,
 		status: game.status.abstractGameState,
 		venue: venueData
 			? {
