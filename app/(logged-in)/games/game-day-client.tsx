@@ -169,7 +169,7 @@ const GameCard = ({
 								</span>
 							</div>
 							{hasScore && game.awayScore != null ? (
-								<span className="text-lg font-bold tabular-nums">{game.awayScore}</span>
+								<span className="min-w-6 text-right text-sm font-bold tabular-nums">{game.awayScore}</span>
 							) : (
 								<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
 							)}
@@ -188,7 +188,7 @@ const GameCard = ({
 								</span>
 							</div>
 							{hasScore && game.homeScore != null ? (
-								<span className="text-lg font-bold tabular-nums">{game.homeScore}</span>
+								<span className="min-w-6 text-right text-sm font-bold tabular-nums">{game.homeScore}</span>
 							) : (
 								<span className="text-muted-foreground text-xs">{game.homeRecord}</span>
 							)}
