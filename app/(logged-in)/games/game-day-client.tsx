@@ -42,7 +42,7 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 
 	// Poll every 30s when any game is Live
 	const hasLiveGames = games.some((g) => g.status === 'Live');
-	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+	const intervalRef = useRef<null | ReturnType<typeof setInterval>>(null);
 
 	useEffect(() => {
 		if (hasLiveGames) {

@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 
-import { dbConnect } from '@/lib/mongoose';
 import { todayET } from '@/lib/date-utils';
+import { dbConnect } from '@/lib/mongoose';
 import { GameModel } from '@/models/game.model';
 import { GameState, Sport } from '@/types';
 
@@ -204,9 +204,9 @@ export async function syncLiveGames(): Promise<{
 	// or are starting within 30 minutes
 	if (liveCount === 0) {
 		const needsUpdateCount = await GameModel.countDocuments({
+			gameDate: { $lte: soon }, // already started OR starting within 30 min
 			officialDate: date,
 			'status.abstractGameState': GameState.Preview,
-			gameDate: { $lte: soon }, // already started OR starting within 30 min
 		});
 
 		if (needsUpdateCount === 0) {

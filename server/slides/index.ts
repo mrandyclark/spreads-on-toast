@@ -255,8 +255,17 @@ async function buildOpenerCountdownSlides(
 
 	const openerGames = await gameService.getOpenerForTeams(teamIds);
 	const now = new Date();
+	const slides: OpenerCountdownSlide[] = [];
 
-	return openerGames.map((game) => {
+	for (const game of openerGames) {
+		const msPerDay = 1000 * 60 * 60 * 24;
+		const daysUntil = Math.ceil((game.gameDate.getTime() - now.getTime()) / msPerDay);
+
+		// Skip openers that have already happened
+		if (daysUntil < 0) {
+			continue;
+		}
+
 		const teamId = teamIds.find((id) => {
 			return id === resolveRefId(game.homeTeam.team) || id === resolveRefId(game.awayTeam.team);
 		});
@@ -267,11 +276,8 @@ async function buildOpenerCountdownSlides(
 		const team = teamFromRef(teamSide.team);
 		const opponent = teamFromRef(opponentSide.team);
 
-		const msPerDay = 1000 * 60 * 60 * 24;
-		const daysUntil = Math.ceil((game.gameDate.getTime() - now.getTime()) / msPerDay);
-
-		return {
-			daysUntil: Math.max(0, daysUntil),
+		slides.push({
+			daysUntil,
 			gameDate: game.gameDate.toISOString(),
 			opponent: {
 				abbreviation: opponent?.abbreviation ?? 'TBD',
@@ -285,6 +291,8 @@ async function buildOpenerCountdownSlides(
 				name: team?.name ?? 'TBD',
 			},
 			venue: game.venue.name,
-		};
-	});
+		});
+	}
+
+	return slides;
 }

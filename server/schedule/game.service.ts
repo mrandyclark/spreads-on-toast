@@ -187,12 +187,12 @@ class GameService extends BaseService<Game> {
 		);
 	}
 
-	async getOpenerForTeams(teamIds: string[]): Promise<Game[]> {
+	async getOpenerForTeams(teamIds: string[], season?: string): Promise<Game[]> {
 		if (teamIds.length === 0) {
 			return [];
 		}
 
-		const now = new Date();
+		const targetSeason = season ?? new Date().getFullYear().toString();
 		const seenGameIds = new Set<number>();
 		const results: Game[] = [];
 
@@ -203,8 +203,8 @@ class GameService extends BaseService<Game> {
 						{ 'homeTeam.team': teamId },
 						{ 'awayTeam.team': teamId },
 					],
-					gameDate: { $gte: now },
 					gameType: GameType.RegularSeason,
+					season: targetSeason,
 				},
 				{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
 			);
