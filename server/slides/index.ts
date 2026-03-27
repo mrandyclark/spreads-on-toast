@@ -261,8 +261,8 @@ async function buildOpenerCountdownSlides(
 		const msPerDay = 1000 * 60 * 60 * 24;
 		const daysUntil = Math.ceil((game.gameDate.getTime() - now.getTime()) / msPerDay);
 
-		// Skip openers that have already happened
-		if (daysUntil < 0) {
+		// Skip openers that have already started
+		if (game.gameDate.getTime() <= now.getTime()) {
 			continue;
 		}
 
