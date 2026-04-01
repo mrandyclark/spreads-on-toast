@@ -28,6 +28,7 @@ export interface StandingsOnDate {
 	gamesPlayed: number;
 	losses: number;
 	projectedWins: number;
+	pythagoreanWins?: number;
 	wins: number;
 }
 
@@ -344,16 +345,18 @@ export async function getStandingsForDate(
 ): Promise<Map<string, StandingsOnDate>> {
 	const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 	const standings = await standingService.findByDateAndSeason(normalizedDate, season, {
-		select: 'team gamesPlayed wins losses projectedWins',
+		select: 'team gamesPlayed wins losses projectedWins pythagoreanWins',
 	});
 
 	const result = new Map<string, StandingsOnDate>();
 
 	for (const standing of standings) {
-		result.set(standing.id, {
+		const teamId = resolveRefId(standing.team);
+		result.set(teamId, {
 			gamesPlayed: standing.gamesPlayed,
 			losses: standing.losses,
 			projectedWins: standing.projectedWins,
+			pythagoreanWins: standing.pythagoreanWins,
 			wins: standing.wins,
 		});
 	}

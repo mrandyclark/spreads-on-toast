@@ -9,10 +9,12 @@ import MlbTeamPicks from './team-picks';
 import MlbWorldSeriesPicks from './world-series-picks';
 
 interface MlbPicksFormProps {
+	gamesPlayedByTeamId: Record<string, number>;
 	linesByTeamId: Record<string, number>;
 	onPostseasonPicksChange?: (picks: PostseasonPicks) => void;
 	onTeamPicksChange?: (picks: Record<string, PickChoice>) => void;
 	onWorldSeriesPicksChange?: (picks: WorldSeriesPicks) => void;
+	projectedWinsByTeamId: Record<string, number>;
 	sheet: Sheet;
 }
 
@@ -21,10 +23,12 @@ interface MlbPicksFormProps {
  * Contains all pick sections: team win totals, postseason, and World Series
  */
 const MlbPicksForm = ({
+	gamesPlayedByTeamId,
 	linesByTeamId,
 	onPostseasonPicksChange,
 	onTeamPicksChange,
 	onWorldSeriesPicksChange,
+	projectedWinsByTeamId,
 	sheet,
 }: MlbPicksFormProps) => {
 	const [postseasonPicks, setPostseasonPicks] = useState<PostseasonPicks>(
@@ -40,7 +44,13 @@ const MlbPicksForm = ({
 		<div className="space-y-8">
 			<section>
 				<h2 className="mb-4 text-xl font-semibold">Team Win Totals</h2>
-				<MlbTeamPicks linesByTeamId={linesByTeamId} onPicksChange={onTeamPicksChange} teamPicks={sheet.teamPicks} />
+				<MlbTeamPicks
+					gamesPlayedByTeamId={gamesPlayedByTeamId}
+					linesByTeamId={linesByTeamId}
+					onPicksChange={onTeamPicksChange}
+					projectedWinsByTeamId={projectedWinsByTeamId}
+					teamPicks={sheet.teamPicks}
+				/>
 			</section>
 
 			<section>

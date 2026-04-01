@@ -37,12 +37,20 @@ import {
 } from '../../app/(logged-in)/league/[id]/actions';
 
 interface LeagueDetailClientProps {
+	gamesPlayedByTeamId: Record<string, number>;
 	initialGroup: Group;
 	initialSheet: null | Sheet;
 	linesByTeamId: Record<string, number>;
+	projectedWinsByTeamId: Record<string, number>;
 }
 
-const LeagueDetailClient = ({ initialGroup, initialSheet, linesByTeamId }: LeagueDetailClientProps) => {
+const LeagueDetailClient = ({
+	gamesPlayedByTeamId,
+	initialGroup,
+	initialSheet,
+	linesByTeamId,
+	projectedWinsByTeamId,
+}: LeagueDetailClientProps) => {
 	const [group, setGroup] = useState<Group>(initialGroup);
 	const [sheet] = useState<null | Sheet>(initialSheet);
 	const [isSaving, setIsSaving] = useState(false);
@@ -371,10 +379,12 @@ const LeagueDetailClient = ({ initialGroup, initialSheet, linesByTeamId }: Leagu
 						{/* Sport-specific picks form - renders based on group.sport */}
 						{sheet && (
 							<PicksForm
+								gamesPlayedByTeamId={gamesPlayedByTeamId}
 								linesByTeamId={linesByTeamId}
 								onPostseasonPicksChange={setPostseasonPicks}
 								onTeamPicksChange={setTeamPicks}
 								onWorldSeriesPicksChange={setWorldSeriesPicks}
+								projectedWinsByTeamId={projectedWinsByTeamId}
 								sheet={sheet}
 							/>
 						)}

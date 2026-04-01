@@ -34,14 +34,14 @@ class StandingService extends BaseService<TeamStanding> {
 		return doc?.date ?? null;
 	}
 
-	async findAllForLatestDate(season: string): Promise<TeamStanding[]> {
+	async findAllForLatestDate(season: string, options?: { select?: string }): Promise<TeamStanding[]> {
 		const latestDate = await this.findLatestDate(season);
 
 		if (!latestDate) {
 			return [];
 		}
 
-		return this.find({ date: latestDate, season }, { select: 'team wins' });
+		return this.find({ date: latestDate, season }, options);
 	}
 
 	async findDateRange(season: string): Promise<{ maxDate: Date | null; minDate: Date | null }> {

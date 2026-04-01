@@ -1,5 +1,8 @@
 'use client';
 
+import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+
 import { Badge } from '@/components/ui/badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getResultBorderClass, getResultIcon } from '@/lib/result-utils';
@@ -7,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { PickChoice, PickResult } from '@/types';
 
 interface TeamPickCardProps {
-	// actualWins?: number;
+	abbreviation?: string;
 	editable?: boolean;
 	gamesPlayed?: number;
 	line: number;
@@ -19,6 +22,7 @@ interface TeamPickCardProps {
 }
 
 const TeamPickCard = ({
+	abbreviation,
 	editable = false,
 	gamesPlayed,
 	line,
@@ -52,6 +56,15 @@ const TeamPickCard = ({
 						<span className="text-muted-foreground">Line:</span>
 						<span className="font-medium">{line}</span>
 					</div>
+
+					{abbreviation && (
+						<Link
+							className="text-primary hover:text-primary/80 flex items-center gap-1 text-xs transition-colors"
+							href={`/teams/MLB/${abbreviation}`}>
+							View Team
+							<ExternalLink className="h-3 w-3" />
+						</Link>
+					)}
 				</div>
 
 				{editable && (

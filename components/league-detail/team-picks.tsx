@@ -13,12 +13,20 @@ import { PickChoice, TeamPick } from '@/types';
 import TeamPickCard from './team-pick-card';
 
 interface MlbTeamPicksProps {
+	gamesPlayedByTeamId: Record<string, number>;
 	linesByTeamId: Record<string, number>;
 	onPicksChange?: (picks: Record<string, PickChoice>) => void;
+	projectedWinsByTeamId: Record<string, number>;
 	teamPicks: TeamPick[];
 }
 
-const MlbTeamPicks = ({ linesByTeamId, onPicksChange, teamPicks }: MlbTeamPicksProps) => {
+const MlbTeamPicks = ({
+	gamesPlayedByTeamId,
+	linesByTeamId,
+	onPicksChange,
+	projectedWinsByTeamId,
+	teamPicks,
+}: MlbTeamPicksProps) => {
 	const [picks, setPicks] = useState<Record<string, PickChoice>>(() => {
 		const initial: Record<string, PickChoice> = {};
 		teamPicks.forEach((tp) => {
@@ -97,11 +105,14 @@ const MlbTeamPicks = ({ linesByTeamId, onPicksChange, teamPicks }: MlbTeamPicksP
 				<div className="space-y-3">
 					{filteredTeams.map((team) => (
 						<TeamPickCard
+							abbreviation={team.abbreviation}
 							editable
+							gamesPlayed={gamesPlayedByTeamId[team.id]}
 							key={team.id}
 							line={team.line}
 							onChange={(pick) => handlePickChange(team.id, pick)}
 							pick={picks[team.id]}
+							projectedWins={projectedWinsByTeamId[team.id]}
 							teamName={getFullTeamName(team)}
 						/>
 					))}

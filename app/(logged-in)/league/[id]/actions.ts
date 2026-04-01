@@ -7,14 +7,9 @@ import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { withAuth } from '@/lib/with-auth-action';
 import { calculateLeaderboard, getGroupForMember, groupService } from '@/server/groups/group.actions';
 import { groupService as groupSvc } from '@/server/groups/group.service';
-import { calculateProjectedWins } from '@/server/mlb-api';
 import { teamLineService } from '@/server/seasons/team-line.service';
 import { sheetService } from '@/server/sheets/sheet.service';
-import {
-	calculatePickResult,
-	getFinalStandings,
-	getStandingsForDate,
-} from '@/server/standings/standings.actions';
+import { calculatePickResult, getStandingsForDate } from '@/server/standings/standings.actions';
 import {
 	CopyableSheet,
 	GroupResults,
@@ -203,28 +198,9 @@ export const getResultsAction = withAuth(
 		const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
 
 		// Get standings data
-		let standingsData: Map<string, { projectedWins: number; wins: number; gamesPlayed: number }>;
-
-		if (date) {
-			const dateObj = new Date(date);
-			const historicalStandings = await getStandingsForDate(group.season, dateObj);
-			standingsData = new Map();
-
-			for (const [teamId, data] of historicalStandings) {
-				standingsData.set(teamId, {
-					gamesPlayed: data.gamesPlayed,
-					projectedWins: data.projectedWins,
-					wins: data.wins,
-				});
-			}
-		} else {
-			const finalStandings = await getFinalStandings(group.season);
-			standingsData = new Map();
-
-			for (const [teamId, wins] of finalStandings) {
-				standingsData.set(teamId, { gamesPlayed: 162, projectedWins: wins, wins });
-			}
-		}
+		const standingsData = date
+			? await getStandingsForDate(group.season, new Date(date))
+			: await getStandingsForDate(group.season, new Date());
 
 		// Calculate results
 		const picks: TeamPickResult[] = [];
@@ -247,19 +223,18 @@ export const getResultsAction = withAuth(
 
 			const actualWins = standing?.wins ?? 0;
 			const gamesPlayed = standing?.gamesPlayed ?? 0;
-			const projectedWinsForComparison =
-				gamesPlayed > 0 ? calculateProjectedWins(actualWins, gamesPlayed, 162, false) : 0;
-			const projectedWinsForDisplay = standing?.projectedWins ?? 0;
+			const projectedWins = standing?.projectedWins ?? 0;
+			const pythagoreanWins = standing?.pythagoreanWins ?? projectedWins;
 
 			const line = linesByTeamId.get(team.id) ?? 0;
-			const result = calculatePickResult(teamPick.pick, line, projectedWinsForComparison);
+			const result = calculatePickResult(teamPick.pick, line, pythagoreanWins);
 
 			picks.push({
 				actualWins,
 				gamesPlayed,
 				line,
 				pick: teamPick.pick,
-				projectedWins: projectedWinsForDisplay,
+				projectedWins: pythagoreanWins,
 				result,
 				team: {
 					abbreviation: team.abbreviation,

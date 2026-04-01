@@ -11,9 +11,9 @@ import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/compo
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
-import { Conference, GroupResults, Sheet, TeamPickResult } from '@/types';
+import { Conference, GroupResults, Sheet } from '@/types';
 
-import TeamPickCard from './team-pick-card';
+import TeamPicksResults from './team-picks-results';
 
 interface MlbMemberSheetProps {
 	groupId: string;
@@ -156,19 +156,7 @@ const MlbMemberSheet = ({
 						</TabsList>
 
 						<TabsContent value="teams">
-							<div className="space-y-3">
-								{results?.picks.map((pick: TeamPickResult) => (
-									<TeamPickCard
-										gamesPlayed={pick.gamesPlayed}
-										key={pick.team.id}
-										line={pick.line}
-										pick={pick.pick}
-										projectedWins={pick.projectedWins}
-										result={pick.result}
-										teamName={`${pick.team.city} ${pick.team.name}`}
-									/>
-								))}
-							</div>
+							<TeamPicksResults picks={results?.picks ?? []} />
 						</TabsContent>
 
 						<TabsContent value="postseason">

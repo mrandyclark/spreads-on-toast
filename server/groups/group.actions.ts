@@ -1,12 +1,10 @@
 import { resolveRefId } from '@/lib/ref-utils';
-import { calculateProjectedWins } from '@/server/mlb-api';
 import { Group, LeaderboardEntry, PickResult, TeamPick, User } from '@/types';
 
 import { teamLineService } from '../seasons/team-line.service';
 import { sheetService } from '../sheets/sheet.service';
 import {
 	calculatePickResult,
-	getFinalStandings,
 	getStandingsDateRange,
 	getStandingsForDate,
 } from '../standings/standings.actions';
@@ -104,25 +102,10 @@ export async function calculateLeaderboard(
 	groupId: string,
 	date?: string,
 ): Promise<LeaderboardEntry[]> {
-	// Get standings data — historical or final
-	let standingsData: Map<string, { gamesPlayed: number; wins: number }>;
-
-	if (date) {
-		const dateObj = new Date(date);
-		const historicalStandings = await getStandingsForDate(group.season, dateObj);
-		standingsData = new Map();
-
-		for (const [teamId, data] of historicalStandings) {
-			standingsData.set(teamId, { gamesPlayed: data.gamesPlayed, wins: data.wins });
-		}
-	} else {
-		const finalStandings = await getFinalStandings(group.season);
-		standingsData = new Map();
-
-		for (const [teamId, wins] of finalStandings) {
-			standingsData.set(teamId, { gamesPlayed: 162, wins });
-		}
-	}
+	// Get standings data — historical or current
+	const standingsData = date
+		? await getStandingsForDate(group.season, new Date(date))
+		: await getStandingsForDate(group.season, new Date());
 
 	const [sheets, teamLines] = await Promise.all([
 		sheetService.findByGroupPopulated(groupId),
@@ -149,12 +132,10 @@ export async function calculateLeaderboard(
 				const teamId = resolveRefId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
 
-				const projectedWins =
-					standing && standing.gamesPlayed > 0
-						? calculateProjectedWins(standing.wins, standing.gamesPlayed, 162, false)
-						: 0;
+				const projectedWins = standing?.projectedWins ?? 0;
+				const pythagoreanWins = standing?.pythagoreanWins ?? projectedWins;
 				const line = linesByTeamId.get(teamId) ?? 0;
-				const result: PickResult = calculatePickResult(teamPick.pick, line, projectedWins);
+				const result: PickResult = calculatePickResult(teamPick.pick, line, pythagoreanWins);
 
 				if (result === PickResult.Win) {
 					wins++;

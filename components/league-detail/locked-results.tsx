@@ -10,9 +10,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getPostseasonTeams, getWorldSeriesChampions } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
-import { Conference, GroupResults, Sheet, TeamPickResult } from '@/types';
+import { Conference, GroupResults, Sheet } from '@/types';
 
-import TeamPickCard from './team-pick-card';
+import TeamPicksResults from './team-picks-results';
 
 interface MlbLockedResultsProps {
 	groupId: string;
@@ -97,19 +97,7 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProp
 								Your locked win total picks for the season. Final results based on end-of-season
 								standings.
 							</p>
-							<div className="space-y-3">
-								{results?.picks.map((pick: TeamPickResult) => (
-									<TeamPickCard
-										gamesPlayed={pick.gamesPlayed}
-										key={pick.team.id}
-										line={pick.line}
-										pick={pick.pick}
-										projectedWins={pick.projectedWins}
-										result={pick.result}
-										teamName={`${pick.team.city} ${pick.team.name}`}
-									/>
-								))}
-							</div>
+							<TeamPicksResults picks={results?.picks ?? []} />
 						</CardContent>
 					</Card>
 				</TabsContent>
