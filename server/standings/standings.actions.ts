@@ -289,7 +289,7 @@ export const getStandingsBoardData = cached(async (season: string, date: string)
 
 	const [standings, teamLines] = await Promise.all([
 		standingService.findByDatePopulated(normalizedDate, season, {
-			select: 'team wins losses projectedWins pythagoreanWins',
+			select: 'team wins losses projectedWins pythagoreanWins divisionRank',
 		}),
 		teamLineService.findBySeason(Sport.MLB, season),
 	]);
@@ -310,6 +310,7 @@ export const getStandingsBoardData = cached(async (season: string, date: string)
 			abbreviation: team.abbreviation,
 			conference: team.conference,
 			division: team.division,
+			divisionRank: standing.divisionRank ?? 99,
 			line,
 			losses: standing.losses,
 			name: team.name,
@@ -318,6 +319,9 @@ export const getStandingsBoardData = cached(async (season: string, date: string)
 			wins: standing.wins,
 		});
 	}
+
+	// Sort by division rank (server-side for DRY)
+	result.sort((a, b) => a.divisionRank - b.divisionRank);
 
 	return result;
 });

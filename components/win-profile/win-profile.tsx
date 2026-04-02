@@ -29,7 +29,7 @@ const WinProfile = ({ conference, data }: WinProfileProps) => {
 								key={record.label}
 								label={record.label}
 								pct={record.pct}
-								record={`.${(record.pct * 1000).toFixed(0).padStart(3, '0')}`}
+								record={`${(record.pct * 100).toFixed(1)}%`}
 							/>
 						))}
 					</div>

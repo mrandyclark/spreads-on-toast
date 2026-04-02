@@ -12,8 +12,6 @@ interface DivisionRowsProps {
 }
 
 const DivisionRows = ({ division, standings }: DivisionRowsProps) => {
-	const sortedStandings = [...standings].sort((a, b) => b.pythagoreanWins - a.pythagoreanWins);
-
 	return (
 		<>
 			<tr>
@@ -23,7 +21,7 @@ const DivisionRows = ({ division, standings }: DivisionRowsProps) => {
 					{DIVISION_LABELS[division] ?? division}
 				</td>
 			</tr>
-			{sortedStandings.map((team) => (
+			{standings.map((team) => (
 				<tr className="border-border border-b" key={team.abbreviation}>
 					<td className="text-muted-foreground bg-card sticky left-0 z-10 w-[50px] px-2 py-2 text-center text-xs">{team.abbreviation}</td>
 					<td className="px-2 py-2 font-medium">

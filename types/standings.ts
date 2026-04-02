@@ -7,6 +7,7 @@ export interface StandingsBoardData {
 	abbreviation: string;
 	conference: string;
 	division: string;
+	divisionRank: number;
 	line: number;
 	losses: number;
 	name: string;
