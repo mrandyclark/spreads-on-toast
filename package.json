@@ -37,7 +37,7 @@
 		"jwks-rsa": "^3.2.2",
 		"lucide-react": "^0.563.0",
 		"mongoose": "^9.0.1",
-		"next": "16.1.6",
+		"next": "16.2.2",
 		"react": "19.2.1",
 		"react-day-picker": "^9.13.0",
 		"react-dom": "19.2.1",
