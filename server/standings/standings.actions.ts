@@ -327,20 +327,6 @@ export const getStandingsBoardData = cached(async (season: string, date: string)
 });
 
 /**
- * Get final standings for a season (last day of data)
- */
-export async function getFinalStandings(season: string): Promise<Map<string, number>> {
-	const standings = await standingService.findAllForLatestDate(season);
-	const finalWins = new Map<string, number>();
-
-	for (const standing of standings) {
-		finalWins.set(standing.id, standing.wins);
-	}
-
-	return finalWins;
-}
-
-/**
  * Get standings for a specific date
  */
 export async function getStandingsForDate(

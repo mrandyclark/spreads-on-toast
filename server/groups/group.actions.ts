@@ -102,13 +102,13 @@ export async function calculateLeaderboard(
 	groupId: string,
 	date?: string,
 ): Promise<LeaderboardEntry[]> {
-	// Get standings data — historical or current
-	const standingsData = date
-		? await getStandingsForDate(group.season, new Date(date))
-		: await getStandingsForDate(group.season, new Date());
-
-	const [sheets, teamLines] = await Promise.all([
-		sheetService.findByGroupPopulated(groupId),
+	// Fetch standings, sheets, and team lines in parallel
+	// Sheets don't need populate — leaderboard only uses team ID + pick
+	const [standingsData, sheets, teamLines] = await Promise.all([
+		date
+			? getStandingsForDate(group.season, new Date(date))
+			: getStandingsForDate(group.season, new Date()),
+		sheetService.findByGroup(groupId),
 		teamLineService.findBySeason(group.sport, group.season),
 	]);
 	const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));

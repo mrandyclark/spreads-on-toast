@@ -37,14 +37,6 @@ class SheetService extends BaseService<Sheet> {
 		return this.find({ group: groupId });
 	}
 
-	async findByUser(userId: string): Promise<Sheet[]> {
-		return this.find({ user: userId });
-	}
-
-	async findByGroupPopulated(groupId: string): Promise<Sheet[]> {
-		return this.find({ group: groupId }, { populate: 'teamPicks.team' });
-	}
-
 	async findByUserAndGroupPopulated(userId: string, groupId: string): Promise<null | Sheet> {
 		return this.findOne({ group: groupId, user: userId }, { populate: 'teamPicks.team' });
 	}

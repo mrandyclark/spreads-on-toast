@@ -34,6 +34,7 @@ vi.mock('@/server/groups/group.actions', () => ({
 	groupService: {
 		findById: vi.fn(),
 		findByIdAndUpdate: vi.fn(),
+		findForMember: vi.fn(),
 		findForMemberPopulated: vi.fn(),
 		isMember: vi.fn(),
 	},
@@ -64,7 +65,6 @@ vi.mock('@/server/sheets/sheet.service', () => ({
 
 vi.mock('@/server/standings/standings.actions', () => ({
 	calculatePickResult: vi.fn(),
-	getFinalStandings: vi.fn(() => Promise.resolve(new Map())),
 	getStandingsForDate: vi.fn(() => Promise.resolve(new Map())),
 }));
 

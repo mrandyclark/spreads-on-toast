@@ -43,13 +43,13 @@ class SignService extends BaseService<Sign> {
 	}
 
 	async isMember(signId: string, userId: string): Promise<boolean> {
-		const sign = await this.findOne({ _id: signId, 'members.user': userId });
-		return !!sign;
+		const count = await this.count({ _id: signId, 'members.user': userId });
+		return count > 0;
 	}
 
 	async isOwner(signId: string, userId: string): Promise<boolean> {
-		const sign = await this.findOne({ _id: signId, owner: userId });
-		return !!sign;
+		const count = await this.count({ _id: signId, owner: userId });
+		return count > 0;
 	}
 
 	async removeMember(signId: string, userId: string): Promise<null | Sign> {

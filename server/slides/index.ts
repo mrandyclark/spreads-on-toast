@@ -37,19 +37,14 @@ export async function getSignSlides(
 	contentConfig?: SignContentConfig,
 	date?: string,
 ): Promise<SlidesResponse> {
-	const slides: Slide[] = [];
+	// Fetch all slide types in parallel
+	const [standingsSlides, openerSlides, gameSlides] = await Promise.all([
+		buildStandingsSlides(contentConfig?.standingsDivisions, date),
+		buildOpenerCountdownSlides(contentConfig?.openerCountdownTeamIds),
+		buildTeamGameSlides(contentConfig, date),
+	]);
 
-	// Build standings slides (filtered to selected divisions)
-	const standingsSlides = await buildStandingsSlides(contentConfig?.standingsDivisions, date);
-	slides.push(...standingsSlides);
-
-	// Build opener countdown slides (only produces slides when opener is in the future)
-	const openerSlides = await buildOpenerCountdownSlides(contentConfig?.openerCountdownTeamIds);
-	slides.push(...openerSlides);
-
-	// Build per-team game slides (last game → next game, grouped by team)
-	const gameSlides = await buildTeamGameSlides(contentConfig, date);
-	slides.push(...gameSlides);
+	const slides: Slide[] = [...standingsSlides, ...openerSlides, ...gameSlides];
 
 	return {
 		generatedAt: new Date().toISOString(),

@@ -36,13 +36,13 @@ class GroupService extends BaseService<Group> {
 	}
 
 	async isMember(groupId: string, userId: string): Promise<boolean> {
-		const group = await this.findOne({ _id: groupId, 'members.user': userId });
-		return !!group;
+		const count = await this.count({ _id: groupId, 'members.user': userId });
+		return count > 0;
 	}
 
 	async isOwner(groupId: string, userId: string): Promise<boolean> {
-		const group = await this.findOne({ _id: groupId, owner: userId });
-		return !!group;
+		const count = await this.count({ _id: groupId, owner: userId });
+		return count > 0;
 	}
 
 	async findByUserSportSeason(userId: string, sport: Sport, season: string): Promise<Group[]> {
@@ -55,6 +55,10 @@ class GroupService extends BaseService<Group> {
 				members: { joinedAt: new Date(), role: GroupRole.Member, user: userId },
 			},
 		});
+	}
+
+	async findForMember(groupId: string, userId: string): Promise<Group | null> {
+		return this.findOne({ _id: groupId, 'members.user': userId });
 	}
 
 	async findForMemberPopulated(groupId: string, userId: string): Promise<Group | null> {

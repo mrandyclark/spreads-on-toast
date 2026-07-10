@@ -21,13 +21,12 @@ vi.mock('../seasons/team-line.service', () => ({
 vi.mock('../sheets/sheet.service', () => ({
 	sheetService: {
 		createForGroup: vi.fn(),
-		findByGroupPopulated: vi.fn(),
+		findByGroup: vi.fn(),
 	},
 }));
 
 vi.mock('../standings/standings.actions', () => ({
 	calculatePickResult: vi.fn(() => PickResult.Pending),
-	getFinalStandings: vi.fn(() => Promise.resolve(new Map())),
 	getStandingsDateRange: vi.fn(() => Promise.resolve({ maxDate: null, minDate: null })),
 	getStandingsForDate: vi.fn(() => Promise.resolve(new Map())),
 }));

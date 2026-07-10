@@ -173,16 +173,10 @@ export const savePicksAction = withAuth(async (user, groupId: string, input: Sav
 
 export const getResultsAction = withAuth(
 	async (user, groupId: string, userId?: string, date?: string) => {
-		const isMember = await groupService.isMember(groupId, user.id);
-
-		if (!isMember) {
-			return forbidden('view results');
-		}
-
-		const group = await groupService.findById(groupId);
+		const group = await groupService.findForMember(groupId, user.id);
 
 		if (!group) {
-			return notFound('Group');
+			return forbidden('view results');
 		}
 
 		const targetUserId = userId || user.id;

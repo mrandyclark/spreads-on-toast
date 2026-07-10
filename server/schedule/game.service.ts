@@ -59,36 +59,6 @@ class GameService extends BaseService<Game> {
 		});
 	}
 
-	async getRecentGames(teamId: string, limit = 10): Promise<Game[]> {
-		const today = new Date();
-		today.setUTCHours(0, 0, 0, 0);
-
-		return this.find(
-			{
-				$or: [
-					{ 'homeTeam.team': teamId },
-					{ 'awayTeam.team': teamId },
-				],
-				gameDate: { $lt: today },
-			},
-			// eslint-disable-next-line perfectionist/sort-objects
-			{ sort: { gameDate: -1 }, limit },
-		);
-	}
-
-	async getTeamSeasonSchedule(teamId: string, season: string): Promise<Game[]> {
-		return this.find(
-			{
-				$or: [
-					{ 'homeTeam.team': teamId },
-					{ 'awayTeam.team': teamId },
-				],
-				season,
-			},
-			{ sort: { gameDate: 1 } },
-		);
-	}
-
 	async getLastGameForTeams(teamIds: string[], asOfDate?: string): Promise<Game[]> {
 		if (teamIds.length === 0) {
 			return [];
