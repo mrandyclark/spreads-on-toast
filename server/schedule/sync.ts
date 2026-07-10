@@ -76,99 +76,119 @@ async function syncGamesToDatabase(
 	const teams = await teamService.findWithExternalIds(Sport.MLB);
 	const teamsByExternalId = new Map(teams.map((t) => [t.externalId, t]));
 
+	const mlbGameIds = games.map((g) => g.mlbGameId);
+	const existingDocs = await GameModel.find(
+		{ mlbGameId: { $in: mlbGameIds } },
+		{ mlbGameId: 1 },
+	).lean();
+	const existingIds = new Set(existingDocs.map((d) => d.mlbGameId));
+
 	let created = 0;
 	let updated = 0;
 	const errors: string[] = [];
-	let processed = 0;
 
-	for (const game of games) {
-		try {
-			const homeTeam = teamsByExternalId.get(game.homeTeamMlbId);
-			const awayTeam = teamsByExternalId.get(game.awayTeamMlbId);
+	const BATCH_SIZE = 500;
 
-			const gameDoc = {
-				awayTeam: {
-					errors: game.linescore?.teams.away.errors,
-					hits: game.linescore?.teams.away.hits,
-					isWinner: game.awayIsWinner,
-					leagueRecord: game.awayLeagueRecord,
-					leftOnBase: game.linescore?.teams.away.leftOnBase,
-					probablePitcher: game.awayProbablePitcher,
-					score: game.awayScore,
-					seriesNumber: game.awaySeriesNumber,
-					splitSquad: game.awaySplitSquad,
-					team: awayTeam?.id,
-					teamMlbId: game.awayTeamMlbId,
-				},
-				calendarEventId: game.calendarEventId,
-				dayNight: game.dayNight,
-				description: game.description,
-				doubleHeader: game.doubleHeader,
-				gameDate: game.gameDate,
-				gamedayType: game.gamedayType,
-				gameNumber: game.gameNumber,
-				gamesInSeries: game.gamesInSeries,
-				gameType: game.gameType,
-				homeTeam: {
-					errors: game.linescore?.teams.home.errors,
-					hits: game.linescore?.teams.home.hits,
-					isWinner: game.homeIsWinner,
-					leagueRecord: game.homeLeagueRecord,
-					leftOnBase: game.linescore?.teams.home.leftOnBase,
-					probablePitcher: game.homeProbablePitcher,
-					score: game.homeScore,
-					seriesNumber: game.homeSeriesNumber,
-					splitSquad: game.homeSplitSquad,
-					team: homeTeam?.id,
-					teamMlbId: game.homeTeamMlbId,
-				},
-				ifNecessary: game.ifNecessary,
-				ifNecessaryDescription: game.ifNecessaryDescription,
-				inningBreakLength: game.inningBreakLength,
-				isTie: game.isTie,
-				linescore: game.linescore,
-				mlbGameId: game.mlbGameId,
-				officialDate: game.officialDate,
-				publicFacing: game.publicFacing,
-				reverseHomeAwayStatus: game.reverseHomeAwayStatus,
-				scheduledInnings: game.scheduledInnings,
-				season: game.season,
-				seriesDescription: game.seriesDescription,
-				seriesGameNumber: game.seriesGameNumber,
-				status: game.status,
-				tiebreaker: game.tiebreaker,
-				venue: {
-					mlbId: game.venueMlbId,
-					name: game.venueName,
-				},
-			};
+	for (let i = 0; i < games.length; i += BATCH_SIZE) {
+		const batch = games.slice(i, i + BATCH_SIZE);
+		const ops = [];
 
-			const existingGame = await GameModel.findOne({ mlbGameId: game.mlbGameId });
+		for (const game of batch) {
+			try {
+				const homeTeam = teamsByExternalId.get(game.homeTeamMlbId);
+				const awayTeam = teamsByExternalId.get(game.awayTeamMlbId);
 
-			if (existingGame) {
-				await GameModel.updateOne(
-					{ mlbGameId: game.mlbGameId },
-					{ $set: gameDoc },
-				);
-				updated++;
-			} else {
-				await GameModel.create({
-					_id: randomUUID(),
-					...gameDoc,
-				});
-				created++;
+				const gameDoc = {
+					awayTeam: {
+						errors: game.linescore?.teams.away.errors,
+						hits: game.linescore?.teams.away.hits,
+						isWinner: game.awayIsWinner,
+						leagueRecord: game.awayLeagueRecord,
+						leftOnBase: game.linescore?.teams.away.leftOnBase,
+						probablePitcher: game.awayProbablePitcher,
+						score: game.awayScore,
+						seriesNumber: game.awaySeriesNumber,
+						splitSquad: game.awaySplitSquad,
+						team: awayTeam?.id,
+						teamMlbId: game.awayTeamMlbId,
+					},
+					calendarEventId: game.calendarEventId,
+					dayNight: game.dayNight,
+					description: game.description,
+					doubleHeader: game.doubleHeader,
+					gameDate: game.gameDate,
+					gamedayType: game.gamedayType,
+					gameNumber: game.gameNumber,
+					gamesInSeries: game.gamesInSeries,
+					gameType: game.gameType,
+					homeTeam: {
+						errors: game.linescore?.teams.home.errors,
+						hits: game.linescore?.teams.home.hits,
+						isWinner: game.homeIsWinner,
+						leagueRecord: game.homeLeagueRecord,
+						leftOnBase: game.linescore?.teams.home.leftOnBase,
+						probablePitcher: game.homeProbablePitcher,
+						score: game.homeScore,
+						seriesNumber: game.homeSeriesNumber,
+						splitSquad: game.homeSplitSquad,
+						team: homeTeam?.id,
+						teamMlbId: game.homeTeamMlbId,
+					},
+					ifNecessary: game.ifNecessary,
+					ifNecessaryDescription: game.ifNecessaryDescription,
+					inningBreakLength: game.inningBreakLength,
+					isTie: game.isTie,
+					linescore: game.linescore,
+					mlbGameId: game.mlbGameId,
+					officialDate: game.officialDate,
+					publicFacing: game.publicFacing,
+					reverseHomeAwayStatus: game.reverseHomeAwayStatus,
+					scheduledInnings: game.scheduledInnings,
+					season: game.season,
+					seriesDescription: game.seriesDescription,
+					seriesGameNumber: game.seriesGameNumber,
+					status: game.status,
+					tiebreaker: game.tiebreaker,
+					venue: {
+						mlbId: game.venueMlbId,
+						name: game.venueName,
+					},
+				};
+
+				if (existingIds.has(game.mlbGameId)) {
+					ops.push({
+						updateOne: {
+							filter: { mlbGameId: game.mlbGameId },
+							update: { $set: gameDoc },
+						},
+					});
+					updated++;
+				} else {
+					ops.push({
+						insertOne: {
+							document: { _id: randomUUID(), ...gameDoc },
+						},
+					});
+					created++;
+				}
+			} catch (error) {
+				const msg = `Error preparing game ${game.mlbGameId}: ${error}`;
+				console.error(`[Schedule Sync] ${msg}`);
+				errors.push(msg);
 			}
-		} catch (error) {
-			const msg = `Error syncing game ${game.mlbGameId}: ${error}`;
-			console.error(`[Schedule Sync] ${msg}`);
-			errors.push(msg);
 		}
 
-		processed++;
-
-		if (processed % 100 === 0) {
-			console.log(`[Schedule Sync] Processed ${processed}/${games.length} games...`);
+		if (ops.length > 0) {
+			try {
+				await GameModel.bulkWrite(ops, { ordered: false });
+			} catch (error) {
+				const msg = `Bulk write error for batch at index ${i}: ${error}`;
+				console.error(`[Schedule Sync] ${msg}`);
+				errors.push(msg);
+			}
 		}
+
+		console.log(`[Schedule Sync] Processed ${Math.min(i + BATCH_SIZE, games.length)}/${games.length} games...`);
 	}
 
 	console.log(`[Schedule Sync] Season ${season}: Created ${created}, Updated ${updated}, Errors ${errors.length}`);
@@ -231,26 +251,34 @@ export async function syncLiveGames(): Promise<{
 
 	console.log(`[Live Sync] ${games.length} games today, ${activeGames.length} active/final`);
 
+	if (activeGames.length === 0) {
+		return { errors: [], gamesChecked: 0, updated: 0 };
+	}
+
+	// Bulk-fetch DB status for all active games in one query
+	const activeMlbIds = activeGames.map((g) => g.mlbGameId);
+	const existingDocs = await GameModel.find(
+		{ mlbGameId: { $in: activeMlbIds } },
+		{ mlbGameId: 1, 'status.abstractGameState': 1 },
+	).lean();
+	const existingStatusMap = new Map(
+		existingDocs.map((d) => [d.mlbGameId, d.status?.abstractGameState]),
+	);
+
+	// Build bulk update ops, skipping games already Final in DB
+	const ops = [];
+
 	for (const game of activeGames) {
-		try {
-			// Only update if our DB copy isn't already Final
-			const existing = await GameModel.findOne(
-				{ mlbGameId: game.mlbGameId },
-				{ 'status.abstractGameState': 1 },
-			);
+		const dbState = existingStatusMap.get(game.mlbGameId);
 
-			if (!existing) {
-				continue;
-			}
+		if (!dbState || dbState === GameState.Final) {
+			continue;
+		}
 
-			// Skip if already Final in our DB (no new data to update)
-			if (existing.status.abstractGameState === GameState.Final) {
-				continue;
-			}
-
-			await GameModel.updateOne(
-				{ mlbGameId: game.mlbGameId },
-				{
+		ops.push({
+			updateOne: {
+				filter: { mlbGameId: game.mlbGameId },
+				update: {
 					$set: {
 						'awayTeam.errors': game.linescore?.teams.away.errors,
 						'awayTeam.hits': game.linescore?.teams.away.hits,
@@ -267,11 +295,16 @@ export async function syncLiveGames(): Promise<{
 						status: game.status,
 					},
 				},
-			);
+			},
+		});
+	}
 
-			updated++;
+	if (ops.length > 0) {
+		try {
+			const result = await GameModel.bulkWrite(ops, { ordered: false });
+			updated = result.modifiedCount;
 		} catch (error) {
-			const msg = `Error updating game ${game.mlbGameId}: ${error}`;
+			const msg = `Bulk write error: ${error}`;
 			console.error(`[Live Sync] ${msg}`);
 			errors.push(msg);
 		}

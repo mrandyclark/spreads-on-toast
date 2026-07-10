@@ -1,4 +1,4 @@
-import { resolveRefId } from '@/lib/ref-utils';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { Group, LeaderboardEntry, PickResult, TeamPick, User } from '@/types';
 
 import { teamLineService } from '../seasons/team-line.service';
@@ -115,9 +115,9 @@ export async function calculateLeaderboard(
 	const entries: LeaderboardEntry[] = [];
 
 	for (const member of group.members) {
-		const memberUser = member.user as User;
+		const memberUser = resolveRef<User>(member.user);
 		const memberId = resolveRefId(member.user)!;
-		const sheet = sheets.find((s) => s.user.toString() === memberId);
+		const sheet = sheets.find((s) => resolveRefId(s.user) === memberId);
 
 		let wins = 0;
 		let losses = 0;

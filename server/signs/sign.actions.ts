@@ -54,29 +54,15 @@ export async function updateSign(
 	signId: string,
 	input: { config?: Partial<SignConfig>; title?: string },
 ): Promise<null | Sign> {
-	const updateFields: Record<string, unknown> = {};
-
 	if (input.title !== undefined) {
-		updateFields.title = input.title;
+		await signService.findByIdAndUpdate(signId, { $set: { title: input.title } });
 	}
 
 	if (input.config) {
-		Object.entries(input.config).forEach(([section, sectionValue]) => {
-			if (sectionValue && typeof sectionValue === 'object') {
-				Object.entries(sectionValue as unknown as Record<string, unknown>).forEach(([field, fieldValue]) => {
-					if (fieldValue !== undefined) {
-						updateFields[`config.${section}.${field}`] = fieldValue;
-					}
-				});
-			}
-		});
+		return signService.updateConfig(signId, input.config);
 	}
 
-	if (Object.keys(updateFields).length === 0) {
-		return signService.findById(signId);
-	}
-
-	return signService.findByIdAndUpdate(signId, { $set: updateFields });
+	return signService.findById(signId);
 }
 
 /**

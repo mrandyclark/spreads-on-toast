@@ -10,12 +10,18 @@ export function getPostseasonTeams(sheet: null | Sheet): { al: Team[]; nl: Team[
 	}
 
 	const alTeams = (sheet.postseasonPicks?.al ?? [])
-		.map((id) => sheet.teamPicks.find((tp) => getTeamId(tp) === id)?.team)
-		.filter((t): t is Team => typeof t === 'object');
+		.map((id) => {
+			const tp = sheet.teamPicks.find((tp) => getTeamId(tp) === id);
+			return tp ? getTeamFromPick(tp) : null;
+		})
+		.filter((t): t is Team => t !== null);
 
 	const nlTeams = (sheet.postseasonPicks?.nl ?? [])
-		.map((id) => sheet.teamPicks.find((tp) => getTeamId(tp) === id)?.team)
-		.filter((t): t is Team => typeof t === 'object');
+		.map((id) => {
+			const tp = sheet.teamPicks.find((tp) => getTeamId(tp) === id);
+			return tp ? getTeamFromPick(tp) : null;
+		})
+		.filter((t): t is Team => t !== null);
 
 	return { al: alTeams, nl: nlTeams };
 }
@@ -32,13 +38,15 @@ export function getWorldSeriesChampions(sheet: null | Sheet): {
 		return { alChampion: undefined, nlChampion: undefined, winner: undefined };
 	}
 
-	const alChampion = sheet.teamPicks.find(
+	const alChampionPick = sheet.teamPicks.find(
 		(tp) => getTeamId(tp) === sheet.worldSeriesPicks?.alChampion,
-	)?.team as Team | undefined;
+	);
+	const alChampion = alChampionPick ? getTeamFromPick(alChampionPick) ?? undefined : undefined;
 
-	const nlChampion = sheet.teamPicks.find(
+	const nlChampionPick = sheet.teamPicks.find(
 		(tp) => getTeamId(tp) === sheet.worldSeriesPicks?.nlChampion,
-	)?.team as Team | undefined;
+	);
+	const nlChampion = nlChampionPick ? getTeamFromPick(nlChampionPick) ?? undefined : undefined;
 
 	const winner = sheet.worldSeriesPicks?.winner;
 

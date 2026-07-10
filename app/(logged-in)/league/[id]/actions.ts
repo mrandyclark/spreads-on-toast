@@ -236,14 +236,7 @@ export const getResultsAction = withAuth(
 				pick: teamPick.pick,
 				projectedWins: pythagoreanWins,
 				result,
-				team: {
-					abbreviation: team.abbreviation,
-					city: team.city,
-					conference: team.conference,
-					id: team.id,
-					name: team.name,
-					sport: team.sport,
-				} as Team,
+				team,
 			});
 
 			if (result === PickResult.Win) {

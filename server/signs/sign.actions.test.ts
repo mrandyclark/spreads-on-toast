@@ -107,13 +107,13 @@ describe('sign.actions', () => {
 			});
 		});
 
-		it('flattens nested config to dot notation', async () => {
-			vi.mocked(signService.findByIdAndUpdate).mockResolvedValue(mockSign);
+		it('delegates config update to signService.updateConfig', async () => {
+			vi.mocked(signService.updateConfig).mockResolvedValue(mockSign);
 			await updateSign('sign1', {
 				config: { standings: { showDivision: true } } as never,
 			});
-			expect(signService.findByIdAndUpdate).toHaveBeenCalledWith('sign1', {
-				$set: { 'config.standings.showDivision': true },
+			expect(signService.updateConfig).toHaveBeenCalledWith('sign1', {
+				standings: { showDivision: true },
 			});
 		});
 
