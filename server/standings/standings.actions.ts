@@ -1,5 +1,5 @@
 import { cached } from '@/lib/cache';
-import { resolveRefId } from '@/lib/ref-utils';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import {
 	PickResult,
 	SeasonWithDates,
@@ -298,9 +298,9 @@ export const getStandingsBoardData = cached(async (season: string, date: string)
 	const result: StandingsBoardData[] = [];
 
 	for (const standing of standings) {
-		const { team } = standing;
+		const team = resolveRef(standing.team);
 
-		if (!team || typeof team === 'string') {
+		if (!team) {
 			continue;
 		}
 
@@ -347,7 +347,7 @@ export async function getStandingsForDate(
 	season: string,
 	date: Date,
 ): Promise<Map<string, StandingsOnDate>> {
-	const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 	let standings = await standingService.findByDateAndSeason(normalizedDate, season, {
 		select: 'team gamesPlayed wins losses projectedWins pythagoreanWins',
 	});
@@ -414,9 +414,9 @@ export const getDivisionStandings = cached(async (date?: string): Promise<Divisi
 	const divisionMap = new Map<string, DivisionStandingsTeam[]>();
 
 	for (const standing of standings) {
-		const { team } = standing;
+		const team = resolveRef(standing.team);
 
-		if (!team || typeof team === 'string') {
+		if (!team) {
 			continue;
 		}
 

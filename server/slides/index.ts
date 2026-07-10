@@ -1,4 +1,4 @@
-import { resolveRefId } from '@/lib/ref-utils';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { gameService } from '@/server/schedule/game.service';
 import { getDivisionStandings } from '@/server/standings/standings.actions';
 import {
@@ -182,7 +182,7 @@ async function buildStandingsSlides(
  * Convert a populated game to a LastGameSlide
  */
 function teamFromRef(ref: Game['homeTeam']['team']): null | Team {
-	return typeof ref === 'object' ? ref as Team : null;
+	return resolveRef<Team>(ref);
 }
 
 function gameToLastGameSlide(game: Game): LastGameSlide {

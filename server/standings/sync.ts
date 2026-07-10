@@ -21,7 +21,7 @@ export async function syncMlbStandings(
 	await dbConnect();
 
 	// Normalize date to midnight UTC for consistent storage
-	const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 
 	// Fetch standings from MLB API
 	const standings = await fetchMlbStandings(season, fetchDate);

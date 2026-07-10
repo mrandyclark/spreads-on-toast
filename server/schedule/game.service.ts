@@ -1,4 +1,4 @@
-import { resolveRefId } from '@/lib/ref-utils';
+import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { GameModel } from '@/models/game.model';
 import { Game, GameState, GameType, Team, UpcomingGame } from '@/types';
 
@@ -13,7 +13,7 @@ class GameService extends BaseService<Game> {
 
 	async getUpcomingGames(teamId: string, fromDate?: string, limit = 10): Promise<UpcomingGame[]> {
 		const startDate = fromDate ? new Date(fromDate) : new Date();
-		startDate.setHours(0, 0, 0, 0);
+		startDate.setUTCHours(0, 0, 0, 0);
 
 		const games = await this.find(
 			{
@@ -28,8 +28,8 @@ class GameService extends BaseService<Game> {
 		);
 
 		return games.map((game) => {
-			const homeTeam = typeof game.homeTeam.team === 'object' ? game.homeTeam.team as Team : null;
-			const awayTeam = typeof game.awayTeam.team === 'object' ? game.awayTeam.team as Team : null;
+			const homeTeam = resolveRef<Team>(game.homeTeam.team);
+			const awayTeam = resolveRef<Team>(game.awayTeam.team);
 			const isHome = resolveRefId(game.homeTeam.team) === teamId;
 			const opponentData = isHome ? awayTeam : homeTeam;
 
@@ -61,7 +61,7 @@ class GameService extends BaseService<Game> {
 
 	async getRecentGames(teamId: string, limit = 10): Promise<Game[]> {
 		const today = new Date();
-		today.setHours(0, 0, 0, 0);
+		today.setUTCHours(0, 0, 0, 0);
 
 		return this.find(
 			{
@@ -95,29 +95,45 @@ class GameService extends BaseService<Game> {
 		}
 
 		const now = asOfDate ? new Date(asOfDate + 'T23:59:59Z') : new Date();
-		const seenGameIds = new Set<number>();
+
+		const games = await this.find(
+			{
+				$or: teamIds.flatMap((id) => [
+					{ 'homeTeam.team': id },
+					{ 'awayTeam.team': id },
+				]),
+				gameDate: { $lt: now },
+				'status.abstractGameState': GameState.Final,
+			},
+			// eslint-disable-next-line perfectionist/sort-objects
+			{ sort: { gameDate: -1 }, populate: TEAM_POPULATE },
+		);
+
 		const results: Game[] = [];
+		const coveredTeamIds = new Set<string>();
+		const seenGameIds = new Set<number>();
 
-		for (const teamId of teamIds) {
-			const game = await this.findOne(
-				{
-					$or: [
-						{ 'homeTeam.team': teamId },
-						{ 'awayTeam.team': teamId },
-					],
-					gameDate: { $lt: now },
-					'status.abstractGameState': GameState.Final,
-				},
-				// eslint-disable-next-line perfectionist/sort-objects
-				{ sort: { gameDate: -1 }, populate: TEAM_POPULATE },
-			);
+		for (const game of games) {
+			const homeId = resolveRefId(game.homeTeam.team);
+			const awayId = resolveRefId(game.awayTeam.team);
+			const relevantIds = teamIds.filter((id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id));
 
-			if (!game || seenGameIds.has(game.mlbGameId)) {
+			if (relevantIds.length === 0) {
 				continue;
 			}
 
-			seenGameIds.add(game.mlbGameId);
-			results.push(game);
+			for (const id of relevantIds) {
+				coveredTeamIds.add(id);
+			}
+
+			if (!seenGameIds.has(game.mlbGameId)) {
+				seenGameIds.add(game.mlbGameId);
+				results.push(game);
+			}
+
+			if (coveredTeamIds.size >= teamIds.length) {
+				break;
+			}
 		}
 
 		return results;
@@ -134,27 +150,42 @@ class GameService extends BaseService<Game> {
 			now.setUTCDate(now.getUTCDate() + 1);
 		}
 
-		const seenGameIds = new Set<number>();
+		const games = await this.find(
+			{
+				$or: teamIds.flatMap((id) => [
+					{ 'homeTeam.team': id },
+					{ 'awayTeam.team': id },
+				]),
+				gameDate: { $gte: now },
+			},
+			{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
+		);
+
 		const results: Game[] = [];
+		const coveredTeamIds = new Set<string>();
+		const seenGameIds = new Set<number>();
 
-		for (const teamId of teamIds) {
-			const game = await this.findOne(
-				{
-					$or: [
-						{ 'homeTeam.team': teamId },
-						{ 'awayTeam.team': teamId },
-					],
-					gameDate: { $gte: now },
-				},
-				{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
-			);
+		for (const game of games) {
+			const homeId = resolveRefId(game.homeTeam.team);
+			const awayId = resolveRefId(game.awayTeam.team);
+			const relevantIds = teamIds.filter((id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id));
 
-			if (!game || seenGameIds.has(game.mlbGameId)) {
+			if (relevantIds.length === 0) {
 				continue;
 			}
 
-			seenGameIds.add(game.mlbGameId);
-			results.push(game);
+			for (const id of relevantIds) {
+				coveredTeamIds.add(id);
+			}
+
+			if (!seenGameIds.has(game.mlbGameId)) {
+				seenGameIds.add(game.mlbGameId);
+				results.push(game);
+			}
+
+			if (coveredTeamIds.size >= teamIds.length) {
+				break;
+			}
 		}
 
 		return results;
@@ -193,28 +224,44 @@ class GameService extends BaseService<Game> {
 		}
 
 		const targetSeason = season ?? new Date().getFullYear().toString();
-		const seenGameIds = new Set<number>();
+
+		const games = await this.find(
+			{
+				$or: teamIds.flatMap((id) => [
+					{ 'homeTeam.team': id },
+					{ 'awayTeam.team': id },
+				]),
+				gameType: GameType.RegularSeason,
+				season: targetSeason,
+			},
+			{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
+		);
+
 		const results: Game[] = [];
+		const coveredTeamIds = new Set<string>();
+		const seenGameIds = new Set<number>();
 
-		for (const teamId of teamIds) {
-			const game = await this.findOne(
-				{
-					$or: [
-						{ 'homeTeam.team': teamId },
-						{ 'awayTeam.team': teamId },
-					],
-					gameType: GameType.RegularSeason,
-					season: targetSeason,
-				},
-				{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
-			);
+		for (const game of games) {
+			const homeId = resolveRefId(game.homeTeam.team);
+			const awayId = resolveRefId(game.awayTeam.team);
+			const relevantIds = teamIds.filter((id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id));
 
-			if (!game || seenGameIds.has(game.mlbGameId)) {
+			if (relevantIds.length === 0) {
 				continue;
 			}
 
-			seenGameIds.add(game.mlbGameId);
-			results.push(game);
+			for (const id of relevantIds) {
+				coveredTeamIds.add(id);
+			}
+
+			if (!seenGameIds.has(game.mlbGameId)) {
+				seenGameIds.add(game.mlbGameId);
+				results.push(game);
+			}
+
+			if (coveredTeamIds.size >= teamIds.length) {
+				break;
+			}
 		}
 
 		return results;

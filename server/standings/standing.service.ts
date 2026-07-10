@@ -21,7 +21,7 @@ class StandingService extends BaseService<TeamStanding> {
 	}
 
 	async findByTeamSeasonDate(teamId: string, season: string, date: Date): Promise<null | TeamStanding> {
-		const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+		const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 		return this.findOne({ date: normalizedDate, season, team: teamId });
 	}
 
