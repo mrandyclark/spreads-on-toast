@@ -10,7 +10,6 @@ import {
 	getGroupForMember,
 	groupService,
 } from '@/server/groups/group.actions';
-import { groupService as groupSvc } from '@/server/groups/group.service';
 import { teamLineService } from '@/server/seasons/team-line.service';
 import { sheetService } from '@/server/sheets/sheet.service';
 import { calculatePickResult, getStandingsForDate } from '@/server/standings/standings.actions';
@@ -272,7 +271,7 @@ export const getCopyableSheetsAction = withAuth(async (user, groupId: string) =>
 		return { sheets: [] as CopyableSheet[] };
 	}
 
-	const otherGroups = await groupSvc.findByUserSportSeason(user.id, group.sport, group.season);
+	const otherGroups = await groupService.findByUserSportSeason(user.id, group.sport, group.season);
 	const filteredGroups = otherGroups.filter((g) => g.id !== groupId);
 
 	if (filteredGroups.length === 0) {

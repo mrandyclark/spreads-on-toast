@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, Trophy, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { createGroupAction, getSeasonsAction, joinGroupAction } from '@/app/(logged-in)/dashboard/actions';
 import PageHeader from '@/components/layout/page-header';
@@ -53,6 +53,16 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 	const [joinError, setJoinError] = useState('');
 	const [isJoining, setIsJoining] = useState(false);
 	const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
+
+	const filteredGroups = useMemo(
+		() =>
+			groups.filter((g) =>
+				viewMode === 'archived'
+					? g.visibility === GroupVisibility.Archived
+					: g.visibility !== GroupVisibility.Archived,
+			),
+		[groups, viewMode],
+	);
 
 	useEffect(() => {
 		async function fetchSeasons() {
@@ -228,60 +238,49 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 				title="Your Groups"
 			/>
 
-			{(() => {
-				const filteredGroups = groups.filter((g) =>
-					viewMode === 'archived'
-						? g.visibility === GroupVisibility.Archived
-						: g.visibility !== GroupVisibility.Archived,
-				);
-
-				if (filteredGroups.length === 0) {
-					return (
-						<EmptyState
-							action={
-								viewMode === 'active'
-									? (
-										<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
-											<Plus className="h-4 w-4" />
-											Create your first group
-										</Button>
-									)
-									: undefined
-							}
-							description={
-								viewMode === 'archived'
-									? 'Groups you archive will appear here.'
-									: 'Create your first group to start making picks and competing with friends.'
-							}
+			{filteredGroups.length === 0 && (
+				<EmptyState
+					action={
+						viewMode === 'active'
+							? (
+								<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+									<Plus className="h-4 w-4" />
+									Create your first group
+								</Button>
+							)
+							: undefined
+					}
+					description={
+						viewMode === 'archived'
+							? 'Groups you archive will appear here.'
+							: 'Create your first group to start making picks and competing with friends.'
+					}
+					icon={Trophy}
+					title={viewMode === 'archived' ? 'No archived groups' : 'No groups yet'}
+				/>
+			)}
+			{filteredGroups.length > 0 && (
+				<div className="grid gap-4">
+					{filteredGroups.map((group) => (
+						<CardLink
+							href={`/league/${group.id}`}
 							icon={Trophy}
-							title={viewMode === 'archived' ? 'No archived groups' : 'No groups yet'}
-						/>
-					);
-				}
-
-				return (
-					<div className="grid gap-4">
-						{filteredGroups.map((group) => (
-							<CardLink
-								href={`/league/${group.id}`}
-								icon={Trophy}
-								key={group.id}
-								title={group.name}>
-								<span className="inline-flex items-center gap-1">
-									<span className="bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
-										{group.sport}
-									</span>
+							key={group.id}
+							title={group.name}>
+							<span className="inline-flex items-center gap-1">
+								<span className="bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
+									{group.sport}
 								</span>
-								<span className="inline-flex items-center gap-1">
-									<Users className="h-3.5 w-3.5" />
-									{countAndPluralize(group.members.length, 'member')}
-								</span>
-								<span>{group.season}</span>
-							</CardLink>
-						))}
-					</div>
-				);
-			})()}
+							</span>
+							<span className="inline-flex items-center gap-1">
+								<Users className="h-3.5 w-3.5" />
+								{countAndPluralize(group.members.length, 'member')}
+							</span>
+							<span>{group.season}</span>
+						</CardLink>
+					))}
+				</div>
+			)}
 
 			{viewMode === 'active' && (
 				<div className="border-border bg-muted/30 mt-8 rounded-xl border border-dashed p-6 text-center">
