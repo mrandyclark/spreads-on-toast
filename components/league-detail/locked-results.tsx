@@ -77,7 +77,7 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProp
 							<span className="text-yellow-500">{results.summary.pushes}P</span>
 						)}
 						<span className="text-muted-foreground">
-							({Math.round((results.summary.wins / results.summary.total) * 100)}%)
+							({results.summary.total > 0 ? Math.round((results.summary.wins / results.summary.total) * 100) : 0}%)
 						</span>
 					</div>
 				)}

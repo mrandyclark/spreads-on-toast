@@ -37,14 +37,24 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 	const [error, setError] = useState('');
 
 	// Content config state
-	const [standingsDivisions, setStandingsDivisions] = useState<string[]>(initialSign.config.content.standingsDivisions ?? []);
-	const [lastGameTeamIds, setLastGameTeamIds] = useState<string[]>(initialSign.config.content.lastGameTeamIds ?? []);
-	const [nextGameTeamIds, setNextGameTeamIds] = useState<string[]>(initialSign.config.content.nextGameTeamIds ?? []);
-	const [openerCountdownTeamIds, setOpenerCountdownTeamIds] = useState<string[]>(initialSign.config.content.openerCountdownTeamIds ?? []);
+	const [standingsDivisions, setStandingsDivisions] = useState<string[]>(
+		initialSign.config.content.standingsDivisions ?? [],
+	);
+	const [lastGameTeamIds, setLastGameTeamIds] = useState<string[]>(
+		initialSign.config.content.lastGameTeamIds ?? [],
+	);
+	const [nextGameTeamIds, setNextGameTeamIds] = useState<string[]>(
+		initialSign.config.content.nextGameTeamIds ?? [],
+	);
+	const [openerCountdownTeamIds, setOpenerCountdownTeamIds] = useState<string[]>(
+		initialSign.config.content.openerCountdownTeamIds ?? [],
+	);
 
 	// Display config state
 	const [brightness, setBrightness] = useState(initialSign.config.display.brightness);
-	const [rotationInterval, setRotationInterval] = useState(initialSign.config.display.rotationIntervalSeconds);
+	const [rotationInterval, setRotationInterval] = useState(
+		initialSign.config.display.rotationIntervalSeconds,
+	);
 
 	// Schedule config state
 	const [scheduleEnabled, setScheduleEnabled] = useState(initialSign.config.schedule.enabled);
@@ -93,11 +103,7 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 		setStandingsDivisions((prev) => toggleValue(prev, div));
 	};
 
-	const toggleTeamInList = (
-		teamId: string,
-		list: string[],
-		setList: (val: string[]) => void,
-	) => {
+	const toggleTeamInList = (teamId: string, list: string[], setList: (val: string[]) => void) => {
 		setList(toggleValue(list, teamId));
 	};
 
@@ -122,23 +128,20 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 					<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{sign.title}</h1>
 					<div className="flex items-center gap-2">
 						<WifiSetup />
-						<Button
-							className="gap-2"
-							disabled={isSaving}
-							onClick={handleSave}>
-							{isSaving ? (
+						<Button className="gap-2" disabled={isSaving} onClick={handleSave}>
+							{isSaving && (
 								<>
 									<Loader2 className="h-4 w-4 animate-spin" />
 									Saving...
 								</>
-							) : saveSuccess ? (
+							)}
+							{!isSaving && saveSuccess && (
 								<>
 									<Check className="h-4 w-4" />
 									Saved!
 								</>
-							) : (
-								'Save Changes'
 							)}
+							{!isSaving && !saveSuccess && 'Save Changes'}
 						</Button>
 					</div>
 				</div>
@@ -151,7 +154,7 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 					<CardContent className="p-6">
 						<h2 className="text-foreground mb-1 text-lg font-semibold">Standings</h2>
 						<p className="text-muted-foreground mb-4 text-sm">
-								Select which divisions to show standings for
+							Select which divisions to show standings for
 						</p>
 						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
 							{Object.values(Division).map((div) => (
@@ -177,10 +180,12 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 					<CardContent className="p-6">
 						<h2 className="text-foreground mb-1 text-lg font-semibold">Opening Day Countdown</h2>
 						<p className="text-muted-foreground mb-4 text-sm">
-								Show a countdown to opening day for these teams (only appears in the offseason)
+							Show a countdown to opening day for these teams (only appears in the offseason)
 						</p>
 						<TeamPicker
-							onToggle={(id) => toggleTeamInList(id, openerCountdownTeamIds, setOpenerCountdownTeamIds)}
+							onToggle={(id) =>
+								toggleTeamInList(id, openerCountdownTeamIds, setOpenerCountdownTeamIds)
+							}
 							selectedTeamIds={openerCountdownTeamIds}
 							teamsByDivision={teamsByDivision}
 						/>
@@ -192,7 +197,7 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 					<CardContent className="p-6">
 						<h2 className="text-foreground mb-1 text-lg font-semibold">Last Game Scores</h2>
 						<p className="text-muted-foreground mb-4 text-sm">
-								Show the most recent box score for these teams
+							Show the most recent box score for these teams
 						</p>
 						<TeamPicker
 							onToggle={(id) => toggleTeamInList(id, lastGameTeamIds, setLastGameTeamIds)}
@@ -207,7 +212,7 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 					<CardContent className="p-6">
 						<h2 className="text-foreground mb-1 text-lg font-semibold">Next Game Preview</h2>
 						<p className="text-muted-foreground mb-4 text-sm">
-								Show the next upcoming game for these teams
+							Show the next upcoming game for these teams
 						</p>
 						<TeamPicker
 							onToggle={(id) => toggleTeamInList(id, nextGameTeamIds, setNextGameTeamIds)}
@@ -255,15 +260,18 @@ const SignDetailClient = ({ initialSign, initialTeams }: SignDetailClientProps) 
 						<div className="space-y-4">
 							<div className="flex items-center gap-3">
 								<button
+									aria-checked={scheduleEnabled}
+									aria-label="Auto on/off schedule"
 									className={cn(
 										'relative h-6 w-11 rounded-full transition-colors',
 										scheduleEnabled ? 'bg-primary' : 'bg-muted',
 									)}
 									onClick={() => setScheduleEnabled(!scheduleEnabled)}
+									role="switch"
 									type="button">
 									<span
 										className={cn(
-											'bg-background absolute left-0.5 top-0.5 h-5 w-5 rounded-full shadow transition-transform',
+											'bg-background absolute top-0.5 left-0.5 h-5 w-5 rounded-full shadow transition-transform',
 											scheduleEnabled ? 'translate-x-5' : 'translate-x-0',
 										)}
 									/>

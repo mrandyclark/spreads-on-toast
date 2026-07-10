@@ -125,9 +125,11 @@ const MlbWorldSeriesPicks = ({
 						</p>
 						<div className="flex items-center justify-center gap-4">
 							<button
+								aria-pressed={winner === Conference.AL}
 								className={cn(
 									'rounded-lg px-6 py-4 text-center transition-all',
-									!alChampion && 'bg-primary/50 text-primary-foreground border-2 border-dashed border-primary/30',
+									!alChampion &&
+										'bg-primary/50 text-primary-foreground border-primary/30 border-2 border-dashed',
 									alChampion &&
 										winner === Conference.AL &&
 										'ring-primary bg-primary text-primary-foreground ring-2 ring-offset-2',
@@ -149,18 +151,18 @@ const MlbWorldSeriesPicks = ({
 									</>
 								)}
 
-								{!alTeam && (
-									<p className="text-sm text-white/70">Select AL</p>
-								)}
+								{!alTeam && <p className="text-sm text-white/70">Select AL</p>}
 							</button>
 							<div className="flex flex-col items-center">
 								<span className="text-muted-foreground text-lg font-bold">vs</span>
 								<Trophy className="text-primary mt-1 h-5 w-5" />
 							</div>
 							<button
+								aria-pressed={winner === Conference.NL}
 								className={cn(
 									'rounded-lg px-6 py-4 text-center transition-all',
-									!nlChampion && 'bg-blue-800/50 text-white border-2 border-dashed border-blue-800/30',
+									!nlChampion &&
+										'border-2 border-dashed border-blue-800/30 bg-blue-800/50 text-white',
 									nlChampion &&
 										winner === Conference.NL &&
 										'bg-blue-800 text-white ring-2 ring-blue-800 ring-offset-2',
@@ -182,9 +184,7 @@ const MlbWorldSeriesPicks = ({
 									</>
 								)}
 
-								{!nlTeam && (
-									<p className="text-sm text-white/70">Select NL</p>
-								)}
+								{!nlTeam && <p className="text-sm text-white/70">Select NL</p>}
 							</button>
 						</div>
 						{alChampion && nlChampion && !winner && (
@@ -197,6 +197,6 @@ const MlbWorldSeriesPicks = ({
 			</CardContent>
 		</Card>
 	);
-}
+};
 
 export default MlbWorldSeriesPicks;

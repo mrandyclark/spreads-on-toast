@@ -183,13 +183,16 @@ const WifiSetup = () => {
 		}
 	}, []);
 
-	const handleOpenChange = useCallback((value: boolean) => {
-		setOpen(value);
+	const handleOpenChange = useCallback(
+		(value: boolean) => {
+			setOpen(value);
 
-		if (!value) {
-			resetState();
-		}
-	}, [resetState]);
+			if (!value) {
+				resetState();
+			}
+		},
+		[resetState],
+	);
 
 	return (
 		<Dialog onOpenChange={handleOpenChange} open={open}>
@@ -215,8 +218,8 @@ const WifiSetup = () => {
 							</p>
 						</div>
 						<p className="text-muted-foreground text-sm">
-							Please use Chrome on Android or Desktop. Safari and iOS browsers do not support
-							Web Bluetooth. On iOS, try the Bluefy browser from the App Store.
+							Please use Chrome on Android or Desktop. Safari and iOS browsers do not support Web
+							Bluetooth. On iOS, try the Bluefy browser from the App Store.
 						</p>
 					</div>
 				)}
@@ -231,19 +234,19 @@ const WifiSetup = () => {
 								<div className="bg-muted/50 flex flex-col items-center gap-3 rounded-lg p-6">
 									<Bluetooth className="text-muted-foreground h-10 w-10" />
 									<p className="text-muted-foreground text-center text-sm">
-										Make sure your sign is powered on and showing &quot;WIFI SETUP&quot; on the display
+										Make sure your sign is powered on and showing &quot;WIFI SETUP&quot; on the
+										display
 									</p>
 								</div>
-								<Button
-									className="w-full gap-2"
-									disabled={isConnecting}
-									onClick={connectToSign}>
-									{isConnecting ? (
+								<Button className="w-full gap-2" disabled={isConnecting} onClick={connectToSign}>
+									{isConnecting && (
 										<>
 											<Loader2 className="h-4 w-4 animate-spin" />
 											Scanning...
 										</>
-									) : (
+									)}
+
+									{!isConnecting && (
 										<>
 											<Bluetooth className="h-4 w-4" />
 											Connect to Sign
@@ -257,9 +260,7 @@ const WifiSetup = () => {
 						{step === 'connected' && (
 							<div className="space-y-4">
 								<div className="bg-primary/10 border-primary/20 rounded-lg border p-3 text-center">
-									<p className="text-primary text-sm font-medium">
-										Connected via Bluetooth
-									</p>
+									<p className="text-primary text-sm font-medium">Connected via Bluetooth</p>
 								</div>
 
 								{/* WiFi network picker */}
@@ -272,11 +273,8 @@ const WifiSetup = () => {
 												disabled={isScanning}
 												onClick={rescanNetworks}
 												variant="link">
-												{isScanning ? (
-													<Loader2 className="h-3 w-3 animate-spin" />
-												) : (
-													<RefreshCw className="h-3 w-3" />
-												)}
+												{isScanning && <Loader2 className="h-3 w-3 animate-spin" />}
+												{!isScanning && <RefreshCw className="h-3 w-3" />}
 												Rescan
 											</Button>
 										</div>
@@ -321,10 +319,7 @@ const WifiSetup = () => {
 									/>
 								</div>
 
-								<Button
-									className="w-full gap-2"
-									disabled={!ssid}
-									onClick={sendWifiCredentials}>
+								<Button className="w-full gap-2" disabled={!ssid} onClick={sendWifiCredentials}>
 									<Wifi className="h-4 w-4" />
 									Connect to WiFi
 								</Button>
@@ -349,17 +344,9 @@ const WifiSetup = () => {
 							<div className="flex flex-col items-center gap-4 py-6">
 								<Loader2 className="text-primary h-10 w-10 animate-spin" />
 								<div className="space-y-1 text-center">
-									<p className="text-foreground font-medium">
-										Connecting to &quot;{ssid}&quot;...
-									</p>
-									<p className="text-muted-foreground text-sm">
-										This may take up to 30 seconds
-									</p>
-									{status && (
-										<p className="text-muted-foreground text-xs">
-											Status: {status}
-										</p>
-									)}
+									<p className="text-foreground font-medium">Connecting to &quot;{ssid}&quot;...</p>
+									<p className="text-muted-foreground text-sm">This may take up to 30 seconds</p>
+									{status && <p className="text-muted-foreground text-xs">Status: {status}</p>}
 								</div>
 							</div>
 						)}
@@ -371,17 +358,13 @@ const WifiSetup = () => {
 									<Wifi className="text-primary h-8 w-8" />
 								</div>
 								<div className="space-y-1 text-center">
-									<p className="text-foreground text-lg font-semibold">
-										WiFi Connected!
-									</p>
+									<p className="text-foreground text-lg font-semibold">WiFi Connected!</p>
 									<p className="text-muted-foreground text-sm">
-										Your sign is now connected to &quot;{ssid}&quot; and will start
-										displaying MLB data shortly.
+										Your sign is now connected to &quot;{ssid}&quot; and will start displaying MLB
+										data shortly.
 									</p>
 								</div>
-								<Button
-									className="mt-2"
-									onClick={() => handleOpenChange(false)}>
+								<Button className="mt-2" onClick={() => handleOpenChange(false)}>
 									Done
 								</Button>
 							</div>

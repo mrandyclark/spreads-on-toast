@@ -99,7 +99,7 @@ const MlbMemberSheet = ({
 				{results && (
 					<SheetDescription>
 						{results.summary.wins} correct (
-						{Math.round((results.summary.wins / results.summary.total) * 100)}%)
+						{results.summary.total > 0 ? Math.round((results.summary.wins / results.summary.total) * 100) : 0}%)
 					</SheetDescription>
 				)}
 			</SheetHeader>

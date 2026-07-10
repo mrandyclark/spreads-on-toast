@@ -95,7 +95,7 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 			</div>
 
 			{/* Games grid */}
-			{loading || isPending ? (
+			{(loading || isPending) && (
 				<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					{Array.from({ length: 6 }).map((_, i) => (
 						<Card className="animate-pulse" key={i}>
@@ -103,13 +103,15 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 						</Card>
 					))}
 				</div>
-			) : games.length === 0 ? (
+			)}
+			{!loading && !isPending && games.length === 0 && (
 				<Card>
 					<CardContent className="flex items-center justify-center p-12">
 						<p className="text-muted-foreground">No games scheduled for this date.</p>
 					</CardContent>
 				</Card>
-			) : (
+			)}
+			{!loading && !isPending && games.length > 0 && (
 				<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					{games.map((game) => (
 						<GameCard game={game} key={game.gameId} />
@@ -136,11 +138,13 @@ const GameCard = ({
 					{/* Status + Venue row */}
 					<div className="text-muted-foreground mb-3 flex items-center justify-between text-xs">
 						<div className="flex items-center gap-1.5">
-							{isLive ? (
+							{isLive && (
 								<span className="bg-destructive inline-block h-2 w-2 animate-pulse rounded-full" />
-							) : game.dayNight === 'night' ? (
+							)}
+							{!isLive && game.dayNight === 'night' && (
 								<Moon className="h-3 w-3" />
-							) : (
+							)}
+							{!isLive && game.dayNight !== 'night' && (
 								<Sun className="h-3 w-3" />
 							)}
 							<span>
@@ -168,9 +172,10 @@ const GameCard = ({
 									{game.awayTeamCity} {game.awayTeamName}
 								</span>
 							</div>
-							{hasScore && game.awayScore != null ? (
+							{hasScore && game.awayScore != null && (
 								<span className="min-w-6 text-right text-sm font-bold tabular-nums">{game.awayScore}</span>
-							) : (
+							)}
+							{!(hasScore && game.awayScore != null) && (
 								<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
 							)}
 						</div>
@@ -187,9 +192,10 @@ const GameCard = ({
 									{game.homeTeamCity} {game.homeTeamName}
 								</span>
 							</div>
-							{hasScore && game.homeScore != null ? (
+							{hasScore && game.homeScore != null && (
 								<span className="min-w-6 text-right text-sm font-bold tabular-nums">{game.homeScore}</span>
-							) : (
+							)}
+							{!(hasScore && game.homeScore != null) && (
 								<span className="text-muted-foreground text-xs">{game.homeRecord}</span>
 							)}
 						</div>

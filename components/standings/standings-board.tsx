@@ -25,6 +25,7 @@ const MlbStandingsBoard = ({ initialSeasons }: StandingsBoardProps) => {
 	const [selectedDate, setSelectedDate] = useState<string>(initialSeasons[0]?.latestDate ?? '');
 	const [standings, setStandings] = useState<StandingsBoardData[]>([]);
 	const [isLoadingStandings, setIsLoadingStandings] = useState(false);
+	const [error, setError] = useState('');
 
 	// Fetch standings when season/date changes
 	useEffect(() => {
@@ -34,6 +35,7 @@ const MlbStandingsBoard = ({ initialSeasons }: StandingsBoardProps) => {
 
 		async function fetchStandings() {
 			setIsLoadingStandings(true);
+			setError('');
 
 			try {
 				const result = await getStandingsAction(selectedSeason, selectedDate);
@@ -41,6 +43,8 @@ const MlbStandingsBoard = ({ initialSeasons }: StandingsBoardProps) => {
 				if (result.standings) {
 					setStandings(result.standings);
 				}
+			} catch {
+				setError('Failed to load standings.');
 			} finally {
 				setIsLoadingStandings(false);
 			}
@@ -111,7 +115,10 @@ const MlbStandingsBoard = ({ initialSeasons }: StandingsBoardProps) => {
 			{isLoadingStandings && (
 				<div className="text-muted-foreground">Loading standings...</div>
 			)}
-			{!isLoadingStandings && standings.length === 0 && (
+			{!isLoadingStandings && error && (
+				<div className="text-destructive">{error}</div>
+			)}
+			{!isLoadingStandings && !error && standings.length === 0 && (
 				<div className="text-muted-foreground">No standings data for this date.</div>
 			)}
 			{!isLoadingStandings && standings.length > 0 && (
