@@ -348,9 +348,15 @@ export async function getStandingsForDate(
 	date: Date,
 ): Promise<Map<string, StandingsOnDate>> {
 	const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-	const standings = await standingService.findByDateAndSeason(normalizedDate, season, {
+	let standings = await standingService.findByDateAndSeason(normalizedDate, season, {
 		select: 'team gamesPlayed wins losses projectedWins pythagoreanWins',
 	});
+
+	if (standings.length === 0) {
+		standings = await standingService.findAllForLatestDate(season, {
+			select: 'team gamesPlayed wins losses projectedWins pythagoreanWins',
+		});
+	}
 
 	const result = new Map<string, StandingsOnDate>();
 
