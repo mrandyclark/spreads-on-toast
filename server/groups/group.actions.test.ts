@@ -18,10 +18,16 @@ vi.mock('../seasons/team-line.service', () => ({
 	},
 }));
 
+vi.mock('../seasons/season.service', () => ({
+	seasonService: {
+		findBySportAndYear: vi.fn(() => Promise.resolve(null)),
+	},
+}));
+
 vi.mock('../sheets/sheet.service', () => ({
 	sheetService: {
-		createForGroup: vi.fn(),
 		findByGroup: vi.fn(),
+		getOrCreate: vi.fn(),
 	},
 }));
 
@@ -43,11 +49,11 @@ const makeMockGroup = (): Group => ({
 	createdAt: new Date(),
 	id: 'group1',
 	inviteCode: 'ABC123',
-	lockDate: new Date('2025-04-01'),
+	lockDate: new Date('2099-04-01'),
 	members: [{ joinedAt: new Date(), role: GroupRole.Owner, user: 'user1' }],
 	name: 'Test Group',
 	owner: 'user1',
-	season: '2025',
+	season: '2099',
 	sport: Sport.MLB,
 	updatedAt: new Date(),
 	visibility: GroupVisibility.Active,
@@ -65,10 +71,18 @@ describe('group.actions', () => {
 			expect(result.error).toBe('Invalid invite code');
 		});
 
-		it('returns error if already a member', async () => {
-			vi.mocked(groupService.findByInviteCode).mockResolvedValue(makeMockGroup());
+		it('repairs or returns an existing member sheet idempotently', async () => {
+			const group = makeMockGroup();
+			vi.mocked(groupService.findByInviteCode).mockResolvedValue(group);
 			const result = await joinGroupByInviteCode('ABC123', 'user1');
-			expect(result.error).toBe('You are already a member of this group');
+			expect(result.group).toBe(group);
+			expect(sheetService.getOrCreate).toHaveBeenCalledWith({
+				group: 'group1',
+				lockAt: new Date('2099-04-01'),
+				season: '2099',
+				sport: Sport.MLB,
+				user: 'user1',
+			});
 		});
 
 		it('returns error if addMember fails', async () => {
@@ -82,15 +96,16 @@ describe('group.actions', () => {
 			const group = makeMockGroup();
 			vi.mocked(groupService.findByInviteCode).mockResolvedValue(group);
 			vi.mocked(groupService.addMember).mockResolvedValue(group);
-			vi.mocked(sheetService.createForGroup).mockResolvedValue({} as never);
+			vi.mocked(sheetService.getOrCreate).mockResolvedValue({} as never);
 
 			const result = await joinGroupByInviteCode('ABC123', 'user2');
 
 			expect(result.group).toBe(group);
 			expect(groupService.addMember).toHaveBeenCalledWith('group1', 'user2');
-			expect(sheetService.createForGroup).toHaveBeenCalledWith({
+			expect(sheetService.getOrCreate).toHaveBeenCalledWith({
 				group: 'group1',
-				season: '2025',
+				lockAt: new Date('2099-04-01'),
+				season: '2099',
 				sport: Sport.MLB,
 				user: 'user2',
 			});

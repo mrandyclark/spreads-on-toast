@@ -55,9 +55,7 @@ export function calculateLeagueAverages(allStandings: TeamStanding[]): LeagueAve
 
 	// Average runs per game (use scored, as scored and allowed should average the same league-wide)
 	const avgRunsPerGame =
-		totalGamesPlayed > 0
-			? totalRunsScored / totalGamesPlayed
-			: LEAGUE_FALLBACKS.AVG_RUNS_PER_GAME;
+		totalGamesPlayed > 0 ? totalRunsScored / totalGamesPlayed : LEAGUE_FALLBACKS.AVG_RUNS_PER_GAME;
 
 	// Average run differential per win above .500
 	// This is trickier - we want the relationship between run diff and wins
@@ -109,8 +107,7 @@ export function calculateTeamChips(
 	const delta = standing.wins - expectedWins;
 
 	// Run diff per win
-	const runDiffPerWin =
-		standing.wins > 0 ? (standing.runDifferential ?? 0) / standing.wins : 0;
+	const runDiffPerWin = standing.wins > 0 ? (standing.runDifferential ?? 0) / standing.wins : 0;
 
 	// -------------------------------------------------------------------------
 	// CATEGORY 1: TEAM TIER

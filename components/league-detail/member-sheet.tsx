@@ -54,7 +54,9 @@ const MlbMemberSheet = ({
 			]);
 
 			if (resultsResult.error || sheetResult.error) {
-				setError(resultsResult.errorMessage ?? sheetResult.errorMessage ?? 'Failed to load member data');
+				setError(
+					resultsResult.errorMessage ?? sheetResult.errorMessage ?? 'Failed to load member data',
+				);
 			} else {
 				if (resultsResult.results) {
 					setResults(resultsResult.results);
@@ -73,6 +75,8 @@ const MlbMemberSheet = ({
 
 	useEffect(() => {
 		if (userId) {
+			// This effect intentionally synchronizes the selected member with server-owned data.
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			fetchData();
 		}
 	}, [fetchData, userId]);
@@ -99,7 +103,10 @@ const MlbMemberSheet = ({
 				{results && (
 					<SheetDescription>
 						{results.summary.wins} correct (
-						{results.summary.total > 0 ? Math.round((results.summary.wins / results.summary.total) * 100) : 0}%)
+						{results.summary.total > 0
+							? Math.round((results.summary.wins / results.summary.total) * 100)
+							: 0}
+						%)
 					</SheetDescription>
 				)}
 			</SheetHeader>
@@ -128,15 +135,15 @@ const MlbMemberSheet = ({
 				</div>
 			)}
 
-			{isLoading && (
-				<div className="text-muted-foreground mt-6 text-sm">Loading picks...</div>
-			)}
+			{isLoading && <div className="text-muted-foreground mt-6 text-sm">Loading picks...</div>}
 
 			{!isLoading && error && (
 				<div className="mt-6 flex flex-col items-center gap-2 py-4 text-center">
 					<AlertCircle className="text-destructive h-5 w-5" />
 					<p className="text-muted-foreground text-sm">{error}</p>
-					<Button onClick={fetchData} size="sm" variant="outline">Retry</Button>
+					<Button onClick={fetchData} size="sm" variant="outline">
+						Retry
+					</Button>
 				</div>
 			)}
 
@@ -245,6 +252,6 @@ const MlbMemberSheet = ({
 			)}
 		</SheetContent>
 	);
-}
+};
 
 export default MlbMemberSheet;

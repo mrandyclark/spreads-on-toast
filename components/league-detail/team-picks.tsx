@@ -126,6 +126,6 @@ const MlbTeamPicks = ({
 			</CardContent>
 		</Card>
 	);
-}
+};
 
 export default MlbTeamPicks;

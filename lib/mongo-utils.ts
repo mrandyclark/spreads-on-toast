@@ -478,4 +478,3 @@ export function enumToValues<T extends object>(enumObj: T): [string, ...string[]
 
 	return values as unknown as [string, ...string[]];
 }
-

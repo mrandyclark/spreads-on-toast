@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 
+import { hasValidBearerSecret } from '@/server/http/authentication';
 import { syncLiveGames } from '@/server/schedule/sync';
 
 /**
@@ -12,7 +13,7 @@ import { syncLiveGames } from '@/server/schedule/sync';
 export async function GET(request: NextRequest) {
 	const authHeader = request.headers.get('authorization');
 
-	if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+	if (!hasValidBearerSecret(authHeader)) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 

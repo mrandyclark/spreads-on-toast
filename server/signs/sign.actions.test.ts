@@ -2,7 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Sign, SignRole } from '@/types';
 
-import { createSign, deleteSign, getSign, getSignsForUser, isMember, isOwner, updateSign, updateSignConfig } from './sign.actions';
+import {
+	createSign,
+	deleteSign,
+	getSign,
+	getSignForMember,
+	getSignsForUser,
+	isMember,
+	isOwner,
+	updateSign,
+	updateSignConfig,
+} from './sign.actions';
 
 vi.mock('./sign.service', () => ({
 	signService: {
@@ -12,6 +22,7 @@ vi.mock('./sign.service', () => ({
 		findById: vi.fn(),
 		findByIdAndUpdate: vi.fn(),
 		findByUser: vi.fn(),
+		findForMember: vi.fn(),
 		isMember: vi.fn(),
 		isOwner: vi.fn(),
 		updateConfig: vi.fn(),
@@ -60,6 +71,17 @@ describe('sign.actions', () => {
 			vi.mocked(signService.findById).mockResolvedValue(null);
 			const result = await getSign('missing');
 			expect(result).toBeNull();
+		});
+	});
+
+	describe('getSignForMember', () => {
+		it('uses a membership-scoped query', async () => {
+			vi.mocked(signService.findForMember).mockResolvedValue(mockSign);
+
+			const result = await getSignForMember('sign1', 'user1');
+
+			expect(signService.findForMember).toHaveBeenCalledWith('sign1', 'user1');
+			expect(result).toBe(mockSign);
 		});
 	});
 
@@ -129,7 +151,9 @@ describe('sign.actions', () => {
 		it('updates config when user is owner', async () => {
 			vi.mocked(signService.isOwner).mockResolvedValue(true);
 			vi.mocked(signService.updateConfig).mockResolvedValue(mockSign);
-			const result = await updateSignConfig('sign1', 'user1', { standings: { showDivision: true } } as never);
+			const result = await updateSignConfig('sign1', 'user1', {
+				standings: { showDivision: true },
+			} as never);
 			expect(result).toEqual({ sign: mockSign });
 		});
 

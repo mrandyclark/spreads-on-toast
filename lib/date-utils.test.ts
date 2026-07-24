@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDateDisplay, formatGameDate, formatGameTime, formatShortDate, toDateString, todayET } from './date-utils';
+import {
+	formatDateDisplay,
+	formatGameDate,
+	formatGameTime,
+	formatShortDate,
+	toDateString,
+	todayET,
+} from './date-utils';
 
 describe('date-utils', () => {
 	describe('toDateString', () => {

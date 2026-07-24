@@ -18,6 +18,8 @@ import {
 	TeamSplits,
 } from '@/types';
 
+import { fetchMlbJson } from './client';
+
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
 // League IDs
@@ -105,6 +107,81 @@ interface MlbStandingsResponse {
 	copyright: string;
 	records: MlbDivisionStandings[];
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isMlbStandingsResponse = (value: unknown): value is MlbStandingsResponse => {
+	if (!isRecord(value)) {
+		return false;
+	}
+
+	const records = value.records;
+
+	return (
+		Array.isArray(records) &&
+		records.every(
+			(record) =>
+				isRecord(record) &&
+				Array.isArray(record.teamRecords) &&
+				record.teamRecords.every(
+					(teamRecord) =>
+						isRecord(teamRecord) &&
+						isRecord(teamRecord.team) &&
+						typeof teamRecord.team.id === 'number' &&
+						typeof teamRecord.gamesPlayed === 'number' &&
+						typeof teamRecord.losses === 'number' &&
+						typeof teamRecord.wins === 'number',
+				),
+		)
+	);
+};
+
+const isMlbScheduleResponse = (value: unknown): value is MlbScheduleResponse => {
+	if (!isRecord(value)) {
+		return false;
+	}
+
+	const dates = value.dates;
+
+	return (
+		Array.isArray(dates) &&
+		dates.every((date) => {
+			if (!isRecord(date) || !Array.isArray(date.games)) {
+				return false;
+			}
+
+			return date.games.every((game) => {
+				if (
+					!isRecord(game) ||
+					typeof game.gamePk !== 'number' ||
+					typeof game.gameDate !== 'string' ||
+					!isRecord(game.status) ||
+					typeof game.status.abstractGameState !== 'string' ||
+					!isRecord(game.teams) ||
+					!isRecord(game.teams.away) ||
+					!isRecord(game.teams.home) ||
+					!isRecord(game.venue)
+				) {
+					return false;
+				}
+
+				const awayTeam = game.teams.away;
+				const homeTeam = game.teams.home;
+
+				return (
+					isRecord(awayTeam.team) &&
+					typeof awayTeam.team.id === 'number' &&
+					isRecord(awayTeam.leagueRecord) &&
+					isRecord(homeTeam.team) &&
+					typeof homeTeam.team.id === 'number' &&
+					isRecord(homeTeam.leagueRecord) &&
+					typeof game.venue.id === 'number'
+				);
+			});
+		})
+	);
+};
 
 export interface TeamStandingData {
 	// Playoff status
@@ -239,13 +316,7 @@ export async function fetchMlbStandings(
 		url.searchParams.set('date', date);
 	}
 
-	const response = await fetch(url.toString());
-
-	if (!response.ok) {
-		throw new Error(`MLB API error: ${response.status} ${response.statusText}`);
-	}
-
-	const data: MlbStandingsResponse = await response.json();
+	const data = await fetchMlbJson(url.toString(), isMlbStandingsResponse);
 
 	// Flatten all team records from all divisions
 	const standings: TeamStandingData[] = [];
@@ -275,10 +346,10 @@ export async function fetchMlbStandings(
 			// Parse league record
 			const leagueRecord: LeagueRecord | undefined = record.leagueRecord
 				? {
-					losses: record.leagueRecord.losses,
-					pct: record.leagueRecord.pct,
-					wins: record.leagueRecord.wins,
-				}
+						losses: record.leagueRecord.losses,
+						pct: record.leagueRecord.pct,
+						wins: record.leagueRecord.wins,
+					}
 				: undefined;
 
 			standings.push({
@@ -480,7 +551,9 @@ function mapGameState(state: string): GameState {
 /**
  * Transform MLB API player reference to our format
  */
-function transformPlayerRef(player?: MlbLinescorePlayer): undefined | { fullName: string; mlbId: number } {
+function transformPlayerRef(
+	player?: MlbLinescorePlayer,
+): undefined | { fullName: string; mlbId: number } {
 	if (!player) {
 		return undefined;
 	}
@@ -503,22 +576,24 @@ function transformLinescore(linescore?: MlbLinescore): GameLinescore | undefined
 		balls: linescore.balls,
 		currentInning: linescore.currentInning,
 		currentInningOrdinal: linescore.currentInningOrdinal,
-		defense: linescore.defense ? {
-			batter: transformPlayerRef(linescore.defense.batter),
-			battingOrder: linescore.defense.battingOrder,
-			catcher: transformPlayerRef(linescore.defense.catcher),
-			center: transformPlayerRef(linescore.defense.center),
-			first: transformPlayerRef(linescore.defense.first),
-			inHole: transformPlayerRef(linescore.defense.inHole),
-			left: transformPlayerRef(linescore.defense.left),
-			onDeck: transformPlayerRef(linescore.defense.onDeck),
-			pitcher: transformPlayerRef(linescore.defense.pitcher),
-			right: transformPlayerRef(linescore.defense.right),
-			second: transformPlayerRef(linescore.defense.second),
-			shortstop: transformPlayerRef(linescore.defense.shortstop),
-			teamMlbId: linescore.defense.team?.id,
-			third: transformPlayerRef(linescore.defense.third),
-		} : undefined,
+		defense: linescore.defense
+			? {
+					batter: transformPlayerRef(linescore.defense.batter),
+					battingOrder: linescore.defense.battingOrder,
+					catcher: transformPlayerRef(linescore.defense.catcher),
+					center: transformPlayerRef(linescore.defense.center),
+					first: transformPlayerRef(linescore.defense.first),
+					inHole: transformPlayerRef(linescore.defense.inHole),
+					left: transformPlayerRef(linescore.defense.left),
+					onDeck: transformPlayerRef(linescore.defense.onDeck),
+					pitcher: transformPlayerRef(linescore.defense.pitcher),
+					right: transformPlayerRef(linescore.defense.right),
+					second: transformPlayerRef(linescore.defense.second),
+					shortstop: transformPlayerRef(linescore.defense.shortstop),
+					teamMlbId: linescore.defense.team?.id,
+					third: transformPlayerRef(linescore.defense.third),
+				}
+			: undefined,
 		inningHalf: linescore.inningHalf,
 		innings: linescore.innings.map((inning) => ({
 			away: {
@@ -538,14 +613,16 @@ function transformLinescore(linescore?: MlbLinescore): GameLinescore | undefined
 		})),
 		inningState: linescore.inningState,
 		isTopInning: linescore.isTopInning,
-		offense: linescore.offense ? {
-			batter: transformPlayerRef(linescore.offense.batter),
-			battingOrder: linescore.offense.battingOrder,
-			inHole: transformPlayerRef(linescore.offense.inHole),
-			onDeck: transformPlayerRef(linescore.offense.onDeck),
-			pitcher: transformPlayerRef(linescore.offense.pitcher),
-			teamMlbId: linescore.offense.team?.id,
-		} : undefined,
+		offense: linescore.offense
+			? {
+					batter: transformPlayerRef(linescore.offense.batter),
+					battingOrder: linescore.offense.battingOrder,
+					inHole: transformPlayerRef(linescore.offense.inHole),
+					onDeck: transformPlayerRef(linescore.offense.onDeck),
+					pitcher: transformPlayerRef(linescore.offense.pitcher),
+					teamMlbId: linescore.offense.team?.id,
+				}
+			: undefined,
 		outs: linescore.outs,
 		scheduledInnings: linescore.scheduledInnings,
 		strikes: linescore.strikes,
@@ -579,7 +656,12 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 			pct: game.teams.away.leagueRecord.pct,
 			wins: game.teams.away.leagueRecord.wins,
 		},
-		awayProbablePitcher: game.teams.away.probablePitcher ? { fullName: game.teams.away.probablePitcher.fullName, mlbId: game.teams.away.probablePitcher.id } : undefined,
+		awayProbablePitcher: game.teams.away.probablePitcher
+			? {
+					fullName: game.teams.away.probablePitcher.fullName,
+					mlbId: game.teams.away.probablePitcher.id,
+				}
+			: undefined,
 		awayScore: game.teams.away.score,
 		awaySeriesNumber: game.teams.away.seriesNumber,
 		awaySplitSquad: game.teams.away.splitSquad,
@@ -600,7 +682,12 @@ function transformGame(game: MlbScheduleGame): ScheduleGameData {
 			pct: game.teams.home.leagueRecord.pct,
 			wins: game.teams.home.leagueRecord.wins,
 		},
-		homeProbablePitcher: game.teams.home.probablePitcher ? { fullName: game.teams.home.probablePitcher.fullName, mlbId: game.teams.home.probablePitcher.id } : undefined,
+		homeProbablePitcher: game.teams.home.probablePitcher
+			? {
+					fullName: game.teams.home.probablePitcher.fullName,
+					mlbId: game.teams.home.probablePitcher.id,
+				}
+			: undefined,
 		homeScore: game.teams.home.score,
 		homeSeriesNumber: game.teams.home.seriesNumber,
 		homeSplitSquad: game.teams.home.splitSquad,
@@ -648,13 +735,7 @@ export async function fetchMlbSchedule(
 
 	console.log(`[MLB API] Fetching schedule for team ${teamMlbId}, season ${season}`);
 
-	const response = await fetch(url);
-
-	if (!response.ok) {
-		throw new Error(`MLB API error: ${response.status} ${response.statusText}`);
-	}
-
-	const data: MlbScheduleResponse = await response.json();
+	const data = await fetchMlbJson(url, isMlbScheduleResponse);
 
 	const games: ScheduleGameData[] = [];
 
@@ -677,13 +758,7 @@ export async function fetchMlbSchedule(
 export async function fetchMlbScheduleByDate(date: string): Promise<ScheduleGameData[]> {
 	const url = `${MLB_API_BASE}/schedule?sportId=1&date=${date}&gameType=R,F,D,L,W&hydrate=linescore,probablePitcher`;
 
-	const response = await fetch(url);
-
-	if (!response.ok) {
-		throw new Error(`MLB API error: ${response.status} ${response.statusText}`);
-	}
-
-	const data: MlbScheduleResponse = await response.json();
+	const data = await fetchMlbJson(url, isMlbScheduleResponse);
 
 	const games: ScheduleGameData[] = [];
 
@@ -694,6 +769,17 @@ export async function fetchMlbScheduleByDate(date: string): Promise<ScheduleGame
 	}
 
 	return games;
+}
+
+/**
+ * Fetch a complete MLB season in one request. This is the primary full-sync path;
+ * team-specific fetching remains available for targeted repair jobs.
+ */
+export async function fetchMlbSeasonSchedule(season: string): Promise<ScheduleGameData[]> {
+	const url = `${MLB_API_BASE}/schedule?sportId=1&season=${season}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R,F,D,L,W&hydrate=linescore,probablePitcher`;
+	const data = await fetchMlbJson(url, isMlbScheduleResponse);
+
+	return data.dates.flatMap((dateEntry) => dateEntry.games.map(transformGame));
 }
 
 /**

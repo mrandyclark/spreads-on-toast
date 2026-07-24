@@ -21,23 +21,20 @@ interface ParkData {
 }
 
 function getBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
-	const toRad = (d: number) => d * Math.PI / 180;
-	const toDeg = (r: number) => r * 180 / Math.PI;
+	const toRad = (d: number) => (d * Math.PI) / 180;
+	const toDeg = (r: number) => (r * 180) / Math.PI;
 
 	const φ1 = toRad(lat1);
 	const φ2 = toRad(lat2);
 	const Δλ = toRad(lon2 - lon1);
 
 	const y = Math.sin(Δλ) * Math.cos(φ2);
-	const x =
-		Math.cos(φ1) * Math.sin(φ2) -
-		Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+	const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
 
 	const θ = toDeg(Math.atan2(y, x));
 	return Math.round((θ + 360) % 360);
 }
 
- 
 const PARK_DATA: Record<number, ParkData> = {
 	// Angel Stadium of Anaheim
 	1: {
@@ -304,7 +301,7 @@ const METERS_TO_FEET = 3.28084;
 async function fetchElevation(lat: number, lng: number): Promise<number> {
 	const url = `https://api.open-elevation.com/api/v1/lookup?locations=${lat.toFixed(6)},${lng.toFixed(6)}`;
 	const res = await fetch(url);
-	const json = await res.json() as { results: { elevation: number }[] };
+	const json = (await res.json()) as { results: { elevation: number }[] };
 	const meters = json.results[0].elevation;
 	return Math.round(meters * METERS_TO_FEET);
 }
@@ -358,7 +355,9 @@ async function main() {
 		);
 
 		const hasBearing = data.homePlate && data.pitchersMound;
-		console.log(`  ✓ ${bp.name} → ${data.street}, ${bp.location.city} (${elevation} ft)${hasBearing ? ` [orientation: ${fieldOrientation}°]` : ' [dome]'}`);
+		console.log(
+			`  ✓ ${bp.name} → ${data.street}, ${bp.location.city} (${elevation} ft)${hasBearing ? ` [orientation: ${fieldOrientation}°]` : ' [dome]'}`,
+		);
 		updated++;
 	}
 

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 
+import { hasValidBearerSecret } from '@/server/http/authentication';
 import { syncAllSchedules } from '@/server/schedule/sync';
 import { seasonService } from '@/server/seasons/season.service';
 import { Sport } from '@/types';
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 	// Verify the request is from Vercel CRON
 	const authHeader = request.headers.get('authorization');
 
-	if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+	if (!hasValidBearerSecret(authHeader)) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 

@@ -17,14 +17,19 @@ const maxWidthClasses = {
 
 const PageShell = ({ children, className, maxWidth = '5xl' }: PageShellProps) => {
 	return (
-		<div className="bg-background min-h-screen">
+		<div className="bg-background min-h-dvh">
 			<SiteHeader />
 
-			<main className={cn('mx-auto px-4 py-8', maxWidthClasses[maxWidth], className)}>
+			<main
+				className={cn(
+					'mx-auto px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pt-8',
+					maxWidthClasses[maxWidth],
+					className,
+				)}>
 				{children}
 			</main>
 		</div>
 	);
-}
+};
 
 export default PageShell;

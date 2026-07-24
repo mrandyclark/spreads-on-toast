@@ -20,7 +20,7 @@ const TeamPicker = ({ onToggle, selectedTeamIds, teamsByDivision }: TeamPickerPr
 
 				return (
 					<div key={div}>
-						<p className="text-muted-foreground mb-1.5 text-xs font-medium uppercase tracking-wide">
+						<p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wide uppercase">
 							{DIVISION_LABELS[div] ?? div}
 						</p>
 						<div className="flex flex-wrap gap-1.5">

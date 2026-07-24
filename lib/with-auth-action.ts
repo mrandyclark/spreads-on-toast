@@ -3,7 +3,11 @@ import { AuthUser, getAuthUser } from './auth';
 
 // Distributes Partial across union members, then merges into a single flat type
 type DistributePartial<T> = T extends unknown ? Partial<T> : never;
-type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+	k: infer I,
+) => void
+	? I
+	: never;
 export type ActionResult<T> = UnionToIntersection<DistributePartial<ActionError | T>>;
 
 /**

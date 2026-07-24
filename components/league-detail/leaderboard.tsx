@@ -18,11 +18,7 @@ interface MlbLeaderboardProps {
 	selectedDate?: string; // YYYY-MM-DD format for historical lookup
 }
 
-const MlbLeaderboard = ({
-	groupId,
-	onMemberSelect,
-	selectedDate,
-}: MlbLeaderboardProps) => {
+const MlbLeaderboard = ({ groupId, onMemberSelect, selectedDate }: MlbLeaderboardProps) => {
 	const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<null | string>(null);
@@ -47,6 +43,8 @@ const MlbLeaderboard = ({
 	}, [groupId, selectedDate]);
 
 	useEffect(() => {
+		// This effect intentionally synchronizes the selected historical date with server results.
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		fetchLeaderboard();
 	}, [fetchLeaderboard]);
 
@@ -59,7 +57,9 @@ const MlbLeaderboard = ({
 			<div className="flex flex-col items-center gap-2 py-4 text-center">
 				<AlertCircle className="text-destructive h-5 w-5" />
 				<p className="text-muted-foreground text-sm">{error}</p>
-				<Button onClick={fetchLeaderboard} size="sm" variant="outline">Retry</Button>
+				<Button onClick={fetchLeaderboard} size="sm" variant="outline">
+					Retry
+				</Button>
 			</div>
 		);
 	}
@@ -94,13 +94,9 @@ const MlbLeaderboard = ({
 										})
 									}>
 									<div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium">
-										{rank === 1 && (
-											<Crown className="text-primary h-4 w-4" />
-										)}
+										{rank === 1 && <Crown className="text-primary h-4 w-4" />}
 
-										{rank !== 1 && (
-											<span className="text-muted-foreground">{rank}</span>
-										)}
+										{rank !== 1 && <span className="text-muted-foreground">{rank}</span>}
 									</div>
 									<Avatar className="border-border h-10 w-10 border-2">
 										<AvatarFallback
@@ -135,6 +131,6 @@ const MlbLeaderboard = ({
 			</Card>
 		</section>
 	);
-}
+};
 
 export default MlbLeaderboard;

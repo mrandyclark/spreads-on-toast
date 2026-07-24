@@ -38,6 +38,17 @@ export async function POST(request: Request) {
 	try {
 		const token = await request.text();
 
+		if (!token || token.length > 65_536) {
+			return errorResponse('Invalid token', 400);
+		}
+
+		const issuer = process.env.KINDE_ISSUER_URL;
+
+		if (!issuer) {
+			console.error('[webhook] KINDE_ISSUER_URL is not configured');
+			return errorResponse('Webhook processing failed', 500);
+		}
+
 		// Decode the token to get the key ID
 		const decoded = jwt.decode(token, { complete: true });
 
@@ -49,7 +60,20 @@ export async function POST(request: Request) {
 		// Verify the token using Kinde's public keys
 		const key = await client.getSigningKey(decoded.header.kid);
 		const signingKey = key.getPublicKey();
-		const event = jwt.verify(token, signingKey) as KindeWebhookEvent;
+		const event = jwt.verify(token, signingKey, {
+			algorithms: ['RS256'],
+			issuer,
+		}) as KindeWebhookEvent;
+
+		if (
+			!event ||
+			typeof event.type !== 'string' ||
+			!event.data?.user ||
+			typeof event.data.user.id !== 'string' ||
+			typeof event.data.user.email !== 'string'
+		) {
+			return errorResponse('Invalid webhook payload', 400);
+		}
 
 		console.log('[webhook] Received event:', event.type);
 

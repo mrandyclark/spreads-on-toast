@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 
+import { hasValidApiKey } from '@/server/http/authentication';
 import { errorResponse, jsonResponse } from '@/server/http/responses';
+import { logger } from '@/server/observability/logger';
 import { getSign } from '@/server/signs/sign.actions';
 import { getSignSlides } from '@/server/slides';
 
@@ -29,11 +31,11 @@ export async function GET(request: NextRequest) {
 	const expectedKey = process.env.EXTERNAL_API_KEY;
 
 	if (!expectedKey) {
-		console.error('[External API] EXTERNAL_API_KEY environment variable not set');
+		logger.error('sign_api_not_configured', { route: 'slides' });
 		return errorResponse('API not configured', 500);
 	}
 
-	if (!apiKey || apiKey !== expectedKey) {
+	if (!hasValidApiKey(apiKey, expectedKey)) {
 		return errorResponse('Unauthorized', 401);
 	}
 
@@ -61,22 +63,20 @@ export async function GET(request: NextRequest) {
 			return errorResponse('Date must be in YYYY-MM-DD format', 400);
 		}
 
-		console.log(`[External API] Slides requested by sign: ${signId}`);
+		logger.info('sign_slides_requested', { date, signId });
 
 		const slidesResponse = await getSignSlides(sign.config.content, date);
 
 		if (slidesResponse.slides.length === 0) {
 			return jsonResponse({
 				...slidesResponse,
-				message: date
-					? `No data available for ${date}`
-					: 'No data available for current season',
+				message: date ? `No data available for ${date}` : 'No data available for current season',
 			});
 		}
 
 		return jsonResponse(slidesResponse);
 	} catch (error) {
-		console.error('[External API] Error building slides:', error);
+		logger.error('sign_slides_failed', { signId }, error);
 		return errorResponse('Internal server error', 500);
 	}
 }

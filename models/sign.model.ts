@@ -1,7 +1,18 @@
 import mongoose, { Model, Schema } from 'mongoose';
 
 import { configureSchema, enumToValues, UuidRefType, UuidType } from '@/lib/mongo-utils';
-import { Division, ModelName, Sign, SignConfig, SignContentConfig, SignDisplayConfig, SignMember, SignRole, SignScheduleConfig, With_id } from '@/types';
+import {
+	Division,
+	ModelName,
+	Sign,
+	SignConfig,
+	SignContentConfig,
+	SignDisplayConfig,
+	SignMember,
+	SignRole,
+	SignScheduleConfig,
+	With_id,
+} from '@/types';
 
 const SignMemberSchema = new Schema<SignMember>(
 	{

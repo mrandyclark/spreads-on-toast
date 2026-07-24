@@ -158,6 +158,8 @@ export interface TeamStanding extends BaseDocument {
 	runsScored?: number;
 	season: string; // e.g., '2026'
 
+	source: 'mlb-stats-api';
+	sourceFetchedAt: Date;
 	// Splits (home/away, vs L/R, last 10, etc.)
 	splits?: TeamSplits;
 	sport: Sport;

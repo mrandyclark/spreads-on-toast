@@ -1,6 +1,8 @@
 import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { Group, LeaderboardEntry, PickResult, TeamPick, User } from '@/types';
 
+import { isSeasonFinalForScoring, selectWinsForScoring } from '../picks/scoring';
+import { seasonService } from '../seasons/season.service';
 import { teamLineService } from '../seasons/team-line.service';
 import { sheetService } from '../sheets/sheet.service';
 import {
@@ -46,7 +48,19 @@ export async function joinGroupByInviteCode(
 	const isMember = group.members.some((m) => resolveRefId(m.user) === userId);
 
 	if (isMember) {
-		return { error: 'You are already a member of this group' };
+		await sheetService.getOrCreate({
+			group: group.id,
+			lockAt: group.lockDate,
+			season: group.season,
+			sport: group.sport,
+			user: userId,
+		});
+
+		return { group };
+	}
+
+	if (new Date(group.lockDate).getTime() <= Date.now()) {
+		return { error: 'This group is locked and no longer accepts new members' };
 	}
 
 	const updated = await groupService.addMember(group.id, userId);
@@ -55,8 +69,9 @@ export async function joinGroupByInviteCode(
 		return { error: 'Failed to join group' };
 	}
 
-	await sheetService.createForGroup({
+	await sheetService.getOrCreate({
 		group: updated.id,
+		lockAt: updated.lockDate,
 		season: updated.season,
 		sport: updated.sport,
 		user: userId,
@@ -79,6 +94,24 @@ export async function getGroupForMember(
 	}
 
 	const result = group as GroupWithSeasonDates;
+
+	result.members = group.members.map((member) => {
+		const memberUser = resolveRef<User>(member.user);
+
+		if (!memberUser) {
+			return member;
+		}
+
+		return {
+			...member,
+			user: {
+				...memberUser,
+				email: '',
+				kindeId: '',
+			},
+		};
+	});
+
 	const dateRange = await getStandingsDateRange(group.season);
 
 	if (dateRange.minDate) {
@@ -104,14 +137,16 @@ export async function calculateLeaderboard(
 ): Promise<LeaderboardEntry[]> {
 	// Fetch standings, sheets, and team lines in parallel
 	// Sheets don't need populate — leaderboard only uses team ID + pick
-	const [standingsData, sheets, teamLines] = await Promise.all([
+	const [standingsData, sheets, teamLines, season] = await Promise.all([
 		date
 			? getStandingsForDate(group.season, new Date(date))
 			: getStandingsForDate(group.season, new Date()),
 		sheetService.findByGroup(groupId),
 		teamLineService.findBySeason(group.sport, group.season),
+		seasonService.findBySportAndYear(group.sport, group.season),
 	]);
 	const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
+	const isFinal = isSeasonFinalForScoring(season, date);
 	const entries: LeaderboardEntry[] = [];
 
 	for (const member of group.members) {
@@ -132,10 +167,9 @@ export async function calculateLeaderboard(
 				const teamId = resolveRefId(teamPick.team)!;
 				const standing = standingsData.get(teamId);
 
-				const projectedWins = standing?.projectedWins ?? 0;
-				const pythagoreanWins = standing?.pythagoreanWins ?? projectedWins;
-				const line = linesByTeamId.get(teamId) ?? 0;
-				const result: PickResult = calculatePickResult(teamPick.pick, line, pythagoreanWins);
+				const scoringWins = selectWinsForScoring(standing ?? {}, isFinal);
+				const line = teamPick.line ?? linesByTeamId.get(teamId) ?? 0;
+				const result: PickResult = calculatePickResult(teamPick.pick, line, scoringWins);
 
 				if (result === PickResult.Win) {
 					wins++;

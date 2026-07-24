@@ -47,12 +47,17 @@ export async function dbConnect() {
 
 	if (!cached.promise) {
 		cached.promise = mongoose.connect(buildConnectionString(), {
-			// Serverless resilience options
-			// serverSelectionTimeoutMS: 5000,
-			// maxPoolSize: 10,
+			maxPoolSize: 10,
+			serverSelectionTimeoutMS: 5000,
 		});
 	}
 
-	cached.conn = await cached.promise;
+	try {
+		cached.conn = await cached.promise;
+	} catch (error) {
+		cached.promise = null;
+		throw error;
+	}
+
 	return cached.conn;
 }

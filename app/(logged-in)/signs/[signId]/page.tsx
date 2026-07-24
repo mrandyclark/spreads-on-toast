@@ -1,12 +1,8 @@
 import SignDetailClient from '@/components/sign-detail/sign-detail-client';
 import { getAuthUser } from '@/lib/auth';
-import { getSign, getTeamsForConfig } from '@/server/signs/sign.actions';
+import { getSignForMember, getTeamsForConfig } from '@/server/signs/sign.actions';
 
-export default async function SignDetailPage({
-	params,
-}: {
-	params: Promise<{ signId: string }>;
-}) {
+export default async function SignDetailPage({ params }: { params: Promise<{ signId: string }> }) {
 	const { signId } = await params;
 	const user = await getAuthUser();
 
@@ -14,10 +10,7 @@ export default async function SignDetailPage({
 		return null;
 	}
 
-	const [sign, teams] = await Promise.all([
-		getSign(signId),
-		getTeamsForConfig(),
-	]);
+	const sign = await getSignForMember(signId, user.id);
 
 	if (!sign) {
 		return (
@@ -26,6 +19,8 @@ export default async function SignDetailPage({
 			</div>
 		);
 	}
+
+	const teams = await getTeamsForConfig();
 
 	return <SignDetailClient initialSign={sign} initialTeams={teams} />;
 }

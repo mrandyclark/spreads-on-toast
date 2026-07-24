@@ -43,6 +43,9 @@ const WorldSeriesPicksSchema = new Schema<WorldSeriesPicks>(
 const SheetSchema = new Schema<With_id<Sheet>>({
 	_id: UuidType,
 	group: { ...UuidRefType, index: true, ref: ModelName.Group, required: true },
+	lastSavedAt: { type: Date },
+	lineSnapshotAt: { type: Date },
+	lockAt: { index: true, type: Date },
 	postseasonPicks: { type: PostseasonPicksSchema },
 	sport: { enum: enumToValues(Sport), required: true, type: String },
 	submittedAt: { type: Date },
@@ -52,6 +55,9 @@ const SheetSchema = new Schema<With_id<Sheet>>({
 });
 
 SheetSchema.index({ group: 1, user: 1 }, { unique: true });
+
+// Atomic pick writes filter by owner and immutable lock deadline.
+SheetSchema.index({ lockAt: 1, user: 1 });
 
 configureSchema(SheetSchema);
 

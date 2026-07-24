@@ -32,19 +32,19 @@ const Footer = () => {
 					</nav>
 
 					{/* Disclaimer */}
-					<p className="text-muted-foreground/70 max-w-md text-center text-xs leading-relaxed">
+					<p className="text-muted-foreground max-w-md text-center text-xs leading-relaxed">
 						For entertainment only. No real-money wagering. spreadsontoast is not affiliated with
 						any sportsbook or gambling operation.
 					</p>
 
 					{/* Copyright */}
-					<p className="text-muted-foreground/50 text-xs">
+					<p className="text-muted-foreground text-xs">
 						&copy; {new Date().getFullYear()} spreadsontoast. All rights reserved.
 					</p>
 				</div>
 			</div>
 		</footer>
 	);
-}
+};
 
 export default Footer;

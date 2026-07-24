@@ -76,7 +76,9 @@ const CONFERENCE_DISPLAY_NAMES: Record<string, string> = {
 // HELPERS
 // =============================================================================
 
-function calculateWinProfile(standing: Record<string, unknown> | TeamStanding): undefined | WinProfileData {
+function calculateWinProfile(
+	standing: Record<string, unknown> | TeamStanding,
+): undefined | WinProfileData {
 	const splits = (standing as TeamStanding).splits;
 	const runsScored = (standing as TeamStanding).runsScored;
 	const runsAllowed = (standing as TeamStanding).runsAllowed;
@@ -165,98 +167,101 @@ function calculateWinProfile(standing: Record<string, unknown> | TeamStanding): 
 /**
  * Get comprehensive team detail data for the team page
  */
-export const getTeamDetailData = cached(async (
-	teamId: string,
-	season: string,
-	selectedDate?: string,
-): Promise<{ current: null | TeamDetailData; history: TeamHistoryDataPoint[] }> => {
-	const [team, teamLine, standings] = await Promise.all([
-		teamService.findById(teamId),
-		teamLineService.findByTeamAndSeason(teamId, season),
-		standingService.findByTeamAndSeason(teamId, season, {
-			select: 'date gamesPlayed wins losses projectedWins pythagoreanWins runDifferential runsScored runsAllowed divisionRank gamesBack leagueRank wildCardRank wildCardGamesBack streak splits divisionGamesBack',
-		}),
-	]);
+export const getTeamDetailData = cached(
+	async (
+		teamId: string,
+		season: string,
+		selectedDate?: string,
+	): Promise<{ current: null | TeamDetailData; history: TeamHistoryDataPoint[] }> => {
+		const [team, teamLine, standings] = await Promise.all([
+			teamService.findById(teamId),
+			teamLineService.findByTeamAndSeason(teamId, season),
+			standingService.findByTeamAndSeason(teamId, season, {
+				select:
+					'date gamesPlayed wins losses projectedWins pythagoreanWins runDifferential runsScored runsAllowed divisionRank gamesBack leagueRank wildCardRank wildCardGamesBack streak splits divisionGamesBack',
+			}),
+		]);
 
-	if (!team) {
-		return { current: null, history: [] };
-	}
-
-	const line = teamLine?.line ?? 81;
-
-	if (standings.length === 0) {
-		return { current: null, history: [] };
-	}
-
-	// Find the standing for the selected date, or use the latest
-	let targetStanding = standings[standings.length - 1];
-
-	if (selectedDate) {
-		const found = standings.find((s) => {
-			const standingDate = new Date(s.date).toISOString().split('T')[0];
-			return standingDate === selectedDate;
-		});
-
-		if (found) {
-			targetStanding = found;
+		if (!team) {
+			return { current: null, history: [] };
 		}
-	}
 
-	// Get all team standings for the target date to calculate league averages
-	const allStandingsForDate = await standingService.find(
-		{ date: new Date(targetStanding.date), season },
-		{ select: 'gamesPlayed runsScored runDifferential wins' },
-	);
+		const line = teamLine?.line ?? 81;
 
-	const leagueAverages = calculateLeagueAverages(allStandingsForDate as TeamStanding[]);
-	const chips = calculateTeamChips(targetStanding as TeamStanding, leagueAverages);
-	const winProfile = calculateWinProfile(targetStanding);
+		if (standings.length === 0) {
+			return { current: null, history: [] };
+		}
 
-	const current: TeamDetailData = {
-		abbreviation: team.abbreviation,
-		chips,
-		city: team.city,
-		conference: team.conference,
-		division: team.division,
-		divisionRank: targetStanding.divisionRank,
-		gamesBack: targetStanding.gamesBack,
-		gamesPlayed: targetStanding.gamesPlayed,
-		id: team.id,
-		leagueRank: targetStanding.leagueRank,
-		line,
-		losses: targetStanding.losses,
-		name: team.name,
-		projectedWins: targetStanding.projectedWins,
-		pythagoreanWins: targetStanding.pythagoreanWins,
-		runDifferential: targetStanding.runDifferential,
-		runsAllowed: targetStanding.runsAllowed,
-		runsScored: targetStanding.runsScored,
-		season,
-		streak: targetStanding.streak
-			? {
-				code: targetStanding.streak.code,
-				count: targetStanding.streak.count,
-				type: targetStanding.streak.type,
+		// Find the standing for the selected date, or use the latest
+		let targetStanding = standings[standings.length - 1];
+
+		if (selectedDate) {
+			const found = standings.find((s) => {
+				const standingDate = new Date(s.date).toISOString().split('T')[0];
+				return standingDate === selectedDate;
+			});
+
+			if (found) {
+				targetStanding = found;
 			}
-			: undefined,
-		wildCardGamesBack: targetStanding.wildCardGamesBack,
-		wildCardRank: targetStanding.wildCardRank,
-		winProfile,
-		wins: targetStanding.wins,
-	};
+		}
 
-	const history: TeamHistoryDataPoint[] = standings.map((s) => ({
-		date: new Date(s.date).toISOString().split('T')[0],
-		gamesPlayed: s.gamesPlayed,
-		losses: s.losses,
-		projectedWins: s.projectedWins,
-		pythagoreanWins: s.pythagoreanWins,
-		runDifferential: s.runDifferential,
-		wins: s.wins,
-	}));
+		// Get all team standings for the target date to calculate league averages
+		const allStandingsForDate = await standingService.find(
+			{ date: new Date(targetStanding.date), season },
+			{ select: 'gamesPlayed runsScored runDifferential wins' },
+		);
 
-	return { current, history };
-});
+		const leagueAverages = calculateLeagueAverages(allStandingsForDate as TeamStanding[]);
+		const chips = calculateTeamChips(targetStanding as TeamStanding, leagueAverages);
+		const winProfile = calculateWinProfile(targetStanding);
+
+		const current: TeamDetailData = {
+			abbreviation: team.abbreviation,
+			chips,
+			city: team.city,
+			conference: team.conference,
+			division: team.division,
+			divisionRank: targetStanding.divisionRank,
+			gamesBack: targetStanding.gamesBack,
+			gamesPlayed: targetStanding.gamesPlayed,
+			id: team.id,
+			leagueRank: targetStanding.leagueRank,
+			line,
+			losses: targetStanding.losses,
+			name: team.name,
+			projectedWins: targetStanding.projectedWins,
+			pythagoreanWins: targetStanding.pythagoreanWins,
+			runDifferential: targetStanding.runDifferential,
+			runsAllowed: targetStanding.runsAllowed,
+			runsScored: targetStanding.runsScored,
+			season,
+			streak: targetStanding.streak
+				? {
+						code: targetStanding.streak.code,
+						count: targetStanding.streak.count,
+						type: targetStanding.streak.type,
+					}
+				: undefined,
+			wildCardGamesBack: targetStanding.wildCardGamesBack,
+			wildCardRank: targetStanding.wildCardRank,
+			winProfile,
+			wins: targetStanding.wins,
+		};
+
+		const history: TeamHistoryDataPoint[] = standings.map((s) => ({
+			date: new Date(s.date).toISOString().split('T')[0],
+			gamesPlayed: s.gamesPlayed,
+			losses: s.losses,
+			projectedWins: s.projectedWins,
+			pythagoreanWins: s.pythagoreanWins,
+			runDifferential: s.runDifferential,
+			wins: s.wins,
+		}));
+
+		return { current, history };
+	},
+);
 
 /**
  * Get seasons that have started with their available standings dates
@@ -283,48 +288,50 @@ export const getStartedSeasonsWithDates = cached(async (): Promise<SeasonWithDat
 /**
  * Get standings board data for the UI
  */
-export const getStandingsBoardData = cached(async (season: string, date: string): Promise<StandingsBoardData[]> => {
-	const [year, month, day] = date.split('-').map(Number);
-	const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+export const getStandingsBoardData = cached(
+	async (season: string, date: string): Promise<StandingsBoardData[]> => {
+		const [year, month, day] = date.split('-').map(Number);
+		const normalizedDate = new Date(Date.UTC(year, month - 1, day));
 
-	const [standings, teamLines] = await Promise.all([
-		standingService.findByDatePopulated(normalizedDate, season, {
-			select: 'team wins losses projectedWins pythagoreanWins divisionRank',
-		}),
-		teamLineService.findBySeason(Sport.MLB, season),
-	]);
+		const [standings, teamLines] = await Promise.all([
+			standingService.findByDatePopulated(normalizedDate, season, {
+				select: 'team wins losses projectedWins pythagoreanWins divisionRank',
+			}),
+			teamLineService.findBySeason(Sport.MLB, season),
+		]);
 
-	const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
-	const result: StandingsBoardData[] = [];
+		const linesByTeamId = new Map(teamLines.map((tl) => [resolveRefId(tl.team), tl.line]));
+		const result: StandingsBoardData[] = [];
 
-	for (const standing of standings) {
-		const team = resolveRef(standing.team);
+		for (const standing of standings) {
+			const team = resolveRef(standing.team);
 
-		if (!team) {
-			continue;
+			if (!team) {
+				continue;
+			}
+
+			const line = linesByTeamId.get(team.id) ?? 81;
+
+			result.push({
+				abbreviation: team.abbreviation,
+				conference: team.conference,
+				division: team.division,
+				divisionRank: standing.divisionRank ?? 99,
+				line,
+				losses: standing.losses,
+				name: team.name,
+				pythagoreanWins: standing.pythagoreanWins ?? standing.projectedWins,
+				teamId: team.id,
+				wins: standing.wins,
+			});
 		}
 
-		const line = linesByTeamId.get(team.id) ?? 81;
+		// Sort by division rank (server-side for DRY)
+		result.sort((a, b) => a.divisionRank - b.divisionRank);
 
-		result.push({
-			abbreviation: team.abbreviation,
-			conference: team.conference,
-			division: team.division,
-			divisionRank: standing.divisionRank ?? 99,
-			line,
-			losses: standing.losses,
-			name: team.name,
-			pythagoreanWins: standing.pythagoreanWins ?? standing.projectedWins,
-			teamId: team.id,
-			wins: standing.wins,
-		});
-	}
-
-	// Sort by division rank (server-side for DRY)
-	result.sort((a, b) => a.divisionRank - b.divisionRank);
-
-	return result;
-});
+		return result;
+	},
+);
 
 /**
  * Get standings for a specific date
@@ -333,7 +340,9 @@ export async function getStandingsForDate(
 	season: string,
 	date: Date,
 ): Promise<Map<string, StandingsOnDate>> {
-	const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+	const normalizedDate = new Date(
+		Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+	);
 	let standings = await standingService.findByDateAndSeason(normalizedDate, season, {
 		select: 'team gamesPlayed wins losses projectedWins pythagoreanWins',
 	});
@@ -363,93 +372,97 @@ export async function getStandingsForDate(
 /**
  * Get the date range we have standings data for
  */
-export async function getStandingsDateRange(season: string): Promise<{ maxDate: Date | null; minDate: Date | null }> {
+export async function getStandingsDateRange(
+	season: string,
+): Promise<{ maxDate: Date | null; minDate: Date | null }> {
 	return standingService.findDateRange(season);
 }
 
 /**
  * Get division standings for external consumers (e.g., Raspberry Pi sign)
  */
-export const getDivisionStandings = cached(async (date?: string): Promise<DivisionStandingsResponse | null> => {
-	let targetDate: Date;
-	let season: string;
+export const getDivisionStandings = cached(
+	async (date?: string): Promise<DivisionStandingsResponse | null> => {
+		let targetDate: Date;
+		let season: string;
 
-	if (date) {
-		const [year, month, day] = date.split('-').map(Number);
-		targetDate = new Date(Date.UTC(year, month - 1, day));
-		season = year.toString();
-	} else {
-		season = new Date().getFullYear().toString();
-		const latestDate = await standingService.findLatestDate(season);
+		if (date) {
+			const [year, month, day] = date.split('-').map(Number);
+			targetDate = new Date(Date.UTC(year, month - 1, day));
+			season = year.toString();
+		} else {
+			season = new Date().getFullYear().toString();
+			const latestDate = await standingService.findLatestDate(season);
 
-		if (!latestDate) {
+			if (!latestDate) {
+				return null;
+			}
+
+			targetDate = latestDate;
+		}
+
+		const standings = await standingService.findByDatePopulated(targetDate, season, {
+			select: 'team wins losses divisionGamesBack divisionRank',
+		});
+
+		if (standings.length === 0) {
 			return null;
 		}
 
-		targetDate = latestDate;
-	}
+		const divisionMap = new Map<string, DivisionStandingsTeam[]>();
 
-	const standings = await standingService.findByDatePopulated(targetDate, season, {
-		select: 'team wins losses divisionGamesBack divisionRank',
-	});
+		for (const standing of standings) {
+			const team = resolveRef(standing.team);
 
-	if (standings.length === 0) {
-		return null;
-	}
+			if (!team) {
+				continue;
+			}
 
-	const divisionMap = new Map<string, DivisionStandingsTeam[]>();
+			const divisionKey = team.division;
 
-	for (const standing of standings) {
-		const team = resolveRef(standing.team);
+			if (!divisionMap.has(divisionKey)) {
+				divisionMap.set(divisionKey, []);
+			}
 
-		if (!team) {
-			continue;
-		}
-
-		const divisionKey = team.division;
-
-		if (!divisionMap.has(divisionKey)) {
-			divisionMap.set(divisionKey, []);
-		}
-
-		divisionMap.get(divisionKey)!.push({
-			abbreviation: team.abbreviation,
-			colors: team.colors,
-			gamesBack: standing.divisionGamesBack ?? '-',
-			losses: standing.losses,
-			name: team.name,
-			rank: standing.divisionRank ?? 0,
-			wins: standing.wins,
-		});
-	}
-
-	for (const teams of divisionMap.values()) {
-		teams.sort((a, b) => a.rank - b.rank);
-	}
-
-	const divisionOrder = ['NL_East', 'NL_Central', 'NL_West', 'AL_East', 'AL_Central', 'AL_West'];
-	const divisions: DivisionStandingsEntry[] = [];
-
-	for (const divisionKey of divisionOrder) {
-		const teams = divisionMap.get(divisionKey);
-
-		if (teams && teams.length > 0) {
-			const conference = divisionKey.startsWith('AL') ? 'AL' : 'NL';
-
-			divisions.push({
-				league: CONFERENCE_DISPLAY_NAMES[conference] ?? conference,
-				name: DIVISION_DISPLAY_NAMES[divisionKey] ?? divisionKey,
-				teams,
+			divisionMap.get(divisionKey)!.push({
+				abbreviation: team.abbreviation,
+				colors: team.colors,
+				gamesBack: standing.divisionGamesBack ?? '-',
+				losses: standing.losses,
+				name: team.name,
+				rank: standing.divisionRank ?? 0,
+				wins: standing.wins,
 			});
 		}
-	}
 
-	return {
-		asOfDate: targetDate.toISOString().split('T')[0],
-		divisions,
-		season,
-	};
-});
+		for (const teams of divisionMap.values()) {
+			teams.sort((a, b) => a.rank - b.rank);
+		}
+
+		const divisionOrder = ['NL_East', 'NL_Central', 'NL_West', 'AL_East', 'AL_Central', 'AL_West'];
+		const divisions: DivisionStandingsEntry[] = [];
+
+		for (const divisionKey of divisionOrder) {
+			const teams = divisionMap.get(divisionKey);
+
+			if (teams && teams.length > 0) {
+				const conference = divisionKey.startsWith('AL') ? 'AL' : 'NL';
+
+				divisions.push({
+					league: CONFERENCE_DISPLAY_NAMES[conference] ?? conference,
+					name: DIVISION_DISPLAY_NAMES[divisionKey] ?? divisionKey,
+					teams,
+				});
+			}
+		}
+
+		return {
+			asOfDate: targetDate.toISOString().split('T')[0],
+			divisions,
+			season,
+		};
+	},
+);
 
 /**
  * Calculate the result of an over/under pick

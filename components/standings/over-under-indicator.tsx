@@ -19,7 +19,7 @@ const OverUnderIndicator = ({ line, pythagoreanWins }: OverUnderIndicatorProps) 
 
 	if (diff > 0) {
 		return (
-			<span className="text-green-600 dark:text-green-400 flex items-center gap-1 font-medium">
+			<span className="flex items-center gap-1 font-medium text-green-600 dark:text-green-400">
 				<ArrowUp className="h-4 w-4" />
 				Over
 			</span>
@@ -27,7 +27,7 @@ const OverUnderIndicator = ({ line, pythagoreanWins }: OverUnderIndicatorProps) 
 	}
 
 	return (
-		<span className="text-red-600 dark:text-red-400 flex items-center gap-1 font-medium">
+		<span className="flex items-center gap-1 font-medium text-red-600 dark:text-red-400">
 			<ArrowDown className="h-4 w-4" />
 			Under
 		</span>

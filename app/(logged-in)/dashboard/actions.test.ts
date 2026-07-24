@@ -28,12 +28,20 @@ vi.mock('@/server/groups/group.actions', () => ({
 vi.mock('@/server/groups/group.service', () => ({
 	groupService: {
 		createGroup: vi.fn(),
+		deleteById: vi.fn(),
 	},
 }));
 
 vi.mock('@/server/seasons/season.service', () => ({
 	seasonService: {
 		findBySport: vi.fn(),
+		findBySportAndYear: vi.fn(),
+	},
+}));
+
+vi.mock('@/server/sheets/sheet.service', () => ({
+	sheetService: {
+		createForGroup: vi.fn(),
 	},
 }));
 
@@ -44,14 +52,30 @@ vi.mock('@/server/standings/standings.actions', () => ({
 import { joinGroupByInviteCode } from '@/server/groups/group.actions';
 import { groupService } from '@/server/groups/group.service';
 import { seasonService } from '@/server/seasons/season.service';
+import { sheetService } from '@/server/sheets/sheet.service';
 import { getStandingsBoardData } from '@/server/standings/standings.actions';
 
-import { createGroupAction, getSeasonsAction, getStandingsAction, joinGroupAction } from './actions';
+import {
+	createGroupAction,
+	getSeasonsAction,
+	getStandingsAction,
+	joinGroupAction,
+} from './actions';
 
 const mockGroup = { id: 'group1', name: 'Test' } as unknown as Group;
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	vi.mocked(seasonService.findBySportAndYear).mockResolvedValue({
+		endDate: new Date('2099-10-01'),
+		id: 'season1',
+		lockDate: new Date('2099-03-28'),
+		name: '2099 MLB Season',
+		season: '2099',
+		sport: Sport.MLB,
+		startDate: new Date('2099-03-28'),
+		status: 'upcoming',
+	} as Season);
 });
 
 describe('dashboard app actions', () => {
@@ -70,9 +94,8 @@ describe('dashboard app actions', () => {
 	describe('createGroupAction', () => {
 		it('returns validation error for empty name', async () => {
 			const result = await createGroupAction({
-				lockDate: '2025-04-01',
 				name: '   ',
-				season: '2025',
+				season: '2099',
 				sport: Sport.MLB,
 			});
 			expect(result.error).toBe('validation');
@@ -83,18 +106,24 @@ describe('dashboard app actions', () => {
 			vi.mocked(groupService.createGroup).mockResolvedValue(mockGroup);
 
 			const result = await createGroupAction({
-				lockDate: '2025-04-01',
 				name: 'My Group',
-				season: '2025',
+				season: '2099',
 				sport: Sport.MLB,
 			});
 
 			expect(groupService.createGroup).toHaveBeenCalledWith({
-				lockDate: new Date('2025-04-01'),
+				lockDate: new Date('2099-03-28'),
 				name: 'My Group',
 				owner: 'user1',
-				season: '2025',
+				season: '2099',
 				sport: Sport.MLB,
+			});
+			expect(sheetService.createForGroup).toHaveBeenCalledWith({
+				group: 'group1',
+				lockAt: new Date('2099-03-28'),
+				season: '2099',
+				sport: Sport.MLB,
+				user: 'user1',
 			});
 			expect(result.group).toBe(mockGroup);
 		});
@@ -103,9 +132,8 @@ describe('dashboard app actions', () => {
 			vi.mocked(groupService.createGroup).mockRejectedValue(new Error('DB error'));
 
 			const result = await createGroupAction({
-				lockDate: '2025-04-01',
 				name: 'My Group',
-				season: '2025',
+				season: '2099',
 				sport: Sport.MLB,
 			});
 

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { countAndPluralize, formatMoney, getOrdinalSuffix, ordinal, pluralize } from './format-utils';
+import {
+	countAndPluralize,
+	formatMoney,
+	getOrdinalSuffix,
+	ordinal,
+	pluralize,
+} from './format-utils';
 
 describe('format-utils', () => {
 	describe('pluralize', () => {

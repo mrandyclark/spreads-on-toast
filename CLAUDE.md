@@ -21,7 +21,7 @@ Spreads on Toast — Next.js app for MLB over/under betting with digital sign di
 - **`server/<domain>/<domain>.service.ts`** — Extends `BaseService<T>` from `server/base.service.ts`. Handles `dbConnect`, `.lean()`, `cleanMongoDoc` automatically. Exported as singleton (e.g., `export const signService = new SignService()`).
 - **`server/<domain>/<domain>.actions.ts`** — Business logic orchestrating multiple services. No auth here.
 - **`app/**/actions.ts`** — Thin Next.js server actions: auth check → call action → `revalidatePath` → return.
-- **`app/api/**/route.ts`** — Thin API routes: auth check → call action/service → return.
+- **`app/api/**/route.ts`\*\* — Thin API routes: auth check → call action/service → return.
 - **`server/<domain>/sync.ts`** — CRON sync logic (MLB API → DB). These and services are the only files that import models directly.
 - Reference: `server/signs/` is the cleanest example of the full pattern.
 
@@ -44,10 +44,12 @@ Spreads on Toast — Next.js app for MLB over/under betting with digital sign di
 `create`, `findById`, `findOne`, `find`, `findByIdAndUpdate`, `findOneAndUpdate`, `deleteById`, `count`, `search` (paginated with cursor), `aggregate`
 
 `find`, `findOne`, and `findById` accept an options object with `populate`, `sort`, `select`, and `limit`:
+
 ```ts
 this.find({ group }, { populate: 'teamPicks.team', sort: { date: -1 }, limit: 10 });
 this.findOne({ _id: id, 'members.user': userId }, { populate: 'members.user' });
 ```
+
 Populate accepts `string | string[]` for multiple paths. **Never call `model.find().populate()` directly** — use BaseService options instead.
 
 ## Database
@@ -114,7 +116,7 @@ Populate accepts `string | string[]` for multiple paths. **Never call `model.fin
 - **One component per file.** Internal helper components go in separate files in the same directory.
 - **No ternary conditional rendering** in JSX. Use `{condition && (...)}` / `{!condition && (...)}` patterns instead.
 - Ternaries are fine for inline values (e.g., button text: `{isSaving ? 'Saving...' : 'Save'}`), just not for rendering different JSX blocks.
-- **Always use `cn()` for dynamic classNames.** Never use template literals for className — use `cn('base-classes', condition && 'conditional-class')` instead of `` className={`base ${condition ? 'a' : 'b'}`} ``.
+- **Always use `cn()` for dynamic classNames.** Never use template literals for className — use `cn('base-classes', condition && 'conditional-class')` instead of ``className={`base ${condition ? 'a' : 'b'}`}``.
 - **All shared types live in `types/`.** Only `interface FooProps` (component props) may be defined in component files. Everything else goes in the appropriate `types/*.ts` file so it can be imported from `@/types`.
 
 ### Conventions
@@ -136,13 +138,15 @@ Populate accepts `string | string[]` for multiple paths. **Never call `model.fin
 ### Server action error handling
 
 All server actions use structured errors from `lib/action-errors.ts`. Every error has three fields:
+
 - **`error`** — machine-readable code (`'not-found'`, `'unauthorized'`, `'validation'`, `'forbidden'`, `'locked'`, `'server-error'`)
 - **`errorCode`** — HTTP-style status code (404, 401, 400, 403, 423, 500)
 - **`errorMessage`** — human-readable string for UI display
 
 Use the factory helpers — never inline `{ error: '...' }`:
+
 ```ts
-return notFound('Group');      // { error: 'not-found', errorCode: 404, errorMessage: 'Group not found' }
+return notFound('Group'); // { error: 'not-found', errorCode: 404, errorMessage: 'Group not found' }
 return forbidden('edit group'); // { error: 'forbidden', errorCode: 403, errorMessage: 'Not authorized to edit group' }
 return validation('Name is required');
 return locked('Picks');
@@ -161,7 +165,7 @@ Clients check `result.error` for error presence and display `result.errorMessage
 
 1. **`lib/` pure utilities** — no mocking, just input → output
 2. **`server/*.actions.ts`** — mock service singletons with `vi.mock('./foo.service', () => ({ fooService: { ... } }))`
-3. **`app/**/actions.ts`** — mock `@/lib/auth` (`getAuthUser` returns fake user), `next/cache` (`revalidatePath`), and downstream services/actions
+3. **`app/**/actions.ts`** — mock `@/lib/auth` (`getAuthUser`returns fake user),`next/cache` (`revalidatePath`), and downstream services/actions
 
 ### Mocking patterns
 

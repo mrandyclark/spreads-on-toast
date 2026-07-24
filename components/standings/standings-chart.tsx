@@ -97,6 +97,6 @@ const StandingsChart = ({ members }: StandingsChartProps) => {
 			</CardContent>
 		</Card>
 	);
-}
+};
 
 export default StandingsChart;

@@ -4,12 +4,17 @@ import { revalidatePath } from 'next/cache';
 
 import { serverError, validation } from '@/lib/action-errors';
 import { withAuth } from '@/lib/with-auth-action';
+import { validateSignConfig } from '@/server/signs/sign-config';
 import { createSign, updateSignConfig } from '@/server/signs/sign.actions';
 import { SignConfig } from '@/types';
 
 export const createSignAction = withAuth(async (user, title: string) => {
-	if (!title.trim()) {
+	if (typeof title !== 'string' || !title.trim()) {
 		return validation('Sign name is required');
+	}
+
+	if (title.trim().length > 80) {
+		return validation('Sign name must be 80 characters or fewer');
 	}
 
 	try {
@@ -22,17 +27,25 @@ export const createSignAction = withAuth(async (user, title: string) => {
 	}
 });
 
-export const updateSignConfigAction = withAuth(async (user, signId: string, config: Partial<SignConfig>) => {
-	try {
-		const result = await updateSignConfig(signId, user.id, config);
+export const updateSignConfigAction = withAuth(
+	async (user, signId: string, config: Partial<SignConfig>) => {
+		const validationResult = validateSignConfig(config);
 
-		if (result.sign) {
-			revalidatePath(`/signs/${signId}`);
+		if (!validationResult.value) {
+			return validation(validationResult.error);
 		}
 
-		return result;
-	} catch (error) {
-		console.error('Failed to update sign:', error);
-		return serverError('update sign settings');
-	}
-});
+		try {
+			const result = await updateSignConfig(signId, user.id, validationResult.value);
+
+			if (result.sign) {
+				revalidatePath(`/signs/${signId}`);
+			}
+
+			return result;
+		} catch (error) {
+			console.error('Failed to update sign:', error);
+			return serverError('update sign settings');
+		}
+	},
+);

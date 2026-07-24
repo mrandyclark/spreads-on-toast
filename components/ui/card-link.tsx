@@ -35,6 +35,6 @@ const CardLink = ({ children, href, icon: Icon, title }: CardLinkProps) => {
 			</Card>
 		</Link>
 	);
-}
+};
 
 export default CardLink;

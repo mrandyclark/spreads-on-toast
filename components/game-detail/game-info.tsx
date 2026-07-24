@@ -51,9 +51,7 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 							<span>
 								{formatGameTime(game.gameDate, ballpark?.timezone)}
 								{ballpark?.timezone && ballpark.timezone !== 'America/New_York' && (
-									<span className="text-muted-foreground">
-										{' '}({formatGameTime(game.gameDate)})
-									</span>
+									<span className="text-muted-foreground"> ({formatGameTime(game.gameDate)})</span>
 								)}
 							</span>
 						)}
@@ -63,10 +61,11 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 						<span>{game.venue.name}</span>
 					</div>
 					<div className="flex items-center gap-2">
-						{isNight
-							? <Moon className="text-muted-foreground h-4 w-4 shrink-0" />
-							: <Sun className="text-muted-foreground h-4 w-4 shrink-0" />
-						}
+						{isNight ? (
+							<Moon className="text-muted-foreground h-4 w-4 shrink-0" />
+						) : (
+							<Sun className="text-muted-foreground h-4 w-4 shrink-0" />
+						)}
 						<span>{isNight ? 'Night game' : 'Day game'}</span>
 					</div>
 				</div>
@@ -82,7 +81,8 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 								<span className="text-muted-foreground">Series</span>
 								<p className="font-medium">
 									{game.seriesDescription}
-									{game.gamesInSeries > 1 && ` (Game ${game.seriesGameNumber} of ${game.gamesInSeries})`}
+									{game.gamesInSeries > 1 &&
+										` (Game ${game.seriesGameNumber} of ${game.gamesInSeries})`}
 								</p>
 							</div>
 						)}
@@ -96,9 +96,10 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 								<div>
 									<span className="text-muted-foreground">{awayTeam.abbreviation} record</span>
 									<p className="font-medium">
-										{game.awayTeam.leagueRecord.wins}-{game.awayTeam.leagueRecord.losses}
-										{' '}
-										<span className="text-muted-foreground">({game.awayTeam.leagueRecord.pct})</span>
+										{game.awayTeam.leagueRecord.wins}-{game.awayTeam.leagueRecord.losses}{' '}
+										<span className="text-muted-foreground">
+											({game.awayTeam.leagueRecord.pct})
+										</span>
 									</p>
 								</div>
 							)}
@@ -106,9 +107,10 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 								<div>
 									<span className="text-muted-foreground">{homeTeam.abbreviation} record</span>
 									<p className="font-medium">
-										{game.homeTeam.leagueRecord.wins}-{game.homeTeam.leagueRecord.losses}
-										{' '}
-										<span className="text-muted-foreground">({game.homeTeam.leagueRecord.pct})</span>
+										{game.homeTeam.leagueRecord.wins}-{game.homeTeam.leagueRecord.losses}{' '}
+										<span className="text-muted-foreground">
+											({game.homeTeam.leagueRecord.pct})
+										</span>
 									</p>
 								</div>
 							)}
@@ -133,7 +135,9 @@ const GameInfo = ({ ballpark, game }: GameInfoProps) => {
 							</div>
 							<div className="flex items-center gap-2">
 								<MapPin className="text-muted-foreground h-4 w-4 shrink-0" />
-								<span>{ballpark.location.city}, {ballpark.location.state}</span>
+								<span>
+									{ballpark.location.city}, {ballpark.location.state}
+								</span>
 							</div>
 						</div>
 					</div>

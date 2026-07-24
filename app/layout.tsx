@@ -1,22 +1,18 @@
 import type { Metadata, Viewport } from 'next';
 
 import { Analytics } from '@vercel/analytics/next';
-import { DM_Sans, DM_Serif_Display } from 'next/font/google';
+
+import PwaController from '@/components/pwa/pwa-controller';
 
 import './globals.css';
 
-const dmSans = DM_Sans({
-	subsets: ['latin'],
-	variable: '--font-dm-sans',
-});
-
-const dmSerif = DM_Serif_Display({
-	subsets: ['latin'],
-	variable: '--font-dm-serif',
-	weight: '400',
-});
-
 export const metadata: Metadata = {
+	appleWebApp: {
+		capable: true,
+		statusBarStyle: 'black-translucent',
+		title: 'Spreads',
+	},
+	applicationName: 'Spreads on Toast',
 	description:
 		"Pick season win totals vs the line, lock them in, and see who comes out on top by season's end. A fun friend-group competition tracker.",
 	icons: {
@@ -28,19 +24,25 @@ export const metadata: Metadata = {
 		shortcut: '/favicon.ico',
 	},
 	manifest: '/site.webmanifest',
+	other: {
+		'mobile-web-app-capable': 'yes',
+	},
 	title: 'spreadsontoast - Lock Your Preseason Spreads',
 };
 
 export const viewport: Viewport = {
-	themeColor: '#c05621',
+	colorScheme: 'light',
+	themeColor: '#8f2f1f',
+	viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html className={`${dmSans.variable} ${dmSerif.variable}`} lang="en">
+		<html lang="en">
 			<body className="font-sans antialiased">
 				{children}
-				<Analytics />
+				<PwaController />
+				{process.env.VERCEL === '1' ? <Analytics /> : null}
 			</body>
 		</html>
 	);

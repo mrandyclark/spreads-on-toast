@@ -52,14 +52,22 @@ vi.mock('@/server/seasons/team-line.service', () => ({
 	},
 }));
 
+vi.mock('@/server/seasons/season.service', () => ({
+	seasonService: {
+		findBySportAndYear: vi.fn(() => Promise.resolve(null)),
+	},
+}));
+
 vi.mock('@/server/sheets/sheet.service', () => ({
 	sheetService: {
+		ensureHistoricalSnapshot: vi.fn(),
 		find: vi.fn(),
 		findByGroupAndUser: vi.fn(),
 		findByGroupAndUserPopulated: vi.fn(),
 		findById: vi.fn(),
 		findByIdAndUpdate: vi.fn(),
 		findByUserAndGroupPopulated: vi.fn(),
+		updatePicksBeforeLock: vi.fn(),
 	},
 }));
 
@@ -72,7 +80,11 @@ vi.mock('@/server/mlb-api', () => ({
 	calculateProjectedWins: vi.fn(() => 0),
 }));
 
-import { calculateLeaderboard, getGroupForMember, groupService } from '@/server/groups/group.actions';
+import {
+	calculateLeaderboard,
+	getGroupForMember,
+	groupService,
+} from '@/server/groups/group.actions';
 import { sheetService } from '@/server/sheets/sheet.service';
 
 import {
@@ -184,7 +196,7 @@ describe('league app actions', () => {
 
 		it('returns locked when group is past lock date', async () => {
 			vi.mocked(sheetService.findById).mockResolvedValue(mockSheet);
-			vi.mocked(sheetService.findByGroupAndUser).mockResolvedValue(mockSheet);
+			vi.mocked(sheetService.findByGroupAndUserPopulated).mockResolvedValue(mockSheet);
 			vi.mocked(groupService.findById).mockResolvedValue(lockedGroup);
 			const result = await copyPicksFromSheetAction('group1', 'sheet1');
 			expect(result.error).toBe('locked');
@@ -199,14 +211,14 @@ describe('league app actions', () => {
 		});
 
 		it('returns not-found when sheet not found', async () => {
-			vi.mocked(getGroupForMember).mockResolvedValue(mockGroup as never);
+			vi.mocked(getGroupForMember).mockResolvedValue(lockedGroup as never);
 			vi.mocked(sheetService.findByGroupAndUserPopulated).mockResolvedValue(null);
 			const result = await getSheetForMemberAction('group1', 'user2');
 			expect(result.error).toBe('not-found');
 		});
 
 		it('returns sheet when found', async () => {
-			vi.mocked(getGroupForMember).mockResolvedValue(mockGroup as never);
+			vi.mocked(getGroupForMember).mockResolvedValue(lockedGroup as never);
 			vi.mocked(sheetService.findByGroupAndUserPopulated).mockResolvedValue(mockSheet);
 			const result = await getSheetForMemberAction('group1', 'user2');
 			expect(result.sheet).toBe(mockSheet);
@@ -230,18 +242,40 @@ describe('league app actions', () => {
 		it('saves picks and revalidates path', async () => {
 			vi.mocked(sheetService.findByGroupAndUserPopulated).mockResolvedValue(mockSheet);
 			vi.mocked(getGroupForMember).mockResolvedValue(mockGroup as never);
-			vi.mocked(sheetService.findByIdAndUpdate).mockResolvedValue(mockSheet);
+			vi.mocked(sheetService.updatePicksBeforeLock).mockResolvedValue(mockSheet);
 
 			const result = await savePicksAction('group1', {
 				teamPicks: { t1: 'over', t2: 'under' },
 			});
 
-			expect(sheetService.findByIdAndUpdate).toHaveBeenCalled();
+			expect(sheetService.updatePicksBeforeLock).toHaveBeenCalled();
 			expect(result.sheet).toBeDefined();
+		});
+
+		it('returns a server error when a legacy snapshot cannot be completed', async () => {
+			vi.mocked(sheetService.findByGroupAndUserPopulated).mockResolvedValue(mockSheet);
+			vi.mocked(getGroupForMember).mockResolvedValue(mockGroup as never);
+			vi.mocked(sheetService.ensureHistoricalSnapshot).mockRejectedValue(
+				new Error('Missing historical line'),
+			);
+
+			const result = await savePicksAction('group1', {
+				teamPicks: { t1: 'over', t2: 'under' },
+			});
+
+			expect(result.error).toBe('server-error');
+			expect(sheetService.updatePicksBeforeLock).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('getLeaderboardAction', () => {
+		it('rejects impossible calendar dates before querying', async () => {
+			const result = await getLeaderboardAction('group1', '2025-02-30');
+
+			expect(result.error).toBe('validation');
+			expect(groupService.findForMemberPopulated).not.toHaveBeenCalled();
+		});
+
 		it('returns not-found when group not found', async () => {
 			vi.mocked(groupService.findForMemberPopulated).mockResolvedValue(null);
 			const result = await getLeaderboardAction('group1');
@@ -249,10 +283,30 @@ describe('league app actions', () => {
 		});
 
 		it('returns leaderboard with isCurrentUser set', async () => {
-			vi.mocked(groupService.findForMemberPopulated).mockResolvedValue(mockGroup);
+			vi.mocked(groupService.findForMemberPopulated).mockResolvedValue(lockedGroup);
 			const entries: LeaderboardEntry[] = [
-				{ isCurrentUser: false, losses: 5, pushes: 1, total: 16, userId: 'user1', userInitials: 'TU', userName: 'Test User', winPct: 63, wins: 10 },
-				{ isCurrentUser: false, losses: 8, pushes: 0, total: 16, userId: 'user2', userInitials: 'OT', userName: 'Other', winPct: 50, wins: 8 },
+				{
+					isCurrentUser: false,
+					losses: 5,
+					pushes: 1,
+					total: 16,
+					userId: 'user1',
+					userInitials: 'TU',
+					userName: 'Test User',
+					winPct: 63,
+					wins: 10,
+				},
+				{
+					isCurrentUser: false,
+					losses: 8,
+					pushes: 0,
+					total: 16,
+					userId: 'user2',
+					userInitials: 'OT',
+					userName: 'Other',
+					winPct: 50,
+					wins: 8,
+				},
 			];
 			vi.mocked(calculateLeaderboard).mockResolvedValue(entries);
 
@@ -264,12 +318,12 @@ describe('league app actions', () => {
 		});
 
 		it('passes date through to calculateLeaderboard', async () => {
-			vi.mocked(groupService.findForMemberPopulated).mockResolvedValue(mockGroup);
+			vi.mocked(groupService.findForMemberPopulated).mockResolvedValue(lockedGroup);
 			vi.mocked(calculateLeaderboard).mockResolvedValue([]);
 
 			await getLeaderboardAction('group1', '2025-06-15');
 
-			expect(calculateLeaderboard).toHaveBeenCalledWith(mockGroup, 'group1', '2025-06-15');
+			expect(calculateLeaderboard).toHaveBeenCalledWith(lockedGroup, 'group1', '2025-06-15');
 		});
 	});
 });

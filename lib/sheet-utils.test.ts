@@ -15,7 +15,9 @@ import {
 	toTeamsWithLines,
 } from './sheet-utils';
 
-const makeTeam = (overrides: Partial<Team> & { abbreviation: string; city: string; id: string; name: string }): Team => ({
+const makeTeam = (
+	overrides: Partial<Team> & { abbreviation: string; city: string; id: string; name: string },
+): Team => ({
 	conference: Conference.AL,
 	createdAt: new Date(),
 	division: Division.AL_East,
@@ -81,11 +83,17 @@ describe('sheet-utils', () => {
 
 	describe('filterTeamsByConference', () => {
 		it('filters AL teams', () => {
-			expect(filterTeamsByConference([yankees, dodgers, redSox], Conference.AL)).toEqual([yankees, redSox]);
+			expect(filterTeamsByConference([yankees, dodgers, redSox], Conference.AL)).toEqual([
+				yankees,
+				redSox,
+			]);
 		});
 
 		it('filters NL teams', () => {
-			expect(filterTeamsByConference([yankees, dodgers, mets], Conference.NL)).toEqual([dodgers, mets]);
+			expect(filterTeamsByConference([yankees, dodgers, mets], Conference.NL)).toEqual([
+				dodgers,
+				mets,
+			]);
 		});
 	});
 
@@ -97,7 +105,12 @@ describe('sheet-utils', () => {
 
 	describe('getTeamsByConference', () => {
 		it('splits and sorts by abbreviation', () => {
-			const picks = [populatedPick(yankees), populatedPick(redSox), populatedPick(dodgers), populatedPick(mets)];
+			const picks = [
+				populatedPick(yankees),
+				populatedPick(redSox),
+				populatedPick(dodgers),
+				populatedPick(mets),
+			];
 			const result = getTeamsByConference(picks);
 			expect(result.al.map((t) => t.abbreviation)).toEqual(['BOS', 'NYY']);
 			expect(result.nl.map((t) => t.abbreviation)).toEqual(['LAD', 'NYM']);
@@ -106,7 +119,12 @@ describe('sheet-utils', () => {
 
 	describe('getTeamsByConferenceSortedByName', () => {
 		it('splits and sorts by full name', () => {
-			const picks = [populatedPick(yankees), populatedPick(redSox), populatedPick(dodgers), populatedPick(mets)];
+			const picks = [
+				populatedPick(yankees),
+				populatedPick(redSox),
+				populatedPick(dodgers),
+				populatedPick(mets),
+			];
 			const result = getTeamsByConferenceSortedByName(picks);
 			expect(result.al.map((t) => t.name)).toEqual(['Red Sox', 'Yankees']);
 			expect(result.nl.map((t) => t.name)).toEqual(['Dodgers', 'Mets']);
@@ -116,7 +134,10 @@ describe('sheet-utils', () => {
 	describe('toTeamsWithLines', () => {
 		it('converts populated picks to TeamWithLine sorted by full name', () => {
 			const picks = [populatedPick(yankees), populatedPick(redSox)];
-			const linesMap = new Map([['t1', 91.5], ['t2', 82.5]]);
+			const linesMap = new Map([
+				['t1', 91.5],
+				['t2', 82.5],
+			]);
 			const result = toTeamsWithLines(picks, linesMap);
 			expect(result).toEqual([
 				{
@@ -142,7 +163,10 @@ describe('sheet-utils', () => {
 
 		it('skips unpopulated picks', () => {
 			const picks = [populatedPick(yankees), unpopulatedPick('t2')];
-			const linesMap = new Map([['t1', 91.5], ['t2', 82.5]]);
+			const linesMap = new Map([
+				['t1', 91.5],
+				['t2', 82.5],
+			]);
 			expect(toTeamsWithLines(picks, linesMap)).toHaveLength(1);
 		});
 	});

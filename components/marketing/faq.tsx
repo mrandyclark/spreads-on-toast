@@ -13,7 +13,7 @@ const faqs = [
 	},
 	{
 		answer:
-			"We currently support MLB with live standings, scores, and win totals updated daily throughout the season. More sports are on the way.",
+			'We currently support MLB with live standings, scores, and win totals updated daily throughout the season. More sports are on the way.',
 		question: 'What sports do you support?',
 	},
 	{
@@ -28,7 +28,7 @@ const faqs = [
 	},
 	{
 		answer:
-			"Yes! spreadsontoast is free to use. We may introduce optional premium features down the road, but the core experience will always be free.",
+			'Yes! spreadsontoast is free to use. We may introduce optional premium features down the road, but the core experience will always be free.',
 		question: 'Is it free?',
 	},
 ];
@@ -66,6 +66,6 @@ const FAQ = () => {
 			</div>
 		</section>
 	);
-}
+};
 
 export default FAQ;

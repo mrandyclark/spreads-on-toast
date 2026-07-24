@@ -4,7 +4,13 @@ import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-const GlobalError = ({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) => {
+const GlobalError = ({
+	error,
+	reset,
+}: {
+	error: Error & { digest?: string };
+	reset: () => void;
+}) => {
 	useEffect(() => {
 		console.error(error);
 	}, [error]);

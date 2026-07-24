@@ -47,7 +47,7 @@ const GameTeamDataSchema = new Schema(
 		team: { ...UuidRefType, ref: ModelName.Team },
 		teamMlbId: { required: true, type: Number },
 	},
-	{ _id: false },
+	{ _id: false, suppressReservedKeysWarning: true },
 );
 
 const InningHalfDataSchema = new Schema(
@@ -57,7 +57,7 @@ const InningHalfDataSchema = new Schema(
 		leftOnBase: { type: Number },
 		runs: { type: Number },
 	},
-	{ _id: false },
+	{ _id: false, suppressReservedKeysWarning: true },
 );
 
 const GameInningSchema = new Schema(
@@ -78,7 +78,7 @@ const LinescoreTeamTotalsSchema = new Schema(
 		leftOnBase: { type: Number },
 		runs: { type: Number },
 	},
-	{ _id: false },
+	{ _id: false, suppressReservedKeysWarning: true },
 );
 
 const GameDefenseSchema = new Schema(
@@ -152,6 +152,8 @@ const GameSchema = new Schema<With_id<Game>>({
 	mlbGameId: { index: true, required: true, type: Number, unique: true },
 	officialDate: { index: true, required: true, type: String },
 	season: { index: true, required: true, type: String },
+	source: { default: 'mlb-stats-api', enum: ['mlb-stats-api'], required: true, type: String },
+	sourceFetchedAt: { required: true, type: Date },
 
 	// Game classification
 	gamesInSeries: { type: Number },
@@ -199,7 +201,7 @@ GameSchema.index({ 'awayTeam.team': 1, season: 1 });
 // Index for querying games by team + gameDate (upcoming/recent games, $or uses both)
 // eslint-disable-next-line perfectionist/sort-objects
 GameSchema.index({ 'homeTeam.team': 1, gameDate: 1 });
- 
+
 GameSchema.index({ 'awayTeam.team': 1, gameDate: 1 });
 
 // Index for CRON sync upserts by MLB game ID

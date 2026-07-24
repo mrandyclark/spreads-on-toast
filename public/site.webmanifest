@@ -1,19 +1,67 @@
 {
-	"name": "spreadsontoast",
-	"short_name": "spreads",
+	"id": "/",
+	"name": "Spreads on Toast",
+	"short_name": "Spreads",
+	"description": "Make MLB season win-total picks, follow the daily slate, and track your group all season.",
+	"lang": "en-US",
+	"start_url": "/dashboard?source=pwa",
+	"scope": "/",
+	"display": "standalone",
+	"display_override": ["window-controls-overlay", "standalone"],
+	"orientation": "any",
+	"categories": ["sports", "games"],
 	"icons": [
 		{
 			"src": "/android-chrome-192x192.png",
 			"sizes": "192x192",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
 		},
 		{
 			"src": "/android-chrome-512x512.png",
 			"sizes": "512x512",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/maskable-icon-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/maskable-icon-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
 		}
 	],
-	"theme_color": "#c05621",
-	"background_color": "#ffffff",
-	"display": "standalone"
+	"shortcuts": [
+		{
+			"name": "Today’s games",
+			"short_name": "Games",
+			"url": "/games",
+			"icons": [
+				{
+					"src": "/android-chrome-192x192.png",
+					"sizes": "192x192",
+					"type": "image/png"
+				}
+			]
+		},
+		{
+			"name": "My groups",
+			"short_name": "Groups",
+			"url": "/dashboard",
+			"icons": [
+				{
+					"src": "/android-chrome-192x192.png",
+					"sizes": "192x192",
+					"type": "image/png"
+				}
+			]
+		}
+	],
+	"theme_color": "#8f2f1f",
+	"background_color": "#f8f5ee"
 }

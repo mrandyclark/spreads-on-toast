@@ -10,7 +10,10 @@ const GameStatusBadge = ({ game }: GameStatusBadgeProps) => {
 	if (game.status.abstractGameState === GameState.Final) {
 		return (
 			<Badge className="bg-muted text-muted-foreground border-0">
-				Final{game.linescore && game.linescore.innings.length > 9 && ` (${game.linescore.innings.length})`}
+				Final
+				{game.linescore &&
+					game.linescore.innings.length > 9 &&
+					` (${game.linescore.innings.length})`}
 			</Badge>
 		);
 	}

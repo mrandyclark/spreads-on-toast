@@ -43,7 +43,7 @@ const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
 	const isMarketing = variant === 'marketing';
 
 	return (
-		<header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur">
+		<header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 w-full border-b pt-[env(safe-area-inset-top)] backdrop-blur">
 			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
 				{/* Logo */}
 				<Link
@@ -153,6 +153,13 @@ const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
 										href="/dashboard"
 										onClick={() => setMobileMenuOpen(false)}>
 										My Leagues
+									</Link>
+
+									<Link
+										className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
+										href="/games"
+										onClick={() => setMobileMenuOpen(false)}>
+										Today’s Games
 									</Link>
 
 									<Link

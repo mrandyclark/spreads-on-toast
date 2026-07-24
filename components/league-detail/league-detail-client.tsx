@@ -22,12 +22,21 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Sheet as SheetUI } from '@/components/ui/sheet';
-import { formatDateDisplay, toDateString } from '@/lib/date-utils';
+import { toDateString } from '@/lib/date-utils';
 import { resolveRef, resolveRefId } from '@/lib/ref-utils';
 import { getTeamId } from '@/lib/sheet-utils';
 import { cn } from '@/lib/utils';
-import { CopyableSheet, Group, GroupRole, PostseasonPicks, SelectedMember, Sheet, WorldSeriesPicks } from '@/types';
+import {
+	CopyableSheet,
+	Group,
+	GroupRole,
+	PostseasonPicks,
+	SelectedMember,
+	Sheet,
+	WorldSeriesPicks,
+} from '@/types';
 
 import {
 	copyPicksFromSheetAction,
@@ -39,6 +48,7 @@ import {
 interface LeagueDetailClientProps {
 	gamesPlayedByTeamId: Record<string, number>;
 	initialGroup: Group;
+	initialLockStatus: { daysUntilLock: number; isLocked: boolean };
 	initialSheet: null | Sheet;
 	linesByTeamId: Record<string, number>;
 	projectedWinsByTeamId: Record<string, number>;
@@ -47,6 +57,7 @@ interface LeagueDetailClientProps {
 const LeagueDetailClient = ({
 	gamesPlayedByTeamId,
 	initialGroup,
+	initialLockStatus,
 	initialSheet,
 	linesByTeamId,
 	projectedWinsByTeamId,
@@ -55,6 +66,11 @@ const LeagueDetailClient = ({
 	const [sheet] = useState<null | Sheet>(initialSheet);
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'success'>('idle');
+	const [saveMessage, setSaveMessage] = useState('');
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+	const [lastSavedAt, setLastSavedAt] = useState<Date | null>(
+		initialSheet?.lastSavedAt ? new Date(initialSheet.lastSavedAt) : null,
+	);
 	const [teamPicks, setTeamPicks] = useState<Record<string, 'over' | 'under' | null>>(() => {
 		const initial: Record<string, 'over' | 'under' | null> = {};
 
@@ -66,8 +82,12 @@ const LeagueDetailClient = ({
 
 		return initial;
 	});
-	const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(null);
-	const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(null);
+	const [postseasonPicks, setPostseasonPicks] = useState<null | PostseasonPicks>(
+		initialSheet?.postseasonPicks ?? null,
+	);
+	const [worldSeriesPicks, setWorldSeriesPicks] = useState<null | WorldSeriesPicks>(
+		initialSheet?.worldSeriesPicks ?? null,
+	);
 	const [selectedMember, setSelectedMember] = useState<null | SelectedMember>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
@@ -95,24 +115,61 @@ const LeagueDetailClient = ({
 	}, [group.id]);
 
 	useEffect(() => {
-		if (copyPicksOpen && copyableSheets.length === 0 && !isLoadingCopyable) {
-			void loadCopyableSheets();
-		}
-	}, [copyPicksOpen, copyableSheets.length, isLoadingCopyable, loadCopyableSheets]);
+		window.dispatchEvent(
+			new CustomEvent('pwa:dirty-state', { detail: { dirty: hasUnsavedChanges } }),
+		);
 
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			if (hasUnsavedChanges) {
+				event.preventDefault();
+			}
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+			window.dispatchEvent(new CustomEvent('pwa:dirty-state', { detail: { dirty: false } }));
+		};
+	}, [hasUnsavedChanges]);
+
+	const { daysUntilLock, isLocked } = initialLockStatus;
 	const lockDate = new Date(group.lockDate);
-	const isLocked = lockDate < new Date();
-	const daysUntilLock = Math.max(
-		0,
-		Math.ceil((lockDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-	);
 
 	// Check if current user is owner or admin
-	const currentUserMember = group.members.find(
-		(m) => resolveRefId(m.user) === sheet?.user,
-	);
+	const currentUserMember = group.members.find((m) => resolveRefId(m.user) === sheet?.user);
 	const canEditGroup =
 		currentUserMember?.role === GroupRole.Owner || currentUserMember?.role === GroupRole.Admin;
+	const teamPickCount = Object.values(teamPicks).filter(Boolean).length;
+	const postseasonPickCount = (postseasonPicks?.al.length ?? 0) + (postseasonPicks?.nl.length ?? 0);
+	const worldSeriesPickCount =
+		Number(Boolean(worldSeriesPicks?.alChampion)) +
+		Number(Boolean(worldSeriesPicks?.nlChampion)) +
+		Number(Boolean(worldSeriesPicks?.winner));
+	const completedPickCount = teamPickCount + postseasonPickCount + worldSeriesPickCount;
+	const totalPickCount = (sheet?.teamPicks.length ?? 0) + 13;
+	const completionPercentage = totalPickCount > 0 ? (completedPickCount / totalPickCount) * 100 : 0;
+
+	const markDirty = () => {
+		setHasUnsavedChanges(true);
+		setSaveStatus('idle');
+		setSaveMessage('');
+	};
+
+	const handleTeamPicksChange = (picks: Record<string, 'over' | 'under' | null>) => {
+		setTeamPicks(picks);
+		markDirty();
+	};
+
+	const handlePostseasonPicksChange = (picks: PostseasonPicks) => {
+		setPostseasonPicks(picks);
+		markDirty();
+	};
+
+	const handleWorldSeriesPicksChange = (picks: WorldSeriesPicks) => {
+		setWorldSeriesPicks(picks);
+		markDirty();
+	};
 
 	const handleCopyInviteCode = async () => {
 		if (!group?.inviteCode) {
@@ -130,6 +187,14 @@ const LeagueDetailClient = ({
 	const handleOpenEditName = () => {
 		setEditingName(group.name);
 		setEditNameOpen(true);
+	};
+
+	const handleCopyPicksOpenChange = (open: boolean) => {
+		setCopyPicksOpen(open);
+
+		if (open && copyableSheets.length === 0 && !isLoadingCopyable) {
+			void loadCopyableSheets();
+		}
 	};
 
 	const handleSaveGroupName = async () => {
@@ -167,8 +232,15 @@ const LeagueDetailClient = ({
 	};
 
 	const handleSavePicks = async () => {
+		if (!navigator.onLine) {
+			setSaveStatus('error');
+			setSaveMessage('You’re offline. Reconnect before saving.');
+			return;
+		}
+
 		setIsSaving(true);
 		setSaveStatus('idle');
+		setSaveMessage('');
 
 		try {
 			const result = await savePicksAction(group.id, {
@@ -179,12 +251,16 @@ const LeagueDetailClient = ({
 
 			if (result.sheet) {
 				setSaveStatus('success');
+				setHasUnsavedChanges(false);
+				setLastSavedAt(new Date(result.sheet.lastSavedAt ?? Date.now()));
+				setSaveMessage('All changes are confirmed by the server.');
 
 				setTimeout(() => {
 					setSaveStatus('idle');
 				}, 3000);
 			} else if (result.error) {
 				setSaveStatus('error');
+				setSaveMessage(result.errorMessage ?? 'The server did not save these changes.');
 
 				setTimeout(() => {
 					setSaveStatus('idle');
@@ -192,6 +268,7 @@ const LeagueDetailClient = ({
 			}
 		} catch {
 			setSaveStatus('error');
+			setSaveMessage('The server did not save these changes. Try again.');
 
 			setTimeout(() => {
 				setSaveStatus('idle');
@@ -279,8 +356,11 @@ const LeagueDetailClient = ({
 								<div>
 									<p className="font-medium">{daysUntilLock} days until picks lock</p>
 									<p className="text-muted-foreground text-sm">
-										Locks on{' '}
-										{formatDateDisplay(toDateString(group.lockDate))}
+										Locks{' '}
+										{lockDate.toLocaleString(undefined, {
+											dateStyle: 'long',
+											timeStyle: 'short',
+										})}
 									</p>
 								</div>
 							</>
@@ -324,55 +404,82 @@ const LeagueDetailClient = ({
 						selectedDate={selectedDate}
 					/>
 
-					{sheet && (
-						<LockedResults
-							groupId={group.id}
-							selectedDate={selectedDate}
-							sheet={sheet}
-						/>
-					)}
+					{sheet && <LockedResults groupId={group.id} selectedDate={selectedDate} sheet={sheet} />}
 				</div>
 			)}
 
 			{!isLocked && (
 				<div className="space-y-8">
 					<section>
-						<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-16 z-40 -mx-4 mb-4 flex items-center justify-between border-b px-4 py-3 backdrop-blur">
-							<h2 className="text-xl font-semibold">Your Picks</h2>
-							<div className="flex items-center gap-2">
-								<Button
-									className="text-xs"
-									onClick={() => setCopyPicksOpen(true)}
-									size="sm"
-									variant="ghost">
-									Copy from another group
-								</Button>
-								<Button
-									disabled={isSaving}
-									onClick={handleSavePicks}
-									size="sm"
-									variant={
-										saveStatus === 'success'
-											? 'outline'
-											: saveStatus === 'error'
-												? 'destructive'
-												: 'default'
-									}>
-									{isSaving && 'Saving...'}
-									{!isSaving && saveStatus === 'success' && (
-										<>
-											<Check className="mr-1 h-4 w-4" />
-											Saved
-										</>
-									)}
-									{!isSaving && saveStatus === 'error' && (
-										<>
-											<X className="mr-1 h-4 w-4" />
-											Error
-										</>
-									)}
-									{!isSaving && saveStatus === 'idle' && 'Save All Picks'}
-								</Button>
+						<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-[calc(4rem+env(safe-area-inset-top))] z-40 -mx-4 mb-5 border-y px-4 py-3 backdrop-blur">
+							<div className="flex items-center justify-between gap-3">
+								<div className="min-w-0 flex-1">
+									<div className="flex items-baseline gap-2">
+										<h2 className="font-semibold">Your picks</h2>
+										<span className="text-muted-foreground text-xs">
+											{completedPickCount}/{totalPickCount} complete
+										</span>
+									</div>
+									<Progress
+										aria-label={`${completedPickCount} of ${totalPickCount} predictions complete`}
+										className="mt-2 h-1.5 max-w-xs"
+										value={completionPercentage}
+									/>
+								</div>
+								<div className="flex shrink-0 items-center gap-2">
+									<Button
+										aria-label="Copy picks from another group"
+										className="hidden text-xs sm:inline-flex"
+										onClick={() => handleCopyPicksOpenChange(true)}
+										size="sm"
+										variant="ghost">
+										Copy picks
+									</Button>
+									<Button
+										disabled={isSaving || !hasUnsavedChanges}
+										onClick={handleSavePicks}
+										size="sm"
+										variant={
+											saveStatus === 'success'
+												? 'outline'
+												: saveStatus === 'error'
+													? 'destructive'
+													: 'default'
+										}>
+										{isSaving && 'Saving...'}
+										{!isSaving && saveStatus === 'success' && (
+											<>
+												<Check className="mr-1 h-4 w-4" />
+												Saved
+											</>
+										)}
+										{!isSaving && saveStatus === 'error' && (
+											<>
+												<X className="mr-1 h-4 w-4" />
+												Error
+											</>
+										)}
+										{!isSaving && saveStatus === 'idle' && 'Save picks'}
+									</Button>
+								</div>
+							</div>
+							<div aria-live="polite" className="mt-2 min-h-5 text-xs">
+								{saveMessage && (
+									<span
+										className={cn(
+											saveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
+										)}>
+										{saveMessage}
+									</span>
+								)}
+								{!saveMessage && hasUnsavedChanges && (
+									<span className="text-muted-foreground">Unsaved changes</span>
+								)}
+								{!saveMessage && !hasUnsavedChanges && lastSavedAt && (
+									<span className="text-muted-foreground">
+										Server confirmed {lastSavedAt.toLocaleTimeString()}
+									</span>
+								)}
 							</div>
 						</div>
 
@@ -381,9 +488,9 @@ const LeagueDetailClient = ({
 							<PicksForm
 								gamesPlayedByTeamId={gamesPlayedByTeamId}
 								linesByTeamId={linesByTeamId}
-								onPostseasonPicksChange={setPostseasonPicks}
-								onTeamPicksChange={setTeamPicks}
-								onWorldSeriesPicksChange={setWorldSeriesPicks}
+								onPostseasonPicksChange={handlePostseasonPicksChange}
+								onTeamPicksChange={handleTeamPicksChange}
+								onWorldSeriesPicksChange={handleWorldSeriesPicksChange}
 								projectedWinsByTeamId={projectedWinsByTeamId}
 								sheet={sheet}
 							/>
@@ -435,7 +542,9 @@ const LeagueDetailClient = ({
 						memberName={selectedMember.userName}
 						onDateChange={setSelectedDate}
 						seasonEndDate={group.seasonEndDate ? toDateString(group.seasonEndDate) : undefined}
-						seasonStartDate={group.seasonStartDate ? toDateString(group.seasonStartDate) : undefined}
+						seasonStartDate={
+							group.seasonStartDate ? toDateString(group.seasonStartDate) : undefined
+						}
 						selectedDate={selectedDate}
 						userId={selectedMember.userId}
 					/>
@@ -472,16 +581,14 @@ const LeagueDetailClient = ({
 			</Dialog>
 
 			{/* Copy Picks Dialog */}
-			<Dialog onOpenChange={setCopyPicksOpen} open={copyPicksOpen}>
+			<Dialog onOpenChange={handleCopyPicksOpenChange} open={copyPicksOpen}>
 				<DialogContent className="sm:max-w-md">
 					<DialogHeader>
 						<DialogTitle>Copy Picks from Another League</DialogTitle>
 					</DialogHeader>
 					<div className="py-4">
 						{isLoadingCopyable && (
-							<p className="text-muted-foreground text-center text-sm">
-								Loading...
-							</p>
+							<p className="text-muted-foreground text-center text-sm">Loading...</p>
 						)}
 						{!isLoadingCopyable && copyableSheets.length === 0 && (
 							<p className="text-muted-foreground text-center text-sm">

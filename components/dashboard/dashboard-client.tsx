@@ -3,7 +3,11 @@
 import { Plus, Trophy, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
-import { createGroupAction, getSeasonsAction, joinGroupAction } from '@/app/(logged-in)/dashboard/actions';
+import {
+	createGroupAction,
+	getSeasonsAction,
+	joinGroupAction,
+} from '@/app/(logged-in)/dashboard/actions';
 import PageHeader from '@/components/layout/page-header';
 import PageShell from '@/components/layout/page-shell';
 import StandingsBoard from '@/components/standings/standings-board';
@@ -39,7 +43,11 @@ interface DashboardClientProps {
 	initialStandingsSeasons: SeasonWithDates[];
 }
 
-const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeasons }: DashboardClientProps) => {
+const DashboardClient = ({
+	initialGroups,
+	initialSeasons,
+	initialStandingsSeasons,
+}: DashboardClientProps) => {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isJoinOpen, setIsJoinOpen] = useState(false);
 	const [groupName, setGroupName] = useState('');
@@ -83,7 +91,6 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 			setIsCreating(true);
 
 			const result = await createGroupAction({
-				lockDate: new Date(`${groupSeason}-03-28`).toISOString(),
 				name: groupName.trim(),
 				season: groupSeason,
 				sport: groupSport as Sport,
@@ -241,14 +248,12 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 			{filteredGroups.length === 0 && (
 				<EmptyState
 					action={
-						viewMode === 'active'
-							? (
-								<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
-									<Plus className="h-4 w-4" />
-									Create your first group
-								</Button>
-							)
-							: undefined
+						viewMode === 'active' ? (
+							<Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+								<Plus className="h-4 w-4" />
+								Create your first group
+							</Button>
+						) : undefined
 					}
 					description={
 						viewMode === 'archived'
@@ -262,11 +267,7 @@ const DashboardClient = ({ initialGroups, initialSeasons, initialStandingsSeason
 			{filteredGroups.length > 0 && (
 				<div className="grid gap-4">
 					{filteredGroups.map((group) => (
-						<CardLink
-							href={`/league/${group.id}`}
-							icon={Trophy}
-							key={group.id}
-							title={group.name}>
+						<CardLink href={`/league/${group.id}`} icon={Trophy} key={group.id} title={group.name}>
 							<span className="inline-flex items-center gap-1">
 								<span className="bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 text-xs font-medium">
 									{group.sport}

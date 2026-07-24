@@ -15,6 +15,6 @@ const BackLink = ({ href, label }: BackLinkProps) => {
 			{label}
 		</Link>
 	);
-}
+};
 
 export default BackLink;

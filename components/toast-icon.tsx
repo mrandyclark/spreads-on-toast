@@ -30,6 +30,6 @@ const ToastIcon = ({ className }: ToastIconProps) => {
 			<rect className="fill-muted-foreground/30" height="2" rx="1" width="8" x="12" y="21" />
 		</svg>
 	);
-}
+};
 
 export default ToastIcon;

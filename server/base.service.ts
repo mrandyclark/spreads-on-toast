@@ -53,7 +53,12 @@ export abstract class BaseService<T extends BaseDocument> {
 
 	async find(
 		query: QueryFilter<T> = {},
-		options?: { limit?: number; populate?: string | string[]; select?: string; sort?: Record<string, -1 | 1> },
+		options?: {
+			limit?: number;
+			populate?: string | string[];
+			select?: string;
+			sort?: Record<string, -1 | 1>;
+		},
 	): Promise<T[]> {
 		await dbConnect();
 		let q = this.model.find(query);
@@ -82,7 +87,10 @@ export abstract class BaseService<T extends BaseDocument> {
 		return cleanMongoDocs<T>(results);
 	}
 
-	async findById(id: string, options?: { populate?: string | string[]; select?: string }): Promise<null | T> {
+	async findById(
+		id: string,
+		options?: { populate?: string | string[]; select?: string },
+	): Promise<null | T> {
 		await dbConnect();
 		let q = this.model.findById(id);
 
@@ -112,7 +120,10 @@ export abstract class BaseService<T extends BaseDocument> {
 		return cleanMongoDoc<T>(doc);
 	}
 
-	async findOne(query: QueryFilter<T>, options?: { populate?: string | string[]; select?: string; sort?: Record<string, -1 | 1> }): Promise<null | T> {
+	async findOne(
+		query: QueryFilter<T>,
+		options?: { populate?: string | string[]; select?: string; sort?: Record<string, -1 | 1> },
+	): Promise<null | T> {
 		await dbConnect();
 		let q = this.model.findOne(query);
 

@@ -64,11 +64,7 @@ const TeamHeader = ({
 						<h1 className="text-foreground text-2xl font-bold sm:text-3xl">
 							{teamCity} {teamName}
 						</h1>
-						<TeamSwitcher
-							currentAbbreviation={teamAbbreviation}
-							season={season}
-							teams={allTeams}
-						/>
+						<TeamSwitcher currentAbbreviation={teamAbbreviation} season={season} teams={allTeams} />
 					</div>
 					<p className="text-muted-foreground mt-1">{season} Season</p>
 				</div>

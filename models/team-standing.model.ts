@@ -67,6 +67,8 @@ const TeamStandingSchema = new Schema<With_id<TeamStanding>>({
 	_id: UuidType,
 	date: { required: true, type: Date },
 	season: { required: true, type: String },
+	source: { default: 'mlb-stats-api', enum: ['mlb-stats-api'], required: true, type: String },
+	sourceFetchedAt: { required: true, type: Date },
 	sport: { enum: enumToValues(Sport), required: true, type: String },
 	team: { ...UuidRefType, ref: ModelName.Team, required: true },
 
@@ -120,7 +122,7 @@ const TeamStandingSchema = new Schema<With_id<TeamStanding>>({
 });
 
 // Unique constraint: one standing per team per date per season
- 
+
 TeamStandingSchema.index({ date: 1, season: 1, team: 1 }, { unique: true });
 
 // Index for querying all standings on a specific date (standings board, CRON upserts)

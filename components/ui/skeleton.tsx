@@ -5,9 +5,7 @@ interface SkeletonProps {
 }
 
 const Skeleton = ({ className }: SkeletonProps) => {
-	return (
-		<div className={cn('bg-muted animate-pulse rounded', className)} />
-	);
-}
+	return <div className={cn('bg-muted animate-pulse rounded', className)} />;
+};
 
 export default Skeleton;

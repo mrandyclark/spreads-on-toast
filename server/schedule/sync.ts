@@ -5,7 +5,12 @@ import { dbConnect } from '@/lib/mongoose';
 import { GameModel } from '@/models/game.model';
 import { GameState, Sport } from '@/types';
 
-import { fetchMlbSchedule, fetchMlbScheduleByDate, ScheduleGameData } from '../mlb-api';
+import {
+	fetchMlbSchedule,
+	fetchMlbScheduleByDate,
+	fetchMlbSeasonSchedule,
+	ScheduleGameData,
+} from '../mlb-api';
 import { teamService } from '../teams/team.service';
 
 export async function syncTeamSchedule(
@@ -24,36 +29,11 @@ export async function syncAllSchedules(
 ): Promise<{ created: number; errors: string[]; updated: number }> {
 	await dbConnect();
 
-	const teams = await teamService.findWithExternalIds(Sport.MLB);
-
-	const allGames: ScheduleGameData[] = [];
-	const seenMlbGameIds = new Set<number>();
 	const errors: string[] = [];
 
-	console.log(`[Schedule Sync] Syncing schedules for ${teams.length} teams, season ${season}`);
+	console.log(`[Schedule Sync] Syncing MLB season ${season} in one upstream request`);
 
-	for (const team of teams) {
-		if (!team.externalId) {
-			continue;
-		}
-
-		try {
-			const games = await fetchMlbSchedule(team.externalId, season);
-
-			for (const game of games) {
-				if (!seenMlbGameIds.has(game.mlbGameId)) {
-					seenMlbGameIds.add(game.mlbGameId);
-					allGames.push(game);
-				}
-			}
-
-			await new Promise((resolve) => setTimeout(resolve, 100));
-		} catch (error) {
-			const msg = `Error fetching schedule for team ${team.name} (${team.externalId}): ${error}`;
-			console.error(`[Schedule Sync] ${msg}`);
-			errors.push(msg);
-		}
-	}
+	const allGames = await fetchMlbSeasonSchedule(season);
 
 	console.log(`[Schedule Sync] Fetched ${allGames.length} unique games`);
 	console.log(`[Schedule Sync] Starting database sync...`);
@@ -75,6 +55,7 @@ async function syncGamesToDatabase(
 
 	const teams = await teamService.findWithExternalIds(Sport.MLB);
 	const teamsByExternalId = new Map(teams.map((t) => [t.externalId, t]));
+	const sourceFetchedAt = new Date();
 
 	const mlbGameIds = games.map((g) => g.mlbGameId);
 	const existingDocs = await GameModel.find(
@@ -92,6 +73,8 @@ async function syncGamesToDatabase(
 	for (let i = 0; i < games.length; i += BATCH_SIZE) {
 		const batch = games.slice(i, i + BATCH_SIZE);
 		const ops = [];
+		let batchCreated = 0;
+		let batchUpdated = 0;
 
 		for (const game of batch) {
 			try {
@@ -147,6 +130,8 @@ async function syncGamesToDatabase(
 					season: game.season,
 					seriesDescription: game.seriesDescription,
 					seriesGameNumber: game.seriesGameNumber,
+					source: 'mlb-stats-api' as const,
+					sourceFetchedAt,
 					status: game.status,
 					tiebreaker: game.tiebreaker,
 					venue: {
@@ -162,14 +147,14 @@ async function syncGamesToDatabase(
 							update: { $set: gameDoc },
 						},
 					});
-					updated++;
+					batchUpdated++;
 				} else {
 					ops.push({
 						insertOne: {
 							document: { _id: randomUUID(), ...gameDoc },
 						},
 					});
-					created++;
+					batchCreated++;
 				}
 			} catch (error) {
 				const msg = `Error preparing game ${game.mlbGameId}: ${error}`;
@@ -181,6 +166,8 @@ async function syncGamesToDatabase(
 		if (ops.length > 0) {
 			try {
 				await GameModel.bulkWrite(ops, { ordered: false });
+				created += batchCreated;
+				updated += batchUpdated;
 			} catch (error) {
 				const msg = `Bulk write error for batch at index ${i}: ${error}`;
 				console.error(`[Schedule Sync] ${msg}`);
@@ -188,10 +175,14 @@ async function syncGamesToDatabase(
 			}
 		}
 
-		console.log(`[Schedule Sync] Processed ${Math.min(i + BATCH_SIZE, games.length)}/${games.length} games...`);
+		console.log(
+			`[Schedule Sync] Processed ${Math.min(i + BATCH_SIZE, games.length)}/${games.length} games...`,
+		);
 	}
 
-	console.log(`[Schedule Sync] Season ${season}: Created ${created}, Updated ${updated}, Errors ${errors.length}`);
+	console.log(
+		`[Schedule Sync] Season ${season}: Created ${created}, Updated ${updated}, Errors ${errors.length}`,
+	);
 
 	return { created, errors, updated };
 }
@@ -246,7 +237,9 @@ export async function syncLiveGames(): Promise<{
 
 	// Only update games that are Live or Final (skip Preview — nothing to update)
 	const activeGames = games.filter(
-		(g) => g.status.abstractGameState === GameState.Live || g.status.abstractGameState === GameState.Final,
+		(g) =>
+			g.status.abstractGameState === GameState.Live ||
+			g.status.abstractGameState === GameState.Final,
 	);
 
 	console.log(`[Live Sync] ${games.length} games today, ${activeGames.length} active/final`);
@@ -292,6 +285,7 @@ export async function syncLiveGames(): Promise<{
 						'homeTeam.score': game.homeScore,
 						isTie: game.isTie,
 						linescore: game.linescore,
+						sourceFetchedAt: new Date(),
 						status: game.status,
 					},
 				},

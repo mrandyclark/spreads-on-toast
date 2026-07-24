@@ -22,11 +22,21 @@ const LeagueStandings = ({ divisions, standings, title }: LeagueStandingsProps) 
 							<tr className="border-border border-b">
 								<th className="text-muted-foreground bg-card sticky left-0 z-10 w-[50px] px-2 py-3 text-center font-medium"></th>
 								<th className="text-muted-foreground px-2 py-3 text-left font-medium">Team</th>
-								<th className="text-muted-foreground w-[50px] px-2 py-3 text-center font-medium">W</th>
-								<th className="text-muted-foreground w-[50px] px-2 py-3 text-center font-medium">L</th>
-								<th className="text-muted-foreground w-[60px] px-2 py-3 text-center font-medium">Line</th>
-								<th className="text-muted-foreground w-[70px] px-2 py-3 text-center font-medium">Proj W</th>
-								<th className="text-muted-foreground w-[80px] px-2 py-3 text-center font-medium">O/U</th>
+								<th className="text-muted-foreground w-[50px] px-2 py-3 text-center font-medium">
+									W
+								</th>
+								<th className="text-muted-foreground w-[50px] px-2 py-3 text-center font-medium">
+									L
+								</th>
+								<th className="text-muted-foreground w-[60px] px-2 py-3 text-center font-medium">
+									Line
+								</th>
+								<th className="text-muted-foreground w-[70px] px-2 py-3 text-center font-medium">
+									Proj W
+								</th>
+								<th className="text-muted-foreground w-[80px] px-2 py-3 text-center font-medium">
+									O/U
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -34,11 +44,7 @@ const LeagueStandings = ({ divisions, standings, title }: LeagueStandingsProps) 
 								const divisionStandings = standings.filter((t) => t.division === division);
 
 								return (
-									<DivisionRows
-										division={division}
-										key={division}
-										standings={divisionStandings}
-									/>
+									<DivisionRows division={division} key={division} standings={divisionStandings} />
 								);
 							})}
 						</tbody>

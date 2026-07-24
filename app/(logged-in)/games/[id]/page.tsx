@@ -38,10 +38,7 @@ const GamePage = async ({ params }: GamePageProps) => {
 		<PageShell maxWidth="4xl">
 			{/* Back link */}
 			<div className="mb-6">
-				<BackLink
-					href={`/games?date=${game.officialDate}`}
-					label="All games"
-				/>
+				<BackLink href={`/games?date=${game.officialDate}`} label="All games" />
 			</div>
 
 			{/* Matchup hero */}
@@ -55,24 +52,17 @@ const GamePage = async ({ params }: GamePageProps) => {
 						<div className="flex w-full items-center justify-center gap-4 sm:gap-8">
 							{/* Away team */}
 							<div className="flex flex-1 flex-col items-center gap-2 text-center">
-								<TeamLogo
-									abbreviation={awayTeam?.abbreviation ?? '?'}
-									colors={awayTeam?.colors}
-								/>
+								<TeamLogo abbreviation={awayTeam?.abbreviation ?? '?'} colors={awayTeam?.colors} />
 								<div>
 									<p className="text-muted-foreground text-xs">Away</p>
-									<p className="text-sm font-medium sm:text-base">
-										{awayTeam?.city ?? 'TBD'}
-									</p>
-									<p className="text-lg font-bold sm:text-xl">
-										{awayTeam?.name ?? 'TBD'}
-									</p>
+									<p className="text-sm font-medium sm:text-base">{awayTeam?.city ?? 'TBD'}</p>
+									<p className="text-lg font-bold sm:text-xl">{awayTeam?.name ?? 'TBD'}</p>
 								</div>
 								{awayAbbr && (
 									<Link
 										className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
 										href={`/teams/mlb/${awayAbbr}`}>
-											Team page →
+										Team page →
 									</Link>
 								)}
 							</div>
@@ -88,24 +78,17 @@ const GamePage = async ({ params }: GamePageProps) => {
 
 							{/* Home team */}
 							<div className="flex flex-1 flex-col items-center gap-2 text-center">
-								<TeamLogo
-									abbreviation={homeTeam?.abbreviation ?? '?'}
-									colors={homeTeam?.colors}
-								/>
+								<TeamLogo abbreviation={homeTeam?.abbreviation ?? '?'} colors={homeTeam?.colors} />
 								<div>
 									<p className="text-muted-foreground text-xs">Home</p>
-									<p className="text-sm font-medium sm:text-base">
-										{homeTeam?.city ?? 'TBD'}
-									</p>
-									<p className="text-lg font-bold sm:text-xl">
-										{homeTeam?.name ?? 'TBD'}
-									</p>
+									<p className="text-sm font-medium sm:text-base">{homeTeam?.city ?? 'TBD'}</p>
+									<p className="text-lg font-bold sm:text-xl">{homeTeam?.name ?? 'TBD'}</p>
 								</div>
 								{homeAbbr && (
 									<Link
 										className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
 										href={`/teams/mlb/${homeAbbr}`}>
-											Team page →
+										Team page →
 									</Link>
 								)}
 							</div>
@@ -114,26 +97,22 @@ const GamePage = async ({ params }: GamePageProps) => {
 						{/* Probable pitchers */}
 						{(game.awayTeam.probablePitcher || game.homeTeam.probablePitcher) && (
 							<div className="border-border w-full border-t pt-4">
-								<p className="text-muted-foreground mb-2 text-center text-xs font-medium uppercase tracking-wide">
+								<p className="text-muted-foreground mb-2 text-center text-xs font-medium tracking-wide uppercase">
 									Probable Pitchers
 								</p>
 								<div className="flex items-center justify-center gap-4 text-sm">
-									<span className="text-right flex-1">
+									<span className="flex-1 text-right">
 										{game.awayTeam.probablePitcher?.fullName ?? 'TBD'}
 									</span>
 									<span className="text-muted-foreground text-xs">vs</span>
-									<span className="flex-1">
-										{game.homeTeam.probablePitcher?.fullName ?? 'TBD'}
-									</span>
+									<span className="flex-1">{game.homeTeam.probablePitcher?.fullName ?? 'TBD'}</span>
 								</div>
 							</div>
 						)}
 
 						{/* Description (e.g., postponement reason) */}
 						{game.description && (
-							<p className="text-muted-foreground text-center text-sm italic">
-								{game.description}
-							</p>
+							<p className="text-muted-foreground text-center text-sm italic">{game.description}</p>
 						)}
 						{game.status.reason && (
 							<p className="text-muted-foreground text-center text-sm italic">
@@ -145,7 +124,11 @@ const GamePage = async ({ params }: GamePageProps) => {
 			</Card>
 
 			{/* Linescore (final games only) */}
-			{isFinal && <div className="mb-6"><GameLinescore game={game} /></div>}
+			{isFinal && (
+				<div className="mb-6">
+					<GameLinescore game={game} />
+				</div>
+			)}
 
 			{/* Game info */}
 			<GameInfo ballpark={ballpark} game={game} />

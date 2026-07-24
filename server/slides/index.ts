@@ -154,9 +154,10 @@ async function buildStandingsSlides(
 
 	// Filter to selected divisions if specified
 	// Division enum values are like 'AL_East', standings names are like 'AL East'
-	const filteredDivisions = divisions && divisions.length > 0
-		? standings.divisions.filter((d) => divisions.includes(d.name.replace(' ', '_')))
-		: standings.divisions;
+	const filteredDivisions =
+		divisions && divisions.length > 0
+			? standings.divisions.filter((d) => divisions.includes(d.name.replace(' ', '_')))
+			: standings.divisions;
 
 	return filteredDivisions.map((division) => ({
 		slideType: SlideType.STANDINGS as const,
@@ -209,10 +210,7 @@ function gameToLastGameSlide(game: Game): LastGameSlide {
 /**
  * Convert a populated game to a NextGameSlide for a specific team
  */
-function gameToNextGameSlide(
-	game: Game,
-	teamId: string,
-): NextGameSlide {
+function gameToNextGameSlide(game: Game, teamId: string): NextGameSlide {
 	const isHome = resolveRefId(game.homeTeam.team) === teamId;
 	const teamSide = isHome ? game.homeTeam : game.awayTeam;
 	const opponentSide = isHome ? game.awayTeam : game.homeTeam;
@@ -241,9 +239,7 @@ function gameToNextGameSlide(
  * Build opener countdown slides for each configured team.
  * Only produces slides when the team's first regular season game is in the future.
  */
-async function buildOpenerCountdownSlides(
-	teamIds?: string[],
-): Promise<OpenerCountdownSlide[]> {
+async function buildOpenerCountdownSlides(teamIds?: string[]): Promise<OpenerCountdownSlide[]> {
 	if (!teamIds || teamIds.length === 0) {
 		return [];
 	}

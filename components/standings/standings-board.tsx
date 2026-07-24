@@ -112,19 +112,23 @@ const MlbStandingsBoard = ({ initialSeasons }: StandingsBoardProps) => {
 				</div>
 			</div>
 
-			{isLoadingStandings && (
-				<div className="text-muted-foreground">Loading standings...</div>
-			)}
-			{!isLoadingStandings && error && (
-				<div className="text-destructive">{error}</div>
-			)}
+			{isLoadingStandings && <div className="text-muted-foreground">Loading standings...</div>}
+			{!isLoadingStandings && error && <div className="text-destructive">{error}</div>}
 			{!isLoadingStandings && !error && standings.length === 0 && (
 				<div className="text-muted-foreground">No standings data for this date.</div>
 			)}
 			{!isLoadingStandings && standings.length > 0 && (
 				<div className="grid min-w-0 gap-6 lg:grid-cols-2">
-					<LeagueStandings divisions={AL_DIVISIONS} standings={alStandings} title="American League" />
-					<LeagueStandings divisions={NL_DIVISIONS} standings={nlStandings} title="National League" />
+					<LeagueStandings
+						divisions={AL_DIVISIONS}
+						standings={alStandings}
+						title="American League"
+					/>
+					<LeagueStandings
+						divisions={NL_DIVISIONS}
+						standings={nlStandings}
+						title="National League"
+					/>
 				</div>
 			)}
 		</section>

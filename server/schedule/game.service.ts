@@ -17,10 +17,7 @@ class GameService extends BaseService<Game> {
 
 		const games = await this.find(
 			{
-				$or: [
-					{ 'homeTeam.team': teamId },
-					{ 'awayTeam.team': teamId },
-				],
+				$or: [{ 'homeTeam.team': teamId }, { 'awayTeam.team': teamId }],
 				gameDate: { $gte: startDate },
 			},
 			// eslint-disable-next-line perfectionist/sort-objects
@@ -68,10 +65,7 @@ class GameService extends BaseService<Game> {
 
 		const games = await this.find(
 			{
-				$or: teamIds.flatMap((id) => [
-					{ 'homeTeam.team': id },
-					{ 'awayTeam.team': id },
-				]),
+				$or: teamIds.flatMap((id) => [{ 'homeTeam.team': id }, { 'awayTeam.team': id }]),
 				gameDate: { $lt: now },
 				'status.abstractGameState': GameState.Final,
 			},
@@ -86,7 +80,9 @@ class GameService extends BaseService<Game> {
 		for (const game of games) {
 			const homeId = resolveRefId(game.homeTeam.team);
 			const awayId = resolveRefId(game.awayTeam.team);
-			const relevantIds = teamIds.filter((id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id));
+			const relevantIds = teamIds.filter(
+				(id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id),
+			);
 
 			if (relevantIds.length === 0) {
 				continue;
@@ -122,10 +118,7 @@ class GameService extends BaseService<Game> {
 
 		const games = await this.find(
 			{
-				$or: teamIds.flatMap((id) => [
-					{ 'homeTeam.team': id },
-					{ 'awayTeam.team': id },
-				]),
+				$or: teamIds.flatMap((id) => [{ 'homeTeam.team': id }, { 'awayTeam.team': id }]),
 				gameDate: { $gte: now },
 			},
 			{ populate: TEAM_POPULATE, sort: { gameDate: 1 } },
@@ -138,7 +131,9 @@ class GameService extends BaseService<Game> {
 		for (const game of games) {
 			const homeId = resolveRefId(game.homeTeam.team);
 			const awayId = resolveRefId(game.awayTeam.team);
-			const relevantIds = teamIds.filter((id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id));
+			const relevantIds = teamIds.filter(
+				(id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id),
+			);
 
 			if (relevantIds.length === 0) {
 				continue;
@@ -184,7 +179,10 @@ class GameService extends BaseService<Game> {
 				season,
 				tiebreaker: { $ne: true },
 			},
-			{ select: 'homeTeam.teamMlbId awayTeam.teamMlbId homeTeam.leagueRecord awayTeam.leagueRecord officialDate status.statusCode' },
+			{
+				select:
+					'homeTeam.teamMlbId awayTeam.teamMlbId homeTeam.leagueRecord awayTeam.leagueRecord officialDate status.statusCode',
+			},
 		);
 	}
 
@@ -197,10 +195,7 @@ class GameService extends BaseService<Game> {
 
 		const games = await this.find(
 			{
-				$or: teamIds.flatMap((id) => [
-					{ 'homeTeam.team': id },
-					{ 'awayTeam.team': id },
-				]),
+				$or: teamIds.flatMap((id) => [{ 'homeTeam.team': id }, { 'awayTeam.team': id }]),
 				gameType: GameType.RegularSeason,
 				season: targetSeason,
 			},
@@ -214,7 +209,9 @@ class GameService extends BaseService<Game> {
 		for (const game of games) {
 			const homeId = resolveRefId(game.homeTeam.team);
 			const awayId = resolveRefId(game.awayTeam.team);
-			const relevantIds = teamIds.filter((id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id));
+			const relevantIds = teamIds.filter(
+				(id) => (id === homeId || id === awayId) && !coveredTeamIds.has(id),
+			);
 
 			if (relevantIds.length === 0) {
 				continue;

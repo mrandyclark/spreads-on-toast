@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { forbidden, locked, notFound, serverError, unauthorized, validation } from './action-errors';
+import {
+	forbidden,
+	locked,
+	notFound,
+	serverError,
+	unauthorized,
+	validation,
+} from './action-errors';
 
 describe('action-errors', () => {
 	describe('notFound', () => {

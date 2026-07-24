@@ -9,7 +9,11 @@ class SignService extends BaseService<Sign> {
 		super(SignModel);
 	}
 
-	async addMember(signId: string, userId: string, role: SignRole = SignRole.Viewer): Promise<null | Sign> {
+	async addMember(
+		signId: string,
+		userId: string,
+		role: SignRole = SignRole.Viewer,
+	): Promise<null | Sign> {
 		const sign = await this.findById(signId);
 
 		if (!sign) {
@@ -36,10 +40,11 @@ class SignService extends BaseService<Sign> {
 	}
 
 	async findByUser(userId: string): Promise<Sign[]> {
-		return this.find(
-			{ 'members.user': userId },
-			{ sort: { createdAt: -1 } },
-		);
+		return this.find({ 'members.user': userId }, { sort: { createdAt: -1 } });
+	}
+
+	async findForMember(signId: string, userId: string): Promise<null | Sign> {
+		return this.findOne({ _id: signId, 'members.user': userId });
 	}
 
 	async isMember(signId: string, userId: string): Promise<boolean> {
@@ -64,11 +69,13 @@ class SignService extends BaseService<Sign> {
 
 		Object.entries(config).forEach(([section, sectionValue]) => {
 			if (sectionValue && typeof sectionValue === 'object') {
-				Object.entries(sectionValue as unknown as Record<string, unknown>).forEach(([field, fieldValue]) => {
-					if (fieldValue !== undefined) {
-						updateFields[`config.${section}.${field}`] = fieldValue;
-					}
-				});
+				Object.entries(sectionValue as unknown as Record<string, unknown>).forEach(
+					([field, fieldValue]) => {
+						if (fieldValue !== undefined) {
+							updateFields[`config.${section}.${field}`] = fieldValue;
+						}
+					},
+				);
 			}
 		});
 

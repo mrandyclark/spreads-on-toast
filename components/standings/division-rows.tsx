@@ -16,14 +16,16 @@ const DivisionRows = ({ division, standings }: DivisionRowsProps) => {
 		<>
 			<tr>
 				<td
-					className="bg-foreground/80 px-4 py-2 text-sm font-semibold text-white dark:bg-foreground/60"
+					className="bg-foreground/80 dark:bg-foreground/60 px-4 py-2 text-sm font-semibold text-white"
 					colSpan={7}>
 					{DIVISION_LABELS[division] ?? division}
 				</td>
 			</tr>
 			{standings.map((team) => (
 				<tr className="border-border border-b" key={team.abbreviation}>
-					<td className="text-muted-foreground bg-card sticky left-0 z-10 w-[50px] px-2 py-2 text-center text-xs">{team.abbreviation}</td>
+					<td className="text-muted-foreground bg-card sticky left-0 z-10 w-[50px] px-2 py-2 text-center text-xs">
+						{team.abbreviation}
+					</td>
 					<td className="px-2 py-2 font-medium">
 						<Link
 							className="hover:text-primary hover:underline"

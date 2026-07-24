@@ -50,11 +50,20 @@ class GroupService extends BaseService<Group> {
 	}
 
 	async addMember(groupId: string, userId: string): Promise<Group | null> {
-		return this.findByIdAndUpdate(groupId, {
-			$push: {
-				members: { joinedAt: new Date(), role: GroupRole.Member, user: userId },
+		const now = new Date();
+
+		return this.findOneAndUpdate(
+			{
+				_id: groupId,
+				lockDate: { $gt: now },
+				'members.user': { $ne: userId },
 			},
-		});
+			{
+				$push: {
+					members: { joinedAt: new Date(), role: GroupRole.Member, user: userId },
+				},
+			},
+		);
 	}
 
 	async findForMember(groupId: string, userId: string): Promise<Group | null> {

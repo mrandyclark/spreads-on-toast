@@ -21,6 +21,6 @@ const CardListSkeleton = ({ count = 2 }: CardListSkeletonProps) => {
 			))}
 		</div>
 	);
-}
+};
 
 export default CardListSkeleton;

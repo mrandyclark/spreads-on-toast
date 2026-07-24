@@ -8,20 +8,38 @@ class StandingService extends BaseService<TeamStanding> {
 		super(TeamStandingModel);
 	}
 
-	async findByTeamAndSeason(teamId: string, season: string, options?: { select?: string }): Promise<TeamStanding[]> {
+	async findByTeamAndSeason(
+		teamId: string,
+		season: string,
+		options?: { select?: string },
+	): Promise<TeamStanding[]> {
 		return this.find({ season, team: teamId }, { sort: { date: 1 }, ...options });
 	}
 
-	async findByDateAndSeason(date: Date, season: string, options?: { select?: string }): Promise<TeamStanding[]> {
+	async findByDateAndSeason(
+		date: Date,
+		season: string,
+		options?: { select?: string },
+	): Promise<TeamStanding[]> {
 		return this.find({ date, season }, options);
 	}
 
-	async findByDatePopulated(date: Date, season: string, options?: { select?: string }): Promise<TeamStanding[]> {
+	async findByDatePopulated(
+		date: Date,
+		season: string,
+		options?: { select?: string },
+	): Promise<TeamStanding[]> {
 		return this.find({ date, season }, { populate: 'team', ...options });
 	}
 
-	async findByTeamSeasonDate(teamId: string, season: string, date: Date): Promise<null | TeamStanding> {
-		const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+	async findByTeamSeasonDate(
+		teamId: string,
+		season: string,
+		date: Date,
+	): Promise<null | TeamStanding> {
+		const normalizedDate = new Date(
+			Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+		);
 		return this.findOne({ date: normalizedDate, season, team: teamId });
 	}
 
@@ -34,7 +52,10 @@ class StandingService extends BaseService<TeamStanding> {
 		return doc?.date ?? null;
 	}
 
-	async findAllForLatestDate(season: string, options?: { select?: string }): Promise<TeamStanding[]> {
+	async findAllForLatestDate(
+		season: string,
+		options?: { select?: string },
+	): Promise<TeamStanding[]> {
 		const latestDate = await this.findLatestDate(season);
 
 		if (!latestDate) {

@@ -41,12 +41,12 @@ export function getWorldSeriesChampions(sheet: null | Sheet): {
 	const alChampionPick = sheet.teamPicks.find(
 		(tp) => getTeamId(tp) === sheet.worldSeriesPicks?.alChampion,
 	);
-	const alChampion = alChampionPick ? getTeamFromPick(alChampionPick) ?? undefined : undefined;
+	const alChampion = alChampionPick ? (getTeamFromPick(alChampionPick) ?? undefined) : undefined;
 
 	const nlChampionPick = sheet.teamPicks.find(
 		(tp) => getTeamId(tp) === sheet.worldSeriesPicks?.nlChampion,
 	);
-	const nlChampion = nlChampionPick ? getTeamFromPick(nlChampionPick) ?? undefined : undefined;
+	const nlChampion = nlChampionPick ? (getTeamFromPick(nlChampionPick) ?? undefined) : undefined;
 
 	const winner = sheet.worldSeriesPicks?.winner;
 
@@ -107,7 +107,10 @@ export function getTeamsByConference(teamPicks: TeamPick[]): { al: Team[]; nl: T
  * Convert populated TeamPick[] to TeamWithLine[], sorted by full name.
  * Lines are resolved from the provided map (keyed by team ID).
  */
-export function toTeamsWithLines(teamPicks: TeamPick[], linesByTeamId: Map<string, number>): TeamWithLine[] {
+export function toTeamsWithLines(
+	teamPicks: TeamPick[],
+	linesByTeamId: Map<string, number>,
+): TeamWithLine[] {
 	return teamPicks
 		.map((tp) => {
 			const team = getTeamFromPick(tp);

@@ -28,6 +28,7 @@ function getJWKS() {
 async function verifyBearerToken(token: string): Promise<null | string> {
 	try {
 		const { payload } = await jwtVerify(token, getJWKS(), {
+			audience: process.env.KINDE_AUDIENCE || undefined,
 			issuer: KINDE_ISSUER_URL,
 		});
 		return payload.sub ?? null;

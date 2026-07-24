@@ -13,24 +13,20 @@ const ContributionBar = ({ offense, pitching }: ContributionBarProps) => {
 			<div className="h-4 w-full overflow-hidden rounded-full">
 				<div className="flex h-full">
 					<div
-						className="flex items-center justify-center bg-al text-xs font-medium text-white transition-all duration-300"
+						className="bg-al flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
 						style={{ width: `${offensePct}%` }}>
 						{offensePct > 15 && `${offensePct}%`}
 					</div>
 					<div
-						className="flex items-center justify-center bg-nl text-xs font-medium text-white transition-all duration-300"
+						className="bg-nl flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
 						style={{ width: `${pitchingPct}%` }}>
 						{pitchingPct > 15 && `${pitchingPct}%`}
 					</div>
 				</div>
 			</div>
 			<div className="flex justify-between text-xs">
-				<span className="text-al">
-					Offense {offensePct}%
-				</span>
-				<span className="text-nl">
-					Pitching {pitchingPct}%
-				</span>
+				<span className="text-al">Offense {offensePct}%</span>
+				<span className="text-nl">Pitching {pitchingPct}%</span>
 			</div>
 		</div>
 	);

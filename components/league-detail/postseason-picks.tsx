@@ -77,7 +77,7 @@ const MlbPostseasonPicks = ({
 								<button
 									aria-pressed={isSelected}
 									className={cn(
-										'rounded-lg border px-3 py-2 text-sm font-medium transition-all',
+										'min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all',
 										isSelected
 											? 'border-primary bg-primary text-primary-foreground'
 											: 'border-border bg-card hover:border-primary/50 hover:bg-muted/50',
@@ -131,7 +131,7 @@ const MlbPostseasonPicks = ({
 								<button
 									aria-pressed={isSelected}
 									className={cn(
-										'rounded-lg border px-3 py-2 text-sm font-medium transition-all',
+										'min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-all',
 										isSelected
 											? 'border-blue-800 bg-blue-800/90 text-white'
 											: 'border-border bg-card hover:bg-muted/50 hover:border-blue-400/50',

@@ -37,6 +37,8 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 	}, []);
 
 	useEffect(() => {
+		// This effect intentionally synchronizes route state with server-owned game data.
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		fetchGames(selectedDate);
 	}, [selectedDate, fetchGames]);
 
@@ -122,11 +124,7 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 	);
 };
 
-const GameCard = ({
-	game,
-}: {
-	game: GameDayCard;
-}) => {
+const GameCard = ({ game }: { game: GameDayCard }) => {
 	const isLive = game.status === 'Live';
 	const isFinal = game.status === 'Final';
 	const hasScore = isLive || isFinal;
@@ -141,12 +139,8 @@ const GameCard = ({
 							{isLive && (
 								<span className="bg-destructive inline-block h-2 w-2 animate-pulse rounded-full" />
 							)}
-							{!isLive && game.dayNight === 'night' && (
-								<Moon className="h-3 w-3" />
-							)}
-							{!isLive && game.dayNight !== 'night' && (
-								<Sun className="h-3 w-3" />
-							)}
+							{!isLive && game.dayNight === 'night' && <Moon className="h-3 w-3" />}
+							{!isLive && game.dayNight !== 'night' && <Sun className="h-3 w-3" />}
 							<span>
 								{isLive && game.currentInning
 									? `${game.inningState ?? ''} ${game.currentInning}`.trim()
@@ -173,7 +167,9 @@ const GameCard = ({
 								</span>
 							</div>
 							{hasScore && game.awayScore != null && (
-								<span className="min-w-6 text-right text-sm font-bold tabular-nums">{game.awayScore}</span>
+								<span className="min-w-6 text-right text-sm font-bold tabular-nums">
+									{game.awayScore}
+								</span>
 							)}
 							{!(hasScore && game.awayScore != null) && (
 								<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
@@ -193,7 +189,9 @@ const GameCard = ({
 								</span>
 							</div>
 							{hasScore && game.homeScore != null && (
-								<span className="min-w-6 text-right text-sm font-bold tabular-nums">{game.homeScore}</span>
+								<span className="min-w-6 text-right text-sm font-bold tabular-nums">
+									{game.homeScore}
+								</span>
 							)}
 							{!(hasScore && game.homeScore != null) && (
 								<span className="text-muted-foreground text-xs">{game.homeRecord}</span>

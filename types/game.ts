@@ -190,6 +190,8 @@ export interface Game extends BaseDocument {
 	season: string;
 	seriesDescription: string;
 	seriesGameNumber: number;
+	source: 'mlb-stats-api';
+	sourceFetchedAt: Date;
 	status: GameStatus;
 	tiebreaker: boolean;
 	venue: GameVenue;

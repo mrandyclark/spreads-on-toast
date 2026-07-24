@@ -45,6 +45,8 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProp
 	}, [groupId, selectedDate]);
 
 	useEffect(() => {
+		// This effect intentionally synchronizes the selected historical date with server results.
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		fetchResults();
 	}, [fetchResults]);
 
@@ -57,7 +59,9 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProp
 			<div className="flex flex-col items-center gap-2 py-4 text-center">
 				<AlertCircle className="text-destructive h-5 w-5" />
 				<p className="text-muted-foreground text-sm">{error}</p>
-				<Button onClick={fetchResults} size="sm" variant="outline">Retry</Button>
+				<Button onClick={fetchResults} size="sm" variant="outline">
+					Retry
+				</Button>
 			</div>
 		);
 	}
@@ -77,7 +81,11 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProp
 							<span className="text-yellow-500">{results.summary.pushes}P</span>
 						)}
 						<span className="text-muted-foreground">
-							({results.summary.total > 0 ? Math.round((results.summary.wins / results.summary.total) * 100) : 0}%)
+							(
+							{results.summary.total > 0
+								? Math.round((results.summary.wins / results.summary.total) * 100)
+								: 0}
+							%)
 						</span>
 					</div>
 				)}
@@ -173,6 +181,6 @@ const MlbLockedResults = ({ groupId, selectedDate, sheet }: MlbLockedResultsProp
 			</Tabs>
 		</section>
 	);
-}
+};
 
 export default MlbLockedResults;

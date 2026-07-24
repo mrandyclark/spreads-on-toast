@@ -34,7 +34,10 @@ PopoverContent.displayName = PopoverPrimitive.Content.displayName;
  * A Popover wrapper that automatically closes when the user scrolls.
  * Drop-in replacement for <Popover> — accepts children with PopoverTrigger/PopoverContent.
  */
-function ScrollDismissPopover({ children, ...props }: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Root>) {
+function ScrollDismissPopover({
+	children,
+	...props
+}: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Root>) {
 	const [open, setOpen] = React.useState(false);
 
 	const handleScroll = React.useCallback(() => {

@@ -20,6 +20,13 @@ export async function getSign(signId: string): Promise<null | Sign> {
 }
 
 /**
+ * Get a sign only when the requesting user is an assigned member.
+ */
+export async function getSignForMember(signId: string, userId: string): Promise<null | Sign> {
+	return signService.findForMember(signId, userId);
+}
+
+/**
  * Create a new sign
  */
 export async function createSign(owner: string, title: string): Promise<Sign> {

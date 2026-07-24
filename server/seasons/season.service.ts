@@ -24,10 +24,7 @@ class SeasonService extends BaseService<Season> {
 	}
 
 	async findStarted(sport: Sport): Promise<Season[]> {
-		return this.find(
-			{ sport, startDate: { $lte: new Date() } },
-			{ sort: { season: -1 } },
-		);
+		return this.find({ sport, startDate: { $lte: new Date() } }, { sort: { season: -1 } });
 	}
 }
 

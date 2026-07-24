@@ -17,7 +17,7 @@ const teamColors = [
 	{ abbreviation: 'COL', colors: { primary: '#333366', secondary: '#C4CED4' } },
 	{ abbreviation: 'DET', colors: { primary: '#0C2340', secondary: '#FA4616' } },
 	{ abbreviation: 'HOU', colors: { primary: '#EB6E1F', secondary: '#002D62' } },
-	{ abbreviation: 'KC',  colors: { primary: '#004687', secondary: '#BD9B60' } },
+	{ abbreviation: 'KC', colors: { primary: '#004687', secondary: '#BD9B60' } },
 	{ abbreviation: 'LAA', colors: { primary: '#BA0021', secondary: '#003263' } },
 	{ abbreviation: 'LAD', colors: { primary: '#005A9C', secondary: '#FFFFFF' } },
 	{ abbreviation: 'MIA', colors: { primary: '#00A3E0', secondary: '#EF3340' } },
@@ -28,11 +28,11 @@ const teamColors = [
 	{ abbreviation: 'OAK', colors: { primary: '#003831', secondary: '#EFB21E' } },
 	{ abbreviation: 'PHI', colors: { primary: '#E81828', secondary: '#002D72' } },
 	{ abbreviation: 'PIT', colors: { primary: '#FDB827', secondary: '#000000' } },
-	{ abbreviation: 'SD',  colors: { primary: '#2F241D', secondary: '#FFC425' } },
-	{ abbreviation: 'SF',  colors: { primary: '#FD5A1E', secondary: '#27251F' } },
+	{ abbreviation: 'SD', colors: { primary: '#2F241D', secondary: '#FFC425' } },
+	{ abbreviation: 'SF', colors: { primary: '#FD5A1E', secondary: '#27251F' } },
 	{ abbreviation: 'SEA', colors: { primary: '#0C2C56', secondary: '#005C5C' } },
 	{ abbreviation: 'STL', colors: { primary: '#C41E3A', secondary: '#0C2340' } },
-	{ abbreviation: 'TB',  colors: { primary: '#092C5C', secondary: '#8FBCE6' } },
+	{ abbreviation: 'TB', colors: { primary: '#092C5C', secondary: '#8FBCE6' } },
 	{ abbreviation: 'TEX', colors: { primary: '#003278', secondary: '#C0111F' } },
 	{ abbreviation: 'TOR', colors: { primary: '#134A8E', secondary: '#E8291C' } },
 	{ abbreviation: 'WSH', colors: { primary: '#AB0003', secondary: '#14225A' } },
@@ -43,7 +43,7 @@ let updated = 0;
 teamColors.forEach(function (team) {
 	const result = db.teams.updateOne(
 		{ abbreviation: team.abbreviation },
-		{ $set: { colors: team.colors } }
+		{ $set: { colors: team.colors } },
 	);
 
 	if (result.modifiedCount > 0) {

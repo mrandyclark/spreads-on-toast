@@ -53,7 +53,7 @@ const TeamSwitcher = ({ currentAbbreviation, season, teams }: TeamSwitcherProps)
 
 						return (
 							<div key={div}>
-								<p className="text-muted-foreground px-2 py-1.5 text-xs font-medium uppercase tracking-wide">
+								<p className="text-muted-foreground px-2 py-1.5 text-xs font-medium tracking-wide uppercase">
 									{DIVISION_LABELS[div] ?? div}
 								</p>
 								{divTeams.map((team) => (
@@ -68,7 +68,9 @@ const TeamSwitcher = ({ currentAbbreviation, season, teams }: TeamSwitcherProps)
 										onClick={() => handleSelect(team.abbreviation)}
 										type="button">
 										{team.city} {team.name}
-										<span className="text-muted-foreground ml-auto text-xs">{team.abbreviation}</span>
+										<span className="text-muted-foreground ml-auto text-xs">
+											{team.abbreviation}
+										</span>
 									</button>
 								))}
 							</div>

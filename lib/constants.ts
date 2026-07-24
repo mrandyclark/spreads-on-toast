@@ -16,10 +16,13 @@ export const DIVISION_LABELS: Record<string, string> = {
  * Standard division display order (NL first, then AL)
  */
 export const DIVISION_ORDER: Division[] = [
-	Division.NL_East, Division.NL_Central, Division.NL_West,
-	Division.AL_East, Division.AL_Central, Division.AL_West,
+	Division.NL_East,
+	Division.NL_Central,
+	Division.NL_West,
+	Division.AL_East,
+	Division.AL_Central,
+	Division.AL_West,
 ];
 
 export const NL_DIVISIONS: Division[] = [Division.NL_East, Division.NL_Central, Division.NL_West];
 export const AL_DIVISIONS: Division[] = [Division.AL_East, Division.AL_Central, Division.AL_West];
-

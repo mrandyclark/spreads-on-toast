@@ -5,7 +5,10 @@ import PageShell from '@/components/layout/page-shell';
 import ScheduleSkeleton from '@/components/team-detail/schedule-skeleton';
 import TeamHeader from '@/components/team-detail/team-header';
 import TeamStatsClient from '@/components/team-detail/team-stats-client';
-import { getStartedSeasonsWithDates, getTeamDetailData } from '@/server/standings/standings.actions';
+import {
+	getStartedSeasonsWithDates,
+	getTeamDetailData,
+} from '@/server/standings/standings.actions';
 import { teamService } from '@/server/teams/team.service';
 import { Sport, TeamSummary } from '@/types';
 

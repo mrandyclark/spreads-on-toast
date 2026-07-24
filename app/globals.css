@@ -23,7 +23,7 @@
 
 	/* Muted: Soft warm gray */
 	--color-muted: hsl(35 20% 90%);
-	--color-muted-foreground: hsl(30 10% 45%);
+	--color-muted-foreground: hsl(30 10% 38%);
 
 	/* Accent: Warm golden */
 	--color-accent: hsl(35 50% 75%);
@@ -52,8 +52,11 @@
 	--radius: 0.75rem;
 
 	/* Font families */
-	--font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-	--font-serif: var(--font-dm-serif), ui-serif, Georgia, serif;
+	--font-sans:
+		'Avenir Next', Avenir, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+		sans-serif;
+	--font-serif:
+		'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, ui-serif, serif;
 }
 
 /* Dark mode overrides */
@@ -85,6 +88,39 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+		min-height: 100dvh;
+		padding-right: env(safe-area-inset-right);
+		padding-left: env(safe-area-inset-left);
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	:focus-visible {
+		outline: 3px solid color-mix(in srgb, var(--color-ring) 75%, white);
+		outline-offset: 3px;
+	}
+
+	button,
+	[role='button'],
+	a {
+		touch-action: manipulation;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+@media (pointer: coarse) {
+	button,
+	[role='button'] {
+		min-height: 44px;
 	}
 }
 

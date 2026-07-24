@@ -73,6 +73,6 @@ const MlbPicksForm = ({
 			</section>
 		</div>
 	);
-}
+};
 
 export default MlbPicksForm;

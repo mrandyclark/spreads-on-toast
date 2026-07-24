@@ -75,7 +75,10 @@ const SOSCard = ({ data, title, tooltipContent }: SOSCardProps) => {
 
 			<div className="bg-muted mb-3 h-2 w-full overflow-hidden rounded-full">
 				<div
-					className={cn('h-full rounded-full transition-all duration-300', LABEL_BG_COLORS[data.label])}
+					className={cn(
+						'h-full rounded-full transition-all duration-300',
+						LABEL_BG_COLORS[data.label],
+					)}
 					style={{ width: `${barWidth}%` }}
 				/>
 			</div>

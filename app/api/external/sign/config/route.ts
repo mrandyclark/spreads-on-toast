@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 
+import { hasValidApiKey } from '@/server/http/authentication';
 import { errorResponse, jsonResponse } from '@/server/http/responses';
+import { logger } from '@/server/observability/logger';
 import { getSign } from '@/server/signs/sign.actions';
 import { SIGN_PAYLOAD_VERSION, SignExternalConfigResponse } from '@/types';
 
@@ -36,11 +38,11 @@ export async function GET(request: NextRequest) {
 	const expectedKey = process.env.EXTERNAL_API_KEY;
 
 	if (!expectedKey) {
-		console.error('[External API] EXTERNAL_API_KEY environment variable not set');
+		logger.error('sign_api_not_configured', { route: 'config' });
 		return errorResponse('API not configured', 500);
 	}
 
-	if (!apiKey || apiKey !== expectedKey) {
+	if (!hasValidApiKey(apiKey, expectedKey)) {
 		return errorResponse('Unauthorized', 401);
 	}
 
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
 
 		return jsonResponse(response);
 	} catch (error) {
-		console.error('[External API] Error fetching sign config:', error);
+		logger.error('sign_config_failed', { signId }, error);
 		return errorResponse('Internal server error', 500);
 	}
 }

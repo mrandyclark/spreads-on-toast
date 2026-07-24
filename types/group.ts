@@ -92,7 +92,7 @@ export interface GroupMemberSummary {
 }
 
 export interface CreateGroupInput {
-	lockDate: string;
+	lockDate?: string;
 	name: string;
 	season: string;
 	sport: Sport;

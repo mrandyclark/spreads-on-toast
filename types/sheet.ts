@@ -31,7 +31,7 @@ export enum PickResult {
  * A single team pick (over/under on win total)
  */
 export interface TeamPick {
-	line?: number; // Deprecated: was copied from TeamLine, now resolved at read time
+	line?: number; // Immutable line snapshot for historical scoring; optional only for legacy records
 	pick?: PickDirection; // 'over' or 'under' (undefined until user picks)
 	result?: PickResult; // Set after season ends
 	team: Ref<Team>; // Team ID or populated Team
@@ -60,6 +60,9 @@ export interface WorldSeriesPicks {
  */
 export interface Sheet extends BaseDocument {
 	group: Ref<Group>; // Group ID or populated Group
+	lastSavedAt?: Date; // Last server-confirmed mutation
+	lineSnapshotAt?: Date; // When preseason lines were copied onto teamPicks
+	lockAt?: Date; // Immutable server-authoritative deadline snapshot
 	postseasonPicks?: PostseasonPicks;
 	sport: Sport; // Sport this sheet is for
 	submittedAt?: Date; // When picks were finalized

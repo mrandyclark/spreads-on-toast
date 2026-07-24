@@ -17,7 +17,8 @@ const steps = [
 		title: 'Lock them in',
 	},
 	{
-		description: 'Follow live leaderboards, dig into team stats, and see who called it best by season\u2019s end.',
+		description:
+			'Follow live leaderboards, dig into team stats, and see who called it best by season\u2019s end.',
 		icon: Trophy,
 		title: 'Crown a winner',
 	},
@@ -69,6 +70,6 @@ const HowItWorks = () => {
 			</div>
 		</section>
 	);
-}
+};
 
 export default HowItWorks;

@@ -1,11 +1,4 @@
-import {
-	DifficultyLabel,
-	Game,
-	GameState,
-	ScheduleDifficultyData,
-	SOSData,
-	Sport,
-} from '@/types';
+import { DifficultyLabel, Game, GameState, ScheduleDifficultyData, SOSData, Sport } from '@/types';
 
 import { teamService } from '../teams/team.service';
 import { gameService } from './game.service';
@@ -94,10 +87,7 @@ function calculateRank(value: number, allValues: number[]): number {
  * Check if a game is "played" (Final)
  */
 function isGameFinal(game: Game): boolean {
-	return (
-		game.status.abstractGameState === GameState.Final ||
-		game.status.statusCode === 'F'
-	);
+	return game.status.abstractGameState === GameState.Final || game.status.statusCode === 'F';
 }
 
 /**

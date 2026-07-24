@@ -1,7 +1,6 @@
 'use client';
 
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import * as React from 'react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -179,17 +178,18 @@ const DatePicker = ({
 		return dateStr === value;
 	};
 
-	// Reset view to selected date when opening
-	React.useEffect(() => {
-		if (open && value) {
+	const handleOpenChange = (nextOpen: boolean) => {
+		if (nextOpen && value) {
 			const { month, year } = parseYMD(value);
 			setViewYear(year);
 			setViewMonth(month);
 		}
-	}, [open, value]);
+
+		setOpen(nextOpen);
+	};
 
 	return (
-		<Popover onOpenChange={setOpen} open={open}>
+		<Popover onOpenChange={handleOpenChange} open={open}>
 			<PopoverTrigger asChild>
 				<Button
 					className={cn('justify-start text-left font-normal', !value && 'text-muted-foreground')}
@@ -262,6 +262,6 @@ const DatePicker = ({
 			</PopoverContent>
 		</Popover>
 	);
-}
+};
 
 export default DatePicker;

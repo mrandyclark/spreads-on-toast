@@ -35,19 +35,21 @@ const TeamPickCard = ({
 	const showEstimated = gamesPlayed !== undefined && gamesPlayed < 162;
 
 	return (
-		<div className={cn('rounded-lg border p-3', result ? getResultBorderClass(result) : 'border-border bg-card')}>
+		<div
+			className={cn(
+				'rounded-lg border p-3',
+				result ? getResultBorderClass(result) : 'border-border bg-card',
+			)}>
 			<div className="mb-2 flex w-full items-center gap-2">
 				{result && getResultIcon(result)}
 				<span className="font-semibold">{teamName}</span>
 			</div>
 
-			<div className="flex items-center justify-between text-sm">
-				<div className="flex items-center gap-4">
+			<div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 					{projectedWins !== undefined && (
 						<div className="flex items-center gap-1">
-							<span className="text-muted-foreground">
-								{showEstimated ? 'Est:' : 'Final:'}
-							</span>
+							<span className="text-muted-foreground">{showEstimated ? 'Est:' : 'Final:'}</span>
 							<span className="font-medium">{projectedWins}</span>
 						</div>
 					)}
@@ -69,19 +71,19 @@ const TeamPickCard = ({
 
 				{editable && (
 					<ToggleGroup
-						className="gap-1"
+						className="grid w-full grid-cols-2 gap-2 sm:w-auto"
 						onValueChange={(v) => onChange?.(v as PickChoice)}
 						type="single"
 						value={pick || ''}>
 						<ToggleGroupItem
 							aria-label={`Over ${line} wins`}
-							className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-8 px-3 text-xs"
+							className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-11 px-4 text-sm sm:h-9 sm:text-xs"
 							value="over">
 							Over
 						</ToggleGroupItem>
 						<ToggleGroupItem
 							aria-label={`Under ${line} wins`}
-							className="data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground h-8 px-3 text-xs"
+							className="data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground h-11 px-4 text-sm sm:h-9 sm:text-xs"
 							value="under">
 							Under
 						</ToggleGroupItem>
@@ -89,13 +91,11 @@ const TeamPickCard = ({
 				)}
 
 				{!editable && pick && (
-					<Badge variant={pick === 'over' ? 'default' : 'secondary'}>
-						{pick.toUpperCase()}
-					</Badge>
+					<Badge variant={pick === 'over' ? 'default' : 'secondary'}>{pick.toUpperCase()}</Badge>
 				)}
 			</div>
 		</div>
 	);
-}
+};
 
 export default TeamPickCard;

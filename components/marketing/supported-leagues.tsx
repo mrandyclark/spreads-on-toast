@@ -35,16 +35,11 @@ const SupportedLeagues = () => {
 						))}
 					</div>
 
-					<p className="text-muted-foreground mt-6 text-sm">
-						More leagues coming soon. Have a request?{' '}
-						<a className="text-primary underline-offset-4 hover:underline" href="#">
-							Let us know
-						</a>
-					</p>
+					<p className="text-muted-foreground mt-6 text-sm">More leagues coming soon.</p>
 				</div>
 			</div>
 		</section>
 	);
-}
+};
 
 export default SupportedLeagues;

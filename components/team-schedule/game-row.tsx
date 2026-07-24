@@ -40,27 +40,19 @@ const GameRow = ({ game }: GameRowProps) => {
 
 	return (
 		<Link
-			className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0 transition-colors hover:bg-muted/50 -mx-2 px-2 rounded-md"
+			className="border-border hover:bg-muted/50 -mx-2 flex items-center justify-between gap-4 rounded-md border-b px-2 py-3 transition-colors last:border-0"
 			href={`/games/${game.id}`}>
-			<div className="flex-1 min-w-0">
+			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
-					<span className="text-muted-foreground text-xs">
-						{game.isHome ? 'vs' : '@'}
-					</span>
-					<span className="font-medium truncate">
-						{game.opponent.name}
-					</span>
-					<span className="text-muted-foreground text-xs">
-						({game.opponent.abbreviation})
-					</span>
+					<span className="text-muted-foreground text-xs">{game.isHome ? 'vs' : '@'}</span>
+					<span className="truncate font-medium">{game.opponent.name}</span>
+					<span className="text-muted-foreground text-xs">({game.opponent.abbreviation})</span>
 					{gameTypeLabel && (
-						<span className="text-xs bg-muted px-1.5 py-0.5 rounded">
-							{gameTypeLabel}
-						</span>
+						<span className="bg-muted rounded px-1.5 py-0.5 text-xs">{gameTypeLabel}</span>
 					)}
 				</div>
 
-				<div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+				<div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
 					<span className="flex items-center gap-1">
 						<Calendar className="h-3 w-3" />
 						{date} • {time}
@@ -68,32 +60,32 @@ const GameRow = ({ game }: GameRowProps) => {
 				</div>
 			</div>
 
-			<div className="text-right shrink-0">
+			<div className="shrink-0 text-right">
 				{game.status === GameState.Final && (
 					<div className="text-sm">
-						<span className={cn(
-							'font-medium',
-							game.homeTeam.score !== undefined && game.awayTeam.score !== undefined && (
-								(game.isHome && game.homeTeam.score > game.awayTeam.score) ||
-								(!game.isHome && game.awayTeam.score > game.homeTeam.score)
-							) ? 'text-green-600' : 'text-red-600'
-						)}>
+						<span
+							className={cn(
+								'font-medium',
+								game.homeTeam.score !== undefined &&
+									game.awayTeam.score !== undefined &&
+									((game.isHome && game.homeTeam.score > game.awayTeam.score) ||
+										(!game.isHome && game.awayTeam.score > game.homeTeam.score))
+									? 'text-green-600'
+									: 'text-red-600',
+							)}>
 							{game.isHome
 								? `${game.homeTeam.score}-${game.awayTeam.score}`
-								: `${game.awayTeam.score}-${game.homeTeam.score}`
-							}
+								: `${game.awayTeam.score}-${game.homeTeam.score}`}
 						</span>
 					</div>
 				)}
 				{game.status === GameState.Live && (
-					<span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
+					<span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-400">
 						Live
 					</span>
 				)}
 				{game.status !== GameState.Final && game.status !== GameState.Live && (
-					<span className="text-xs text-muted-foreground">
-						{game.isHome ? 'Home' : 'Away'}
-					</span>
+					<span className="text-muted-foreground text-xs">{game.isHome ? 'Home' : 'Away'}</span>
 				)}
 			</div>
 		</Link>

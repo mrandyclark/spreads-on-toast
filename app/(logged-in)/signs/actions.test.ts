@@ -59,8 +59,12 @@ describe('signs app actions', () => {
 	describe('updateSignConfigAction', () => {
 		it('returns result from updateSignConfig', async () => {
 			vi.mocked(updateSignConfig).mockResolvedValue({ sign: mockSign });
-			const result = await updateSignConfigAction('sign1', { standings: {} } as never);
-			expect(updateSignConfig).toHaveBeenCalledWith('sign1', 'user1', { standings: {} });
+			const result = await updateSignConfigAction('sign1', {
+				display: { brightness: 50, rotationIntervalSeconds: 10 },
+			});
+			expect(updateSignConfig).toHaveBeenCalledWith('sign1', 'user1', {
+				display: { brightness: 50, rotationIntervalSeconds: 10 },
+			});
 			expect(result.sign).toBe(mockSign);
 		});
 
