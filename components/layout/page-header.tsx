@@ -7,10 +7,13 @@ interface PageHeaderProps {
 
 const PageHeader = ({ actions, children, subtitle, title }: PageHeaderProps) => {
 	return (
-		<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
 			<div>
-				<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{title}</h1>
-				{subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+				<p className="text-primary eyebrow mb-2">Your season</p>
+				<h1 className="display-type text-foreground text-4xl sm:text-5xl">{title}</h1>
+				{subtitle && (
+					<p className="text-muted-foreground mt-2 max-w-xl text-sm sm:text-base">{subtitle}</p>
+				)}
 			</div>
 
 			{actions}

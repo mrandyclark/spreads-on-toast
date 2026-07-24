@@ -1,55 +1,38 @@
 @import 'tailwindcss';
 
 @theme {
-	/* Warm cream/toast color palette */
-	--color-background: hsl(40 33% 96%);
-	--color-foreground: hsl(30 10% 20%);
-
-	/* Card colors */
-	--color-card: hsl(40 40% 98%);
-	--color-card-foreground: hsl(30 10% 20%);
-
-	/* Popover */
-	--color-popover: hsl(40 40% 98%);
-	--color-popover-foreground: hsl(30 10% 20%);
-
-	/* Primary: Jam/rust accent */
-	--color-primary: hsl(12 70% 45%);
-	--color-primary-foreground: hsl(40 40% 98%);
-
-	/* Secondary: Toast tan */
-	--color-secondary: hsl(35 40% 85%);
-	--color-secondary-foreground: hsl(30 10% 20%);
-
-	/* Muted: Soft warm gray */
-	--color-muted: hsl(35 20% 90%);
-	--color-muted-foreground: hsl(30 10% 38%);
-
-	/* Accent: Warm golden */
-	--color-accent: hsl(35 50% 75%);
-	--color-accent-foreground: hsl(30 10% 20%);
-
-	/* Destructive */
-	--color-destructive: hsl(0 84.2% 60.2%);
-	--color-destructive-foreground: hsl(0 0% 98%);
-
-	/* Border: Soft toast edge */
-	--color-border: hsl(35 25% 85%);
-	--color-input: hsl(35 25% 85%);
-	--color-ring: hsl(12 70% 45%);
-
-	/* Chart colors */
-	--color-chart-1: hsl(12 76% 61%);
-	--color-chart-2: hsl(35 58% 50%);
-	--color-chart-3: hsl(30 37% 40%);
-	--color-chart-4: hsl(43 74% 66%);
-	--color-chart-5: hsl(27 87% 67%);
-
-	/* League colors */
-	--color-al: hsl(12 83% 45%);
-	--color-nl: hsl(225 65% 38%);
-
-	--radius: 0.75rem;
+	--color-background: #f6f0e3;
+	--color-foreground: #101e2a;
+	--color-card: #fffdf7;
+	--color-card-foreground: #101e2a;
+	--color-popover: #fffdf7;
+	--color-popover-foreground: #101e2a;
+	--color-primary: #e6492d;
+	--color-primary-foreground: #fffaf0;
+	--color-secondary: #152b3a;
+	--color-secondary-foreground: #fffaf0;
+	--color-muted: #eae2d3;
+	--color-muted-foreground: #5f6870;
+	--color-accent: #f2b84b;
+	--color-accent-foreground: #17232c;
+	--color-destructive: #c9362b;
+	--color-destructive-foreground: #fffaf0;
+	--color-border: #d8cebd;
+	--color-input: #cfc4b2;
+	--color-ring: #e6492d;
+	--color-chart-1: #e6492d;
+	--color-chart-2: #1e7662;
+	--color-chart-3: #2d5bff;
+	--color-chart-4: #f2b84b;
+	--color-chart-5: #915bca;
+	--color-al: #e6492d;
+	--color-nl: #2d5bff;
+	--color-ink: #101e2a;
+	--color-paper: #fffdf7;
+	--color-toast: #f2b84b;
+	--color-outfield: #1e7662;
+	--color-bullpen: #2d5bff;
+	--radius: 1rem;
 
 	/* Font families */
 	--font-sans:
@@ -57,29 +40,36 @@
 		sans-serif;
 	--font-serif:
 		'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, ui-serif, serif;
+	--font-display:
+		'Arial Narrow', 'Avenir Next Condensed', 'Roboto Condensed', 'Helvetica Neue', ui-sans-serif,
+		sans-serif;
 }
 
-/* Dark mode overrides */
 .dark {
-	--color-background: hsl(30 15% 10%);
-	--color-foreground: hsl(40 30% 92%);
-	--color-card: hsl(30 15% 14%);
-	--color-card-foreground: hsl(40 30% 92%);
-	--color-popover: hsl(30 15% 14%);
-	--color-popover-foreground: hsl(40 30% 92%);
-	--color-primary: hsl(12 75% 55%);
-	--color-primary-foreground: hsl(30 15% 10%);
-	--color-secondary: hsl(30 20% 22%);
-	--color-secondary-foreground: hsl(40 30% 92%);
-	--color-muted: hsl(30 15% 18%);
-	--color-muted-foreground: hsl(35 15% 60%);
-	--color-accent: hsl(35 40% 30%);
-	--color-accent-foreground: hsl(40 30% 92%);
-	--color-destructive: hsl(0 62.8% 45%);
-	--color-destructive-foreground: hsl(0 0% 98%);
-	--color-border: hsl(30 15% 22%);
-	--color-input: hsl(30 15% 22%);
-	--color-ring: hsl(12 75% 55%);
+	--color-background: #09141e;
+	--color-foreground: #f5eedf;
+	--color-card: #10212e;
+	--color-card-foreground: #f5eedf;
+	--color-popover: #10212e;
+	--color-popover-foreground: #f5eedf;
+	--color-primary: #ff6548;
+	--color-primary-foreground: #09141e;
+	--color-secondary: #f0e5d3;
+	--color-secondary-foreground: #10212e;
+	--color-muted: #182b39;
+	--color-muted-foreground: #aeb8bc;
+	--color-accent: #f5bf56;
+	--color-accent-foreground: #10212e;
+	--color-destructive: #ff6548;
+	--color-destructive-foreground: #09141e;
+	--color-border: #28404f;
+	--color-input: #365263;
+	--color-ring: #ff6548;
+	--color-ink: #07131d;
+	--color-paper: #10212e;
+	--color-toast: #f5bf56;
+	--color-outfield: #50c7a2;
+	--color-bullpen: #6f91ff;
 }
 
 @layer base {
@@ -92,6 +82,20 @@
 		padding-right: env(safe-area-inset-right);
 		padding-left: env(safe-area-inset-left);
 		-webkit-tap-highlight-color: transparent;
+		background-image:
+			linear-gradient(
+				color-mix(in srgb, var(--color-foreground) 3%, transparent) 1px,
+				transparent 1px
+			),
+			linear-gradient(
+				90deg,
+				color-mix(in srgb, var(--color-foreground) 2%, transparent) 1px,
+				transparent 1px
+			);
+		background-size:
+			100% 32px,
+			32px 100%;
+		text-rendering: optimizeLegibility;
 	}
 
 	:focus-visible {
@@ -103,6 +107,77 @@
 	[role='button'],
 	a {
 		touch-action: manipulation;
+	}
+
+	::selection {
+		background: var(--color-accent);
+		color: var(--color-accent-foreground);
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not(.light) {
+		--color-background: #09141e;
+		--color-foreground: #f5eedf;
+		--color-card: #10212e;
+		--color-card-foreground: #f5eedf;
+		--color-popover: #10212e;
+		--color-popover-foreground: #f5eedf;
+		--color-primary: #ff6548;
+		--color-primary-foreground: #09141e;
+		--color-secondary: #f0e5d3;
+		--color-secondary-foreground: #10212e;
+		--color-muted: #182b39;
+		--color-muted-foreground: #aeb8bc;
+		--color-accent: #f5bf56;
+		--color-accent-foreground: #10212e;
+		--color-destructive: #ff6548;
+		--color-destructive-foreground: #09141e;
+		--color-border: #28404f;
+		--color-input: #365263;
+		--color-ring: #ff6548;
+		--color-ink: #07131d;
+		--color-paper: #10212e;
+		--color-toast: #f5bf56;
+		--color-outfield: #50c7a2;
+		--color-bullpen: #6f91ff;
+	}
+}
+
+@layer components {
+	.display-type {
+		font-family: var(--font-display);
+		font-weight: 800;
+		letter-spacing: -0.035em;
+		line-height: 0.95;
+		text-transform: uppercase;
+	}
+
+	.eyebrow {
+		font-size: 0.75rem;
+		font-weight: 800;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.scorebook-rule {
+		background-image: repeating-linear-gradient(
+			to bottom,
+			transparent 0,
+			transparent 31px,
+			color-mix(in srgb, var(--color-border) 55%, transparent) 32px
+		);
+	}
+
+	.night-panel {
+		background:
+			radial-gradient(circle at 82% 0%, rgb(242 184 75 / 18%), transparent 34%),
+			linear-gradient(145deg, #152f40 0%, #09141e 70%);
+		color: #fffaf0;
+	}
+
+	.tabular {
+		font-variant-numeric: tabular-nums;
 	}
 }
 

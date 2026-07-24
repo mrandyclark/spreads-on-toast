@@ -1,64 +1,51 @@
-import { BarChart3, Calculator, Lock, Users } from 'lucide-react';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BellRing, ChartNoAxesCombined, Flame, Smartphone } from 'lucide-react';
 
 const features = [
 	{
 		description:
-			'No editing once the season starts. Commit to your calls and live with them all year long.',
-		icon: Lock,
-		title: 'Locked picks',
+			'Install it to your home screen. Fast launches, safe areas, and controls built for thumbs.',
+		icon: Smartphone,
+		title: 'Feels at home on your phone',
 	},
 	{
 		description:
-			'Closest to Vegas wins. No complex point spreads or weighted systems. Just correct picks.',
-		icon: Calculator,
-		title: 'Simple scoring',
+			'The slate leads with game state, score, teams, and pitchers—not rows of database fields.',
+		icon: BellRing,
+		title: 'Live means live',
 	},
 	{
 		description:
-			'Live standings, scores, and win totals updated daily throughout the season. Watch your picks play out in real time.',
-		icon: BarChart3,
-		title: 'Live tracking',
+			'Track projected wins against the exact line you called before the season started.',
+		icon: ChartNoAxesCombined,
+		title: 'Every call stays visible',
 	},
 	{
 		description:
-			'Built for bragging rights, not bankrolls. Trash talk encouraged, real money not involved.',
-		icon: Users,
-		title: 'Friends-first',
+			'Movement, close calls, and misses turn a standings table into a season-long group chat.',
+		icon: Flame,
+		title: 'Competition with a pulse',
 	},
 ];
 
 const Features = () => {
 	return (
-		<section className="bg-muted/30 py-16 sm:py-24">
-			<div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-				{/* Section header */}
-				<div className="mx-auto max-w-2xl text-center">
-					<h2 className="text-foreground font-serif text-3xl font-medium tracking-tight sm:text-4xl">
-						Why you{"'"}ll love it
+		<section className="night-panel py-20 sm:py-28">
+			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+				<div className="max-w-3xl">
+					<p className="eyebrow text-[#f2b84b]">Built for the long season</p>
+					<h2 className="display-type mt-3 text-5xl text-white sm:text-6xl">
+						Baseball at the speed of a glance.
 					</h2>
-					<p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-						Simple rules, friendly competition, season-long fun.
-					</p>
 				</div>
-
-				{/* Feature cards */}
-				<div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+				<div className="mt-12 grid gap-px overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
 					{features.map((feature) => (
-						<Card
-							className="group border-border/50 bg-card hover:border-primary/20 transition-all hover:shadow-lg"
-							key={feature.title}>
-							<CardHeader className="items-center pb-4 text-center sm:items-start sm:text-left">
-								<div className="bg-primary/10 group-hover:bg-primary/15 mb-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<feature.icon className="text-primary h-6 w-6" />
-								</div>
-								<CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
-							</CardHeader>
-							<CardContent className="text-center sm:text-left">
-								<p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-							</CardContent>
-						</Card>
+						<article className="bg-[#0b1924] p-6 sm:p-8" key={feature.title}>
+							<feature.icon className="h-6 w-6 text-[#f2b84b]" />
+							<h3 className="mt-8 text-xl font-black tracking-[-.025em] text-white">
+								{feature.title}
+							</h3>
+							<p className="mt-3 text-sm leading-6 text-white/55">{feature.description}</p>
+						</article>
 					))}
 				</div>
 			</div>

@@ -1,13 +1,16 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { addDays, format, parseISO } from 'date-fns';
+import { CalendarDays, ChevronLeft, ChevronRight, Moon, Radio, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import DatePicker from '@/components/ui/date-picker';
 import { formatGameTime } from '@/lib/date-utils';
+import { cn } from '@/lib/utils';
 
 import { GameDayCard, getGameDayData } from './actions';
 
@@ -27,8 +30,7 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 		}
 
 		try {
-			const data = await getGameDayData(date);
-			setGames(data);
+			setGames(await getGameDayData(date));
 		} finally {
 			if (!silent) {
 				setLoading(false);
@@ -37,79 +39,92 @@ const GameDayClient = ({ selectedDate }: GameDayClientProps) => {
 	}, []);
 
 	useEffect(() => {
-		// This effect intentionally synchronizes route state with server-owned game data.
 		// eslint-disable-next-line react-hooks/set-state-in-effect
-		fetchGames(selectedDate);
+		void fetchGames(selectedDate);
 	}, [selectedDate, fetchGames]);
 
-	// Poll every 30s when any game is Live
-	const hasLiveGames = games.some((g) => g.status === 'Live');
+	const hasLiveGames = games.some((game) => game.status === 'Live');
 	const intervalRef = useRef<null | ReturnType<typeof setInterval>>(null);
 
 	useEffect(() => {
 		if (hasLiveGames) {
-			intervalRef.current = setInterval(() => {
-				fetchGames(selectedDate, true);
-			}, 30_000);
+			intervalRef.current = setInterval(() => void fetchGames(selectedDate, true), 30_000);
 		}
-
 		return () => {
 			if (intervalRef.current) {
 				clearInterval(intervalRef.current);
-				intervalRef.current = null;
 			}
 		};
 	}, [hasLiveGames, selectedDate, fetchGames]);
 
-	const handleDateChange = (newDate: string) => {
-		startTransition(() => {
-			router.push(`/games?date=${newDate}`);
-		});
+	const goToDate = (date: string) => {
+		startTransition(() => router.push(`/games?date=${date}`));
 	};
 
-	const formatDisplayDate = (dateStr: string) => {
-		const [year, month, day] = dateStr.split('-').map(Number);
-		const date = new Date(year, month - 1, day);
-		return date.toLocaleDateString('en-US', {
-			day: 'numeric',
-			month: 'long',
-			weekday: 'long',
-			year: 'numeric',
-		});
-	};
+	const parsedDate = parseISO(selectedDate);
+	const liveCount = games.filter((game) => game.status === 'Live').length;
+	const finalCount = games.filter((game) => game.status === 'Final').length;
 
 	return (
 		<div>
-			{/* Header */}
-			<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<div>
-					<h1 className="text-2xl font-bold">Game Day</h1>
-					<p className="text-muted-foreground text-sm">
-						{formatDisplayDate(selectedDate)}
-						{games.length > 0 && ` · ${games.length} game${games.length !== 1 ? 's' : ''}`}
-					</p>
+			<section className="night-panel relative mb-6 overflow-hidden rounded-[1.75rem] p-5 sm:p-8">
+				<div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+					<div>
+						<p className="eyebrow flex items-center gap-2 text-[#f2b84b]">
+							{liveCount > 0 ? <Radio className="h-3.5 w-3.5 animate-pulse" /> : null}
+							{liveCount > 0 ? `${liveCount} live now` : 'Daily baseball'}
+						</p>
+						<h1 className="display-type mt-2 text-5xl text-white sm:text-6xl">The slate</h1>
+						<p className="mt-2 text-sm font-semibold text-white/55">
+							{format(parsedDate, 'EEEE, MMMM d')} · {games.length} games · {finalCount} final
+						</p>
+					</div>
+					<DatePicker
+						onChange={(date) => date && goToDate(date)}
+						placeholder="Select date"
+						value={selectedDate}
+					/>
 				</div>
-				<DatePicker
-					onChange={(date) => date && handleDateChange(date)}
-					placeholder="Select date"
-					value={selectedDate}
-				/>
+			</section>
+
+			<div className="mb-6 grid grid-cols-[44px_1fr_44px] items-center gap-2">
+				<Button
+					aria-label="Previous day"
+					onClick={() => goToDate(format(addDays(parsedDate, -1), 'yyyy-MM-dd'))}
+					size="icon"
+					variant="outline">
+					<ChevronLeft />
+				</Button>
+				<div className="bg-card flex h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black">
+					<CalendarDays className="text-primary h-4 w-4" />
+					{format(parsedDate, 'EEE, MMM d')}
+				</div>
+				<Button
+					aria-label="Next day"
+					onClick={() => goToDate(format(addDays(parsedDate, 1), 'yyyy-MM-dd'))}
+					size="icon"
+					variant="outline">
+					<ChevronRight />
+				</Button>
 			</div>
 
-			{/* Games grid */}
 			{(loading || isPending) && (
 				<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-					{Array.from({ length: 6 }).map((_, i) => (
-						<Card className="animate-pulse" key={i}>
-							<CardContent className="h-48 p-4" />
+					{Array.from({ length: 6 }).map((_, index) => (
+						<Card className="animate-pulse" key={index}>
+							<CardContent className="h-56 p-4" />
 						</Card>
 					))}
 				</div>
 			)}
 			{!loading && !isPending && games.length === 0 && (
-				<Card>
-					<CardContent className="flex items-center justify-center p-12">
-						<p className="text-muted-foreground">No games scheduled for this date.</p>
+				<Card className="border-dashed">
+					<CardContent className="flex min-h-56 flex-col items-center justify-center p-8 text-center">
+						<div className="bg-muted flex h-12 w-12 items-center justify-center rounded-2xl">☂</div>
+						<h2 className="mt-4 text-xl font-black">Rain delay</h2>
+						<p className="text-muted-foreground mt-1 text-sm">
+							No games are scheduled for this date.
+						</p>
 					</CardContent>
 				</Card>
 			)}
@@ -128,85 +143,73 @@ const GameCard = ({ game }: { game: GameDayCard }) => {
 	const isLive = game.status === 'Live';
 	const isFinal = game.status === 'Final';
 	const hasScore = isLive || isFinal;
+	const awayWon = isFinal && (game.awayScore ?? 0) > (game.homeScore ?? 0);
+	const homeWon = isFinal && (game.homeScore ?? 0) > (game.awayScore ?? 0);
+	const status = isLive
+		? `${game.inningState ?? ''} ${game.currentInning ?? ''}`.trim()
+		: isFinal
+			? 'Final'
+			: formatGameTime(game.gameDate);
 
 	return (
-		<Link href={`/games/${game.gameId}`}>
-			<Card className="hover:bg-muted/50 transition-colors">
-				<CardContent className="p-4">
-					{/* Status + Venue row */}
-					<div className="text-muted-foreground mb-3 flex items-center justify-between text-xs">
-						<div className="flex items-center gap-1.5">
-							{isLive && (
-								<span className="bg-destructive inline-block h-2 w-2 animate-pulse rounded-full" />
+		<Link className="group block" href={`/games/${game.gameId}`}>
+			<Card
+				className={cn(
+					'group-hover:border-foreground/25 relative h-full overflow-hidden transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg',
+					isLive && 'border-primary/50',
+				)}>
+				{isLive && <div className="bg-primary absolute top-0 bottom-0 left-0 w-1" />}
+				<CardContent className="p-0">
+					<div className="border-border/70 flex items-center justify-between border-b px-4 py-3 text-[11px] font-bold tracking-wide uppercase">
+						<span
+							className={cn(
+								'flex items-center gap-1.5',
+								isLive ? 'text-primary' : 'text-muted-foreground',
+							)}>
+							{isLive ? (
+								<span className="bg-primary h-2 w-2 animate-pulse rounded-full" />
+							) : game.dayNight === 'night' ? (
+								<Moon className="h-3.5 w-3.5" />
+							) : (
+								<Sun className="h-3.5 w-3.5" />
 							)}
-							{!isLive && game.dayNight === 'night' && <Moon className="h-3 w-3" />}
-							{!isLive && game.dayNight !== 'night' && <Sun className="h-3 w-3" />}
-							<span>
-								{isLive && game.currentInning
-									? `${game.inningState ?? ''} ${game.currentInning}`.trim()
-									: isFinal
-										? 'Final'
-										: formatGameTime(game.gameDate)}
-							</span>
-						</div>
-						{game.venue && <span className="truncate pl-2">{game.venue.name}</span>}
+							{status}
+						</span>
+						<span className="text-muted-foreground max-w-[150px] truncate normal-case">
+							{game.venue?.name}
+						</span>
 					</div>
 
-					{/* Matchup */}
-					<div className="space-y-2">
-						{/* Away team */}
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<span
-									className="inline-block h-3 w-3 rounded-full"
-									style={{ backgroundColor: game.awayTeamColors?.primary ?? '#666' }}
-								/>
-								<span className="font-semibold">{game.awayTeamAbbreviation}</span>
-								<span className="text-muted-foreground text-sm">
-									{game.awayTeamCity} {game.awayTeamName}
-								</span>
-							</div>
-							{hasScore && game.awayScore != null && (
-								<span className="min-w-6 text-right text-sm font-bold tabular-nums">
-									{game.awayScore}
-								</span>
-							)}
-							{!(hasScore && game.awayScore != null) && (
-								<span className="text-muted-foreground text-xs">{game.awayRecord}</span>
-							)}
-						</div>
-
-						{/* Home team */}
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<span
-									className="inline-block h-3 w-3 rounded-full"
-									style={{ backgroundColor: game.homeTeamColors?.primary ?? '#666' }}
-								/>
-								<span className="font-semibold">{game.homeTeamAbbreviation}</span>
-								<span className="text-muted-foreground text-sm">
-									{game.homeTeamCity} {game.homeTeamName}
-								</span>
-							</div>
-							{hasScore && game.homeScore != null && (
-								<span className="min-w-6 text-right text-sm font-bold tabular-nums">
-									{game.homeScore}
-								</span>
-							)}
-							{!(hasScore && game.homeScore != null) && (
-								<span className="text-muted-foreground text-xs">{game.homeRecord}</span>
-							)}
-						</div>
+					<div className="space-y-1 p-3">
+						<TeamScoreRow
+							abbreviation={game.awayTeamAbbreviation}
+							city={game.awayTeamCity}
+							color={game.awayTeamColors?.primary}
+							name={game.awayTeamName}
+							record={game.awayRecord}
+							score={hasScore ? game.awayScore : undefined}
+							winner={awayWon}
+						/>
+						<TeamScoreRow
+							abbreviation={game.homeTeamAbbreviation}
+							city={game.homeTeamCity}
+							color={game.homeTeamColors?.primary}
+							name={game.homeTeamName}
+							record={game.homeRecord}
+							score={hasScore ? game.homeScore : undefined}
+							winner={homeWon}
+						/>
 					</div>
 
-					{/* Pitchers */}
 					{(game.awayPitcher || game.homePitcher) && (
-						<div className="text-muted-foreground mt-3 border-t pt-3 text-xs">
-							<div className="flex justify-between">
-								<span>{game.awayPitcher ?? 'TBD'}</span>
-								<span className="font-medium">vs</span>
-								<span>{game.homePitcher ?? 'TBD'}</span>
-							</div>
+						<div className="border-border/70 mx-4 flex items-center justify-between border-t py-3 text-xs">
+							<span className="text-muted-foreground truncate">{game.awayPitcher ?? 'TBD'}</span>
+							<span className="text-muted-foreground px-2 text-[9px] font-black tracking-widest uppercase">
+								Starters
+							</span>
+							<span className="text-muted-foreground truncate text-right">
+								{game.homePitcher ?? 'TBD'}
+							</span>
 						</div>
 					)}
 				</CardContent>
@@ -214,5 +217,51 @@ const GameCard = ({ game }: { game: GameDayCard }) => {
 		</Link>
 	);
 };
+
+interface TeamScoreRowProps {
+	abbreviation: string;
+	city: string;
+	color?: string;
+	name: string;
+	record?: string;
+	score?: null | number;
+	winner: boolean;
+}
+
+const TeamScoreRow = ({
+	abbreviation,
+	city,
+	color,
+	name,
+	record,
+	score,
+	winner,
+}: TeamScoreRowProps) => (
+	<div className={cn('flex items-center gap-3 rounded-xl p-2.5', winner && 'bg-muted')}>
+		<div
+			className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[11px] font-black text-white shadow-sm"
+			style={{ backgroundColor: color ?? '#304657' }}>
+			{abbreviation}
+		</div>
+		<div className="min-w-0 flex-1">
+			<p className={cn('truncate text-sm', winner ? 'font-black' : 'font-bold')}>
+				{name}
+				<span className="sr-only">{city}</span>
+			</p>
+			<p className="text-muted-foreground mt-0.5 text-[11px]">{record}</p>
+		</div>
+		{score != null ? (
+			<span
+				className={cn(
+					'tabular text-3xl',
+					winner ? 'font-black' : 'text-muted-foreground font-bold',
+				)}>
+				{score}
+			</span>
+		) : (
+			<ChevronRight className="text-muted-foreground h-5 w-5" />
+		)}
+	</div>
+);
 
 export default GameDayClient;

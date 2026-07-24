@@ -70,8 +70,11 @@ const MlbLeaderboard = ({ groupId, onMemberSelect, selectedDate }: MlbLeaderboar
 
 	return (
 		<section>
-			<h2 className="mb-4 text-xl font-semibold">Standings</h2>
-			<Card>
+			<div className="mb-4">
+				<p className="text-primary eyebrow">League competition</p>
+				<h2 className="mt-1 text-2xl font-black tracking-[-.03em]">The league table</h2>
+			</div>
+			<Card className="overflow-hidden">
 				<CardContent className="p-0">
 					<div className="divide-border divide-y">
 						{leaderboard.entries.map((entry: LeaderboardEntry, index: number) => {
@@ -81,8 +84,8 @@ const MlbLeaderboard = ({ groupId, onMemberSelect, selectedDate }: MlbLeaderboar
 							return (
 								<button
 									className={cn(
-										'hover:bg-muted/50 flex w-full items-center gap-4 p-4 text-left transition-colors',
-										isCurrentUser && 'bg-primary/5',
+										'hover:bg-muted/50 flex w-full items-center gap-3 p-4 text-left transition-colors sm:gap-4',
+										isCurrentUser && 'bg-accent/15',
 									)}
 									key={entry.userId}
 									onClick={() =>
@@ -93,10 +96,14 @@ const MlbLeaderboard = ({ groupId, onMemberSelect, selectedDate }: MlbLeaderboar
 											userName: entry.userName,
 										})
 									}>
-									<div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium">
-										{rank === 1 && <Crown className="text-primary h-4 w-4" />}
+									<div
+										className={cn(
+											'bg-muted flex h-9 w-9 items-center justify-center rounded-xl text-sm font-black',
+											rank === 1 && 'bg-accent text-accent-foreground',
+										)}>
+										{rank === 1 && <Crown className="h-4 w-4" />}
 
-										{rank !== 1 && <span className="text-muted-foreground">{rank}</span>}
+										{rank !== 1 && <span>{rank}</span>}
 									</div>
 									<Avatar className="border-border h-10 w-10 border-2">
 										<AvatarFallback
@@ -108,18 +115,21 @@ const MlbLeaderboard = ({ groupId, onMemberSelect, selectedDate }: MlbLeaderboar
 									</Avatar>
 									<div className="flex-1">
 										<div className="flex items-center gap-2">
-											<span className="font-medium">{entry.userName}</span>
+											<span className="font-black">{entry.userName}</span>
 											{isCurrentUser && (
 												<Badge className="text-xs" variant="outline">
 													You
 												</Badge>
 											)}
 										</div>
-										<div className="text-muted-foreground text-sm">
-											{entry.wins} correct ({entry.winPct}%)
+										<div className="text-muted-foreground mt-0.5 text-xs">
+											{entry.wins} called right · {entry.winPct}%
 										</div>
 									</div>
-									<div className="flex items-center gap-2">
+									<div className="flex items-center gap-3">
+										<span className="tabular hidden text-lg font-black sm:block">
+											{entry.winPct}%
+										</span>
 										<Progress className="hidden h-2 w-20 sm:block" value={entry.winPct} />
 										<ChevronRight className="text-muted-foreground h-4 w-4" />
 									</div>

@@ -22,7 +22,7 @@ const PageShell = ({ children, className, maxWidth = '5xl' }: PageShellProps) =>
 
 			<main
 				className={cn(
-					'mx-auto px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pt-8',
+					'mx-auto px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 md:pb-12',
 					maxWidthClasses[maxWidth],
 					className,
 				)}>

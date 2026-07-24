@@ -27,12 +27,18 @@ export const metadata: Metadata = {
 	other: {
 		'mobile-web-app-capable': 'yes',
 	},
-	title: 'spreadsontoast - Lock Your Preseason Spreads',
+	title: {
+		default: 'Spreads on Toast — Call your shot',
+		template: '%s · Spreads on Toast',
+	},
 };
 
 export const viewport: Viewport = {
-	colorScheme: 'light',
-	themeColor: '#8f2f1f',
+	colorScheme: 'light dark',
+	themeColor: [
+		{ color: '#f6f0e3', media: '(prefers-color-scheme: light)' },
+		{ color: '#09141e', media: '(prefers-color-scheme: dark)' },
+	],
 	viewportFit: 'cover',
 };
 

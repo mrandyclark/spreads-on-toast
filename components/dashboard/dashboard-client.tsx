@@ -131,6 +131,35 @@ const DashboardClient = ({
 
 	return (
 		<PageShell>
+			<section className="night-panel relative mb-8 overflow-hidden rounded-[1.75rem] p-5 shadow-xl sm:p-8">
+				<div className="relative z-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+					<div>
+						<p className="eyebrow text-[#f2b84b]">2026 season</p>
+						<h2 className="display-type mt-2 text-4xl text-white sm:text-5xl">
+							The clubhouse is open.
+						</h2>
+						<p className="mt-3 max-w-xl text-sm leading-6 text-white/60 sm:text-base">
+							Make the calls now. Spend the summer proving you were right.
+						</p>
+					</div>
+					<div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 text-center">
+						<div className="bg-[#0d1c28] px-5 py-4">
+							<p className="tabular text-2xl font-black text-white">{filteredGroups.length}</p>
+							<p className="mt-1 text-[10px] font-bold tracking-wider text-white/45 uppercase">
+								Leagues
+							</p>
+						</div>
+						<div className="bg-[#0d1c28] px-5 py-4">
+							<p className="tabular text-2xl font-black text-[#f2b84b]">
+								{groups.reduce((sum, group) => sum + group.members.length, 0)}
+							</p>
+							<p className="mt-1 text-[10px] font-bold tracking-wider text-white/45 uppercase">
+								Rivals
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
 			<PageHeader
 				actions={
 					<div className="flex items-center justify-end gap-3">
@@ -241,8 +270,8 @@ const DashboardClient = ({
 						)}
 					</div>
 				}
-				subtitle="Manage your groups and track your standings"
-				title="Your Groups"
+				subtitle="Your leagues, cards, and season-long bragging rights."
+				title="Your leagues"
 			/>
 
 			{filteredGroups.length === 0 && (
@@ -284,11 +313,16 @@ const DashboardClient = ({
 			)}
 
 			{viewMode === 'active' && (
-				<div className="border-border bg-muted/30 mt-8 rounded-xl border border-dashed p-6 text-center">
-					<p className="text-muted-foreground mb-3">Have an invite code from a friend?</p>
+				<div className="border-border bg-card mt-6 flex flex-col items-center justify-between gap-4 rounded-[1.25rem] border p-5 text-center sm:flex-row sm:text-left">
+					<div>
+						<p className="font-black">Got a clubhouse code?</p>
+						<p className="text-muted-foreground mt-1 text-sm">
+							Join your friends and start calling shots.
+						</p>
+					</div>
 					<Dialog onOpenChange={setIsJoinOpen} open={isJoinOpen}>
 						<DialogTrigger asChild>
-							<Button variant="outline">Join an existing group</Button>
+							<Button variant="outline">Join a league</Button>
 						</DialogTrigger>
 						<DialogContent className="sm:max-w-md">
 							<DialogHeader>
@@ -327,7 +361,7 @@ const DashboardClient = ({
 				</div>
 			)}
 
-			<div className="mt-12">
+			<div className="mt-14">
 				<StandingsBoard initialSeasons={initialStandingsSeasons} />
 			</div>
 		</PageShell>

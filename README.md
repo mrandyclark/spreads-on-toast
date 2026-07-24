@@ -9,6 +9,22 @@ The web application is an installable Progressive Web App. Mutations remain netw
 server-authoritative; the offline experience never claims that a pick was saved without server
 confirmation.
 
+## The new Spreads
+
+Spreads on Toast is designed as three connected baseball moments: an exciting preseason pick card,
+a fast daily scores companion, and a league competition that stays interesting all summer. The
+mobile-first experience uses persistent thumb navigation, system-aware dark mode, safe areas, and a
+distinctive night-game/scorebook visual system.
+
+![Spreads on Toast redesigned desktop experience](./public/screenshots/home-desktop.png)
+
+<p align="center">
+  <img alt="Spreads on Toast redesigned mobile experience" src="./public/screenshots/home-mobile.png" width="390" />
+</p>
+
+Brand and product rationale live in [BRAND.md](./BRAND.md),
+[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md), and [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md).
+
 ## Stack
 
 - Next.js 16 App Router, React 19, and TypeScript 5.9

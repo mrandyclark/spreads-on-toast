@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink } from 'lucide-react';
+import { Check, ExternalLink, TrendingDown, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -37,61 +37,68 @@ const TeamPickCard = ({
 	return (
 		<div
 			className={cn(
-				'rounded-lg border p-3',
+				'bg-card overflow-hidden rounded-2xl border p-3 transition-all',
 				result ? getResultBorderClass(result) : 'border-border bg-card',
 			)}>
-			<div className="mb-2 flex w-full items-center gap-2">
-				{result && getResultIcon(result)}
-				<span className="font-semibold">{teamName}</span>
-			</div>
-
-			<div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-					{projectedWins !== undefined && (
-						<div className="flex items-center gap-1">
-							<span className="text-muted-foreground">{showEstimated ? 'Est:' : 'Final:'}</span>
-							<span className="font-medium">{projectedWins}</span>
-						</div>
-					)}
-
-					<div className="flex items-center gap-1">
-						<span className="text-muted-foreground">Line:</span>
-						<span className="font-medium">{line}</span>
+			<div className="flex items-center gap-3">
+				<div className="bg-foreground text-background flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[11px] font-black">
+					{abbreviation ?? teamName.slice(0, 3).toUpperCase()}
+				</div>
+				<div className="min-w-0 flex-1">
+					<div className="flex items-center gap-2">
+						{result && getResultIcon(result)}
+						<span className="truncate font-black">{teamName}</span>
 					</div>
+					<div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs">
+						{projectedWins !== undefined && (
+							<div className="flex items-center gap-1">
+								<span className="text-muted-foreground">{showEstimated ? 'Est:' : 'Final:'}</span>
+								<span className="tabular font-black">{projectedWins}</span>
+							</div>
+						)}
 
-					{abbreviation && (
-						<Link
-							className="text-primary hover:text-primary/80 flex items-center gap-1 text-xs transition-colors"
-							href={`/teams/MLB/${abbreviation}`}>
-							View Team
-							<ExternalLink className="h-3 w-3" />
-						</Link>
-					)}
+						<div className="flex items-center gap-1">
+							<span className="text-muted-foreground">Vegas line</span>
+							<span className="tabular font-black">{line}</span>
+						</div>
+
+						{abbreviation && (
+							<Link
+								className="text-primary hover:text-primary/80 hidden items-center gap-1 text-xs font-bold transition-colors sm:flex"
+								href={`/teams/MLB/${abbreviation}`}>
+								View Team
+								<ExternalLink className="h-3 w-3" />
+							</Link>
+						)}
+					</div>
 				</div>
 
 				{editable && (
 					<ToggleGroup
-						className="grid w-full grid-cols-2 gap-2 sm:w-auto"
+						className="bg-muted grid w-[128px] shrink-0 grid-cols-2 gap-1 rounded-xl p-1 sm:w-[154px]"
 						onValueChange={(v) => onChange?.(v as PickChoice)}
 						type="single"
 						value={pick || ''}>
 						<ToggleGroupItem
 							aria-label={`Over ${line} wins`}
-							className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-11 px-4 text-sm sm:h-9 sm:text-xs"
+							className="data-[state=on]:bg-outfield h-10 rounded-lg px-2 text-xs font-black data-[state=on]:text-white"
 							value="over">
-							Over
+							<TrendingUp className="h-3.5 w-3.5" />O
 						</ToggleGroupItem>
 						<ToggleGroupItem
 							aria-label={`Under ${line} wins`}
-							className="data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground h-11 px-4 text-sm sm:h-9 sm:text-xs"
+							className="data-[state=on]:bg-bullpen h-10 rounded-lg px-2 text-xs font-black data-[state=on]:text-white"
 							value="under">
-							Under
+							<TrendingDown className="h-3.5 w-3.5" />U
 						</ToggleGroupItem>
 					</ToggleGroup>
 				)}
 
 				{!editable && pick && (
-					<Badge variant={pick === 'over' ? 'default' : 'secondary'}>{pick.toUpperCase()}</Badge>
+					<Badge className="gap-1 font-black" variant={pick === 'over' ? 'default' : 'secondary'}>
+						<Check className="h-3 w-3" />
+						{pick.toUpperCase()}
+					</Badge>
 				)}
 			</div>
 		</div>

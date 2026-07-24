@@ -60,11 +60,12 @@ const MlbTeamPicks = ({
 	const pickedCount = Object.values(picks).filter(Boolean).length;
 
 	return (
-		<Card>
-			<CardHeader>
+		<Card className="overflow-hidden">
+			<CardHeader className="border-b">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<div>
-						<CardTitle className="text-lg">Team Win Totals</CardTitle>
+						<p className="text-primary eyebrow mb-1">The main event</p>
+						<CardTitle className="text-2xl font-black tracking-[-.03em]">Team win totals</CardTitle>
 						<CardDescription>
 							Pick over or under for each team{"'"}s season win total
 						</CardDescription>
@@ -74,7 +75,7 @@ const MlbTeamPicks = ({
 					</Badge>
 				</div>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="p-3 sm:p-6">
 				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
 					<div className="relative flex-1">
 						<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />

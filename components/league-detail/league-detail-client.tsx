@@ -10,7 +10,6 @@ import LockedResults from '@/components/league-detail/locked-results';
 import MemberSheet from '@/components/league-detail/member-sheet';
 import PicksForm from '@/components/league-detail/picks-form';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import DatePicker from '@/components/ui/date-picker';
@@ -281,12 +280,17 @@ const LeagueDetailClient = ({
 	return (
 		<PageShell>
 			{/* Back link */}
-			<BackLink href="/dashboard" label="Dashboard" />
+			<BackLink href="/dashboard" label="Clubhouse" />
 
 			{/* League title and info */}
-			<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
 				<div className="flex items-center gap-2">
-					<h1 className="text-foreground text-2xl font-bold sm:text-3xl">{group.name}</h1>
+					<div>
+						<p className="text-primary eyebrow mb-2">
+							{group.sport} · {group.season} pick league
+						</p>
+						<h1 className="display-type text-foreground text-4xl sm:text-5xl">{group.name}</h1>
+					</div>
 					{canEditGroup && (
 						<Button
 							aria-label="Edit group name"
@@ -299,9 +303,6 @@ const LeagueDetailClient = ({
 					)}
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
-					<Badge variant="secondary">
-						{group.sport} {group.season}
-					</Badge>
 					<div className="text-muted-foreground flex items-center gap-1.5 text-sm">
 						<Users className="h-4 w-4" />
 						<span>{group.members.length}</span>
@@ -330,19 +331,19 @@ const LeagueDetailClient = ({
 			{/* Lock status card */}
 			<Card
 				className={cn(
-					'mb-8',
-					isLocked ? 'border-primary/30 bg-primary/5' : 'border-accent bg-accent/20',
+					'night-panel mb-8 overflow-hidden border-white/10',
+					isLocked ? 'border-primary/40' : 'border-accent/50',
 				)}>
-				<CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+				<CardContent className="flex flex-col gap-4 p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-6">
 					<div className="flex items-center gap-3">
 						{isLocked && (
 							<>
-								<div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-									<Lock className="text-primary h-5 w-5" />
+								<div className="bg-primary flex h-11 w-11 items-center justify-center rounded-2xl">
+									<Lock className="h-5 w-5" />
 								</div>
 								<div>
-									<p className="font-medium">Picks are locked</p>
-									<p className="text-muted-foreground text-sm">
+									<p className="text-lg font-black">The card is locked</p>
+									<p className="text-sm text-white/55">
 										Season is in progress. Track your standings below.
 									</p>
 								</div>
@@ -350,12 +351,12 @@ const LeagueDetailClient = ({
 						)}
 						{!isLocked && (
 							<>
-								<div className="bg-accent flex h-10 w-10 items-center justify-center rounded-full">
+								<div className="bg-accent flex h-11 w-11 items-center justify-center rounded-2xl">
 									<Calendar className="text-foreground h-5 w-5" />
 								</div>
 								<div>
-									<p className="font-medium">{daysUntilLock} days until picks lock</p>
-									<p className="text-muted-foreground text-sm">
+									<p className="text-lg font-black">{daysUntilLock} days until the card locks</p>
+									<p className="text-sm text-white/55">
 										Locks{' '}
 										{lockDate.toLocaleString(undefined, {
 											dateStyle: 'long',
@@ -411,11 +412,11 @@ const LeagueDetailClient = ({
 			{!isLocked && (
 				<div className="space-y-8">
 					<section>
-						<div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-[calc(4rem+env(safe-area-inset-top))] z-40 -mx-4 mb-5 border-y px-4 py-3 backdrop-blur">
+						<div className="bg-card/95 supports-[backdrop-filter]:bg-card/85 sticky top-[calc(4.25rem+env(safe-area-inset-top))] z-40 -mx-4 mb-5 border-y px-4 py-3 shadow-sm backdrop-blur-xl sm:rounded-2xl sm:border">
 							<div className="flex items-center justify-between gap-3">
 								<div className="min-w-0 flex-1">
 									<div className="flex items-baseline gap-2">
-										<h2 className="font-semibold">Your picks</h2>
+										<h2 className="font-black">Your pick card</h2>
 										<span className="text-muted-foreground text-xs">
 											{completedPickCount}/{totalPickCount} complete
 										</span>

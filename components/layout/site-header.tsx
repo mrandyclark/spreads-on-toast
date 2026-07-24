@@ -1,20 +1,28 @@
 'use client';
 
 import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
-import { Calendar, Menu, Monitor } from 'lucide-react';
-import Image from 'next/image';
+import { CalendarDays, Home, Menu, Monitor, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import ToastIcon from '@/components/toast-icon';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 import { getCurrentUserAction } from './actions';
 
 const marketingNavLinks = [
-	{ href: '#how-it-works', label: 'How it works' },
-	{ href: '#leagues', label: 'Leagues' },
+	{ href: '#how-it-works', label: 'The game' },
+	{ href: '#leagues', label: 'Why Spreads' },
 	{ href: '#faq', label: 'FAQ' },
+];
+
+const appNavLinks = [
+	{ href: '/dashboard', icon: Home, label: 'Clubhouse' },
+	{ href: '/games', icon: CalendarDays, label: 'Scores' },
+	{ href: '/signs', icon: Monitor, label: 'Signs' },
 ];
 
 interface SiteHeaderProps {
@@ -22,6 +30,7 @@ interface SiteHeaderProps {
 }
 
 const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
+	const pathname = usePathname();
 	const [userName, setUserName] = useState<string | undefined>();
 	const [isLoading, setIsLoading] = useState(variant === 'app');
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,145 +52,159 @@ const SiteHeader = ({ variant = 'app' }: SiteHeaderProps) => {
 	const isMarketing = variant === 'marketing';
 
 	return (
-		<header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 w-full border-b pt-[env(safe-area-inset-top)] backdrop-blur">
-			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-				{/* Logo */}
-				<Link
-					className="flex items-center gap-2 transition-opacity hover:opacity-80"
-					href={isMarketing ? '/' : '/dashboard'}>
-					<Image alt="spreadsontoast" height={32} src="/toast-icon.svg" width={32} />
-					<span className="text-foreground font-serif text-xl font-medium">spreads on toast.</span>
-				</Link>
+		<>
+			<header
+				className={cn(
+					'sticky top-0 z-50 w-full border-b pt-[env(safe-area-inset-top)] backdrop-blur-xl',
+					isMarketing
+						? 'border-white/10 bg-[#09141e]/92 text-white'
+						: 'border-border/70 bg-background/90',
+				)}>
+				<div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+					<Link
+						aria-label="Spreads on Toast home"
+						className="group flex items-center gap-2.5"
+						href={isMarketing ? '/' : '/dashboard'}>
+						<ToastIcon className="h-9 w-9 transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-3" />
+						<div className="leading-none">
+							<span className="block text-[17px] font-extrabold tracking-[-0.035em]">
+								Spreads on Toast
+							</span>
+							<span
+								className={cn(
+									'mt-1 hidden text-[9px] font-bold tracking-[0.2em] uppercase sm:block',
+									isMarketing ? 'text-white/50' : 'text-muted-foreground',
+								)}>
+								Call your shot
+							</span>
+						</div>
+					</Link>
 
-				{/* Desktop Navigation - Marketing only */}
-				{isMarketing && (
-					<nav className="hidden items-center gap-8 md:flex">
-						{marketingNavLinks.map((link) => (
-							<Link
-								className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-								href={link.href}
-								key={link.href}>
-								{link.label}
-							</Link>
-						))}
+					<nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+						{isMarketing
+							? marketingNavLinks.map((link) => (
+									<Link
+										className="rounded-xl px-4 py-2 text-sm font-semibold text-white/65 transition-colors hover:bg-white/8 hover:text-white"
+										href={link.href}
+										key={link.href}>
+										{link.label}
+									</Link>
+								))
+							: appNavLinks.map((link) => {
+									const active = pathname.startsWith(link.href);
+									return (
+										<Link
+											aria-current={active ? 'page' : undefined}
+											className={cn(
+												'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
+												active
+													? 'bg-foreground text-background'
+													: 'text-muted-foreground hover:bg-muted hover:text-foreground',
+											)}
+											href={link.href}
+											key={link.href}>
+											<link.icon className="h-4 w-4" />
+											{link.label}
+										</Link>
+									);
+								})}
 					</nav>
-				)}
 
-				{/* Desktop CTAs */}
-				<div className="hidden items-center gap-3 md:flex">
+					<div className="hidden items-center gap-2 md:flex">
+						{isMarketing ? (
+							<>
+								<Button asChild className="text-white hover:bg-white/10" size="sm" variant="ghost">
+									<LoginLink postLoginRedirectURL="/dashboard">Sign in</LoginLink>
+								</Button>
+								<Button asChild size="sm">
+									<RegisterLink postLoginRedirectURL="/dashboard">Start a league</RegisterLink>
+								</Button>
+							</>
+						) : (
+							<>
+								{!isLoading && userName && (
+									<span className="text-muted-foreground max-w-36 truncate px-2 text-xs">
+										{userName}
+									</span>
+								)}
+								<Button asChild size="sm" variant="outline">
+									{/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+									<a href="/api/auth/logout">Sign out</a>
+								</Button>
+							</>
+						)}
+					</div>
+
 					{isMarketing && (
-						<>
-							<Button
-								asChild
-								className="text-muted-foreground hover:text-foreground"
-								size="sm"
-								variant="ghost">
-								<LoginLink postLoginRedirectURL="/dashboard">Login</LoginLink>
-							</Button>
-							<Button asChild className="shadow-sm transition-shadow hover:shadow-md" size="sm">
-								<RegisterLink postLoginRedirectURL="/dashboard">Create a league</RegisterLink>
-							</Button>
-						</>
-					)}
-
-					{!isMarketing && (
-						<>
-							{!isLoading && userName && (
-								<span className="text-muted-foreground text-sm">{userName}</span>
-							)}
-							<Button asChild size="sm" variant="ghost">
-								<Link href="/games">
-									<Calendar className="mr-1 h-4 w-4" />
-									Games
-								</Link>
-							</Button>
-							<Button asChild size="sm" variant="ghost">
-								<Link href="/signs">
-									<Monitor className="mr-1 h-4 w-4" />
-									Signs
-								</Link>
-							</Button>
-							<Button asChild size="sm" variant="ghost">
-								{/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Intentionally using <a> to prevent prefetch on logout */}
-								<a href="/api/auth/logout">Sign Out</a>
-							</Button>
-						</>
-					)}
-				</div>
-
-				{/* Mobile Menu */}
-				<Sheet onOpenChange={setMobileMenuOpen} open={mobileMenuOpen}>
-					<SheetTrigger asChild className="md:hidden">
-						<Button aria-label="Open menu" size="icon" suppressHydrationWarning variant="ghost">
-							<Menu className="h-5 w-5" />
-						</Button>
-					</SheetTrigger>
-					<SheetContent className="bg-background w-[280px]" side="right">
-						<nav className="mt-8 flex flex-col gap-4">
-							{isMarketing && (
-								<>
+						<Sheet onOpenChange={setMobileMenuOpen} open={mobileMenuOpen}>
+							<SheetTrigger asChild className="md:hidden">
+								<Button
+									aria-label="Open menu"
+									className="text-white hover:bg-white/10"
+									size="icon"
+									variant="ghost">
+									<Menu className="h-5 w-5" />
+								</Button>
+							</SheetTrigger>
+							<SheetContent className="bg-background w-[300px]" side="right">
+								<nav className="mt-10 flex flex-col gap-2">
 									{marketingNavLinks.map((link) => (
 										<Link
-											className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
+											className="rounded-xl px-4 py-3 text-lg font-bold"
 											href={link.href}
 											key={link.href}
 											onClick={() => setMobileMenuOpen(false)}>
 											{link.label}
 										</Link>
 									))}
-									<div className="mt-6 flex flex-col gap-3">
-										<Button asChild className="w-full bg-transparent" variant="outline">
-											<LoginLink postLoginRedirectURL="/dashboard">Login</LoginLink>
+									<div className="mt-6 grid gap-3">
+										<Button asChild variant="outline">
+											<LoginLink postLoginRedirectURL="/dashboard">Sign in</LoginLink>
 										</Button>
-										<Button asChild className="w-full">
-											<RegisterLink postLoginRedirectURL="/dashboard">Create a league</RegisterLink>
+										<Button asChild>
+											<RegisterLink postLoginRedirectURL="/dashboard">Start a league</RegisterLink>
 										</Button>
 									</div>
-								</>
-							)}
+								</nav>
+							</SheetContent>
+						</Sheet>
+					)}
+					{!isMarketing && (
+						<Link
+							aria-label="League competition"
+							className="bg-muted text-foreground flex h-10 w-10 items-center justify-center rounded-xl md:hidden"
+							href="/dashboard">
+							<Trophy className="h-5 w-5" />
+						</Link>
+					)}
+				</div>
+			</header>
 
-							{!isMarketing && (
-								<>
-									{!isLoading && userName && (
-										<span className="text-foreground text-lg font-medium">{userName}</span>
+			{!isMarketing && (
+				<nav
+					aria-label="Mobile primary"
+					className="border-border/70 bg-card/95 fixed right-0 bottom-0 left-0 z-50 border-t px-3 pt-2 pb-[max(.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
+					<div className="mx-auto grid max-w-md grid-cols-3 gap-1">
+						{appNavLinks.map((link) => {
+							const active = pathname.startsWith(link.href);
+							return (
+								<Link
+									aria-current={active ? 'page' : undefined}
+									className={cn(
+										'flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors',
+										active ? 'bg-foreground text-background' : 'text-muted-foreground',
 									)}
-
-									<div className="border-border my-2 border-t" />
-
-									<Link
-										className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
-										href="/dashboard"
-										onClick={() => setMobileMenuOpen(false)}>
-										My Leagues
-									</Link>
-
-									<Link
-										className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
-										href="/games"
-										onClick={() => setMobileMenuOpen(false)}>
-										Today’s Games
-									</Link>
-
-									<Link
-										className="text-muted-foreground hover:text-foreground text-lg font-medium transition-colors"
-										href="/signs"
-										onClick={() => setMobileMenuOpen(false)}>
-										My Signs
-									</Link>
-
-									<div className="border-border my-2 border-t" />
-
-									<Button asChild className="w-full" variant="outline">
-										{/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Intentionally using <a> to prevent prefetch on logout */}
-										<a href="/api/auth/logout">Sign Out</a>
-									</Button>
-								</>
-							)}
-						</nav>
-					</SheetContent>
-				</Sheet>
-			</div>
-		</header>
+									href={link.href}
+									key={link.href}>
+									<link.icon className="h-5 w-5" />
+									{link.label}
+								</Link>
+							);
+						})}
+					</div>
+				</nav>
+			)}
+		</>
 	);
 };
 
