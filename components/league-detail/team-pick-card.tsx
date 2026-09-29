@@ -13,6 +13,7 @@ interface TeamPickCardProps {
 	abbreviation?: string;
 	editable?: boolean;
 	gamesPlayed?: number;
+	isFinal?: boolean;
 	line: number;
 	onChange?: (pick: PickChoice) => void;
 	pick?: 'over' | 'under' | null;
@@ -24,7 +25,7 @@ interface TeamPickCardProps {
 const TeamPickCard = ({
 	abbreviation,
 	editable = false,
-	gamesPlayed,
+	isFinal = false,
 	line,
 	onChange,
 	pick,
@@ -32,8 +33,6 @@ const TeamPickCard = ({
 	result,
 	teamName,
 }: TeamPickCardProps) => {
-	const showEstimated = gamesPlayed !== undefined && gamesPlayed < 162;
-
 	return (
 		<div
 			className={cn(
@@ -52,7 +51,7 @@ const TeamPickCard = ({
 					<div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs">
 						{projectedWins !== undefined && (
 							<div className="flex items-center gap-1">
-								<span className="text-muted-foreground">{showEstimated ? 'Est:' : 'Final:'}</span>
+								<span className="text-muted-foreground">{isFinal ? 'Final:' : 'Est:'}</span>
 								<span className="tabular font-black">{projectedWins}</span>
 							</div>
 						)}

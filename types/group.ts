@@ -113,6 +113,7 @@ export interface SavePicksInput {
 export interface TeamPickResult {
 	actualWins?: number;
 	gamesPlayed?: number;
+	isFinal?: boolean;
 	line: number;
 	pick: 'over' | 'under';
 	projectedWins: number;

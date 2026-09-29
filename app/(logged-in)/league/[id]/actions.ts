@@ -332,6 +332,7 @@ export const getResultsAction = withAuth(
 			picks.push({
 				actualWins,
 				gamesPlayed,
+				isFinal,
 				line,
 				pick: teamPick.pick,
 				projectedWins: scoringWins,

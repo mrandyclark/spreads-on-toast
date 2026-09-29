@@ -13,6 +13,7 @@ const TeamPicksResults = ({ picks }: TeamPicksResultsProps) => {
 				<TeamPickCard
 					abbreviation={pick.team.abbreviation}
 					gamesPlayed={pick.gamesPlayed}
+					isFinal={pick.isFinal}
 					key={pick.team.id}
 					line={pick.line}
 					pick={pick.pick}
